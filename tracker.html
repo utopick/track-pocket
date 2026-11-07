@@ -1707,14 +1707,14 @@
       }
       html[data-theme="term"] header {
         position: relative;
-        padding-bottom: 8px;
+        margin-bottom: 7px; /* room for the ornament below, so the header buttons never touch it */
       }
       html[data-theme="term"] header::after {
         content: "";
         position: absolute;
         left: 6px;
         right: 6px;
-        bottom: 0;
+        top: calc(100% + 2px);
         height: 3px;
         background: linear-gradient(
           90deg,
@@ -1723,15 +1723,22 @@
           var(--acc) 58% 100%
         );
       }
+      html[data-theme="term"] .mark {
+        padding: 1px 4px 1px 3px;
+      }
       html[data-theme="term"] .mark .t {
         color: var(--acc);
         letter-spacing: 1px;
       }
       html[data-theme="term"] .mark .t::after {
-        content: "▌";
-        color: var(--acc2);
+        content: "";
+        display: inline-block;
+        width: 0.42em;
+        height: 0.72em;
+        margin-left: 2px;
+        vertical-align: baseline;
+        background: var(--acc2);
         animation: blinkc 1.05s steps(1) infinite;
-        margin-left: 1px;
       }
       html[data-theme="term"] .mark b {
         display: none;
@@ -2025,7 +2032,7 @@
       }
       html[data-theme="dungeon"] header {
         position: relative;
-        padding-bottom: 9px;
+        margin-bottom: 7px; /* room for the ornament below, so the header buttons never touch it */
       }
       /* header rule: a gilded line with a diamond boss in the middle */
       html[data-theme="dungeon"] header::after {
@@ -2033,7 +2040,7 @@
         position: absolute;
         left: 8px;
         right: 8px;
-        bottom: 1px;
+        top: 100%;
         height: 7px;
         background:
           linear-gradient(45deg, transparent 35%, var(--acc) 35% 65%, transparent 65%) 50% 50% / 7px 7px
@@ -2276,14 +2283,14 @@
       }
       html[data-theme="dmg"] header {
         position: relative;
-        padding-bottom: 9px;
+        margin-bottom: 7px; /* room for the ornament below, so the header buttons never touch it */
       }
       html[data-theme="dmg"] header::after {
         content: "";
         position: absolute;
         left: 6px;
         right: 6px;
-        bottom: 1px;
+        top: calc(100% + 1px);
         height: 5px;
         background: linear-gradient(180deg, #9b2257 0 2px, transparent 2px 3px, #34366e 3px 5px);
       }
@@ -3163,7 +3170,7 @@
         },
         { id: "drums", name: "Drum kit", drum: 1 },
       ];
-      const KITS = ["Classic", "Electro", "8-bit", "Silly", "Band", "World"];
+      const KITS = ["Classic", "Electro", "8-bit", "Silly", "Band", "World", "Game Boy", "War drums"];
       const DRUMS = [
         "Kick",
         "Snare",
@@ -3196,6 +3203,14 @@
       const EXT_BASE = 1000;
       const P25 = [0.707, 0.5, 0.236, 0, -0.141, -0.167, -0.1, 0],
         P125 = [0.38, 0.35, 0.3, 0.22, 0.13, 0.05, -0.05, -0.1];
+      const WT = {
+        sine: Array.from({ length: 32 }, (_, k) => Math.round(7.5 + 7.5 * Math.sin((2 * Math.PI * k) / 32))),
+        saw: Array.from({ length: 32 }, (_, k) => k >> 1),
+        // the classic chunky handheld bass: a fast rise, a long sag, then a flat floor
+        bass: [0, 2, 5, 9, 12, 14, 15, 15, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        // two square-ish humps: hollow and reedy
+        hollow: [15, 15, 15, 15, 12, 8, 4, 0, 0, 0, 4, 8, 12, 15, 15, 15, 8, 8, 8, 8, 5, 3, 1, 0, 0, 0, 1, 3, 5, 8, 8, 8],
+      };
       const EXT = [
         [
           "Keys",
@@ -3786,9 +3801,130 @@
           "Noise hit",
           { w: "sine", a: 0.001, d: 0.15, s: 0, r: 0.05, g: 0.05, nz: [3000, 0.7] },
         ],
+        // ---- more dungeon: drones, tape keyboards and a pitched timpani
+        [
+          "Dungeon",
+          "Hurdy-gurdy",
+          {
+            w: "sawtooth",
+            a: 0.06,
+            d: 0.2,
+            s: 0.9,
+            r: 0.25,
+            f: 1800,
+            q: 3,
+            det: 6,
+            trem: 13,
+            td: 0.25,
+            lay: [
+              [0.5, "sawtooth", 0.35],
+              [1.5, "square", 0.1],
+            ],
+            g: 0.32,
+          },
+        ],
+        [
+          "Dungeon",
+          "Tape flute",
+          {
+            w: "triangle",
+            a: 0.08,
+            d: 0.2,
+            s: 0.85,
+            r: 0.5,
+            f: 2400,
+            vib: 0.8,
+            nz: [1500, 0.06],
+            lay: [[2, "sine", 0.15]],
+            g: 0.55,
+          },
+        ],
+        [
+          "Dungeon",
+          "Tape choir",
+          {
+            w: "sawtooth",
+            a: 0.3,
+            d: 0.3,
+            s: 0.8,
+            r: 1,
+            f: 1000,
+            q: 2,
+            det: 11,
+            vib: 0.7,
+            trem: 5,
+            td: 0.08,
+            g: 0.48,
+          },
+        ],
+        [
+          "Dungeon",
+          "Timpani",
+          { fm: 1.5, idx: 1.2, a: 0.002, d: 1.6, s: 0, r: 0.8, f: 900, lay: [[0.5, "sine", 0.45]], g: 0.42 },
+        ],
+        // ---- Game Boy: two pulse channels (one with pitch sweep), a 4-bit wave channel and LFSR noise
+        ["Game Boy", "GB pulse 50%", { w: "square", a: 0.001, d: 0.25, s: 0.6, r: 0.02, g: 0.3 }],
+        ["Game Boy", "GB pulse 25%", { h: P25, a: 0.001, d: 0.25, s: 0.6, r: 0.02, g: 0.4 }],
+        ["Game Boy", "GB vibrato lead", { h: P25, a: 0.001, d: 0.4, s: 0.7, r: 0.05, vib: 6, g: 0.4 }],
+        ["Game Boy", "GB sweep up", { w: "square", sw: [0.5, 0.08], a: 0.001, d: 0.15, s: 0.3, r: 0.03, g: 0.3 }],
+        ["Game Boy", "GB laser", { h: P125, sw: [4, 0.18], a: 0.001, d: 0.2, s: 0, r: 0.02, g: 0.45 }],
+        ["Game Boy", "GB wave bass", { wt: WT.bass, a: 0.001, d: 0.1, s: 1, r: 0.02, g: 0.6 }],
+        ["Game Boy", "GB wave soft", { wt: WT.sine, a: 0.001, d: 0.1, s: 1, r: 0.03, vib: 5, g: 0.55 }],
+        ["Game Boy", "GB wave saw", { wt: WT.saw, a: 0.001, d: 0.1, s: 1, r: 0.02, g: 0.4 }],
+        ["Game Boy", "GB wave hollow", { wt: WT.hollow, a: 0.001, d: 0.1, s: 1, r: 0.02, g: 0.45 }],
+        ["Game Boy", "GB metal noise", { w: "none", lf: [1, 1], a: 0.001, d: 0.08, s: 0, r: 0.02, g: 0.45 }],
+        ["Game Boy", "GB noise", { w: "none", lf: [0, 1], a: 0.001, d: 0.3, s: 0.2, r: 0.05, g: 0.35 }],
       ].map(([fam, name, o]) => ({ fam, name, ...o }));
       const instObj = (i) => (i >= EXT_BASE ? EXT[i - EXT_BASE] : INST[i]);
       const pwCache = new WeakMap();
+      function wtwave(c, wt) {
+        let m = pwCache.get(c);
+        if (!m) pwCache.set(c, (m = new Map()));
+        const k = "wt" + wt.join();
+        let w = m.get(k);
+        if (!w) {
+          const N = wt.length,
+            H = 96,
+            re = new Float32Array(H + 1),
+            im = new Float32Array(H + 1);
+          for (let n = 1; n <= H; n++)
+            for (let j = 0; j < N; j++) {
+              const v = wt[j] / 7.5 - 1,
+                x0 = (2 * Math.PI * n * j) / N,
+                x1 = (2 * Math.PI * n * (j + 1)) / N;
+              re[n] += (v * (Math.sin(x1) - Math.sin(x0))) / (Math.PI * n);
+              im[n] += (v * (Math.cos(x0) - Math.cos(x1))) / (Math.PI * n);
+            }
+          w = c.createPeriodicWave(re, im);
+          m.set(k, w);
+        }
+        return w;
+      }
+      // Game Boy noise: a 15-bit LFSR, or its 7-bit "metallic" mode that repeats every 127 steps and sounds pitched.
+      const lfsrBufs = {};
+      function lfsr(c, short) {
+        const key = (short ? "s" : "l") + c.sampleRate;
+        if (!lfsrBufs[key]) {
+          const n = short ? 127 * 8 : 32767,
+            b = c.createBuffer(1, n, c.sampleRate),
+            d = b.getChannelData(0);
+          let r = 0x7fff;
+          const step = () => {
+            const x = (r ^ (r >> 1)) & 1;
+            r = (r >> 1) | (x << 14);
+            if (short) r = (r & ~0x40) | (x << 6);
+          };
+          for (let i = 0; i < 127; i++) step(); // settle into the cycle so the loop point is seamless
+          for (let i = 0; i < n; i++) {
+            step();
+            d[i] = r & 1 ? -0.8 : 0.8;
+          }
+          lfsrBufs[key] = b;
+        }
+        return lfsrBufs[key];
+      }
+      // playback rate that clocks the LFSR one step per sample at `steps` per second
+      const lfsrRate = (c, steps) => Math.min(64, Math.max(0.01, steps / c.sampleRate));
       function pwave(c, h) {
         let m = pwCache.get(c);
         if (!m) pwCache.set(c, (m = new Map()));
@@ -3903,6 +4039,65 @@
         if (ctx.state !== "running") ctx.resume();
         return ctx;
       }
+      // ---- iPhone / iPad audio ----
+      // 1. The ringer (silent) switch mutes Web Audio unless the page declares it plays media.
+      //    iOS 17+ has navigator.audioSession for that; older versions need a (silent) <audio> element playing.
+      // 2. Older iOS only fully unlocks output once a sound is started inside a touch.
+      // 3. Calls, Siri or switching apps leave the context "interrupted": resume it when the page comes back.
+      try {
+        if (navigator.audioSession) navigator.audioSession.type = "playback";
+      } catch {}
+      let iosKeep = null;
+      function silentWavUrl() {
+        const n = 4410, // 0.1 s of silence, 8-bit mono at 44.1 kHz
+          b = new DataView(new ArrayBuffer(44 + n)),
+          str = (o, t) => [...t].forEach((ch, i) => b.setUint8(o + i, ch.charCodeAt(0)));
+        str(0, "RIFF");
+        b.setUint32(4, 36 + n, true);
+        str(8, "WAVEfmt ");
+        b.setUint32(16, 16, true);
+        b.setUint16(20, 1, true);
+        b.setUint16(22, 1, true);
+        b.setUint32(24, 44100, true);
+        b.setUint32(28, 44100, true);
+        b.setUint16(32, 1, true);
+        b.setUint16(34, 8, true);
+        str(36, "data");
+        b.setUint32(40, n, true);
+        for (let i = 0; i < n; i++) b.setUint8(44 + i, 128);
+        return URL.createObjectURL(new Blob([b], { type: "audio/wav" }));
+      }
+      const isIOS =
+        /iP(hone|ad|od)/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      function unlockAudio() {
+        try {
+          ensureCtx();
+          const s = ctx.createBufferSource();
+          s.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+          s.connect(ctx.destination);
+          s.start(0);
+          if (isIOS && !navigator.audioSession && !iosKeep) {
+            iosKeep = new Audio(silentWavUrl());
+            iosKeep.loop = true;
+            iosKeep.setAttribute("playsinline", "");
+            iosKeep.play().catch(() => (iosKeep = null)); // try again on the next touch
+          }
+        } catch {}
+        if (ctx && ctx.state === "running" && (iosKeep || !isIOS || navigator.audioSession))
+          ["pointerdown", "touchend", "click", "keydown"].forEach((ev) =>
+            removeEventListener(ev, unlockAudio, true),
+          );
+      }
+      ["pointerdown", "touchend", "click", "keydown"].forEach((ev) =>
+        addEventListener(ev, unlockAudio, true),
+      );
+      const wakeAudio = () => {
+        if (ctx && !document.hidden && ctx.state !== "running") ctx.resume().catch(() => {});
+      };
+      document.addEventListener("visibilitychange", wakeAudio);
+      addEventListener("pageshow", wakeAudio);
+      addEventListener("focus", wakeAudio);
       const MIXDEF = {
         vol: 0.7,
         pan: 0,
@@ -4031,11 +4226,12 @@
             stops.push(o);
             pitched.push(o);
           });
-        } else {
+        } else if (I.w !== "none") {
           const dets = I.det ? [-I.det, 0, I.det] : [0];
           dets.forEach((dt) => {
             const o = c.createOscillator();
-            if (I.h) o.setPeriodicWave(pwave(c, I.h));
+            if (I.wt) o.setPeriodicWave(wtwave(c, I.wt));
+            else if (I.h) o.setPeriodicWave(pwave(c, I.h));
             else o.type = I.w;
             o.frequency.value = f;
             o.detune.value = dt;
@@ -4069,6 +4265,30 @@
           ns.connect(nf).connect(ng).connect(src);
           stops.push(ns);
         }
+        const rates = []; // playback rates that follow the note (LFSR noise), for the sweep and the arpeggio
+        if (I.lf) {
+          // lf: [metallic?, level]. Metallic mode is tuned to the note; long mode gets brighter as the note goes up.
+          const ns = c.createBufferSource(),
+            ng = c.createGain();
+          ns.buffer = lfsr(c, I.lf[0]);
+          ns.loop = true;
+          ns.playbackRate.value = lfsrRate(c, I.lf[0] ? f * 127 : f * 48);
+          ng.gain.value = I.lf[1];
+          ns.connect(ng).connect(src);
+          stops.push(ns);
+          rates.push(ns.playbackRate);
+        }
+        if (I.sw) {
+          // sw: [start ratio, seconds]: glide from note * ratio to the note, like the pulse channel's sweep
+          pitched
+            .map((o) => o.frequency)
+            .concat(rates)
+            .forEach((p) => {
+              const b = p.value;
+              p.setValueAtTime(b * I.sw[0], t);
+              p.exponentialRampToValueAtTime(b, t + I.sw[1]);
+            });
+        }
         if (I.vib) {
           const l = c.createOscillator(),
             lg = c.createGain();
@@ -4092,7 +4312,7 @@
         const end = env(gn, t, dur, I.a, I.d, I.s, I.r, peak);
         if (arp)
           arpSchedule(
-            pitched.map((o) => o.frequency),
+            pitched.map((o) => o.frequency).concat(rates),
             t,
             end,
             arp,
@@ -4151,7 +4371,126 @@
           s.start(t);
           s.stop(t + dec + 0.02);
         };
-        if (kit >= 4) {
+        // LFSR noise hit for the Game Boy kit: no filters on that machine, brightness comes from the clock
+        const lnz = (short, steps, dec, lv, steps1) => {
+          const s = c.createBufferSource(),
+            ng = c.createGain();
+          s.buffer = lfsr(c, short);
+          s.loop = true;
+          s.playbackRate.setValueAtTime(lfsrRate(c, steps), t);
+          if (steps1) s.playbackRate.exponentialRampToValueAtTime(lfsrRate(c, steps1), t + dec);
+          ng.gain.setValueAtTime(lv * vol, t);
+          ng.gain.exponentialRampToValueAtTime(0.001, t + dec);
+          s.connect(ng).connect(g);
+          s.start(t);
+          s.stop(t + dec + 0.02);
+        };
+        // run a hit a little later (claps, rattles): the helpers above start at t
+        const later = (d, fn) => {
+          const t0 = t;
+          t += d;
+          fn();
+          t = t0;
+        };
+        if (kit === 6) {
+          // Game Boy: pulse sweeps for the drums, LFSR noise for snares and metal
+          switch (k) {
+            case 0:
+              tone("square", 220, 40, 0.18, 0.7);
+              break;
+            case 1:
+              tone("square", 190, 90, 0.08, 0.35);
+              lnz(0, 60000, 0.16, 0.6);
+              break;
+            case 2:
+              [0, 0.014, 0.028].forEach((d) => later(d, () => lnz(0, 45000, 0.1, 0.55)));
+              break;
+            case 3:
+              lnz(1, 260000, 0.035, 0.4);
+              break;
+            case 4:
+              lnz(0, 300000, 0.3, 0.35);
+              break;
+            case 5:
+              tone("square", 160, 70, 0.22, 0.55);
+              break;
+            case 6:
+              tone("square", 300, 140, 0.16, 0.5);
+              break;
+            case 7:
+              lnz(1, 90000, 0.025, 0.45);
+              break;
+            case 8:
+              lnz(0, 200000, 1.1, 0.45, 20000);
+              break;
+            case 9:
+              tone("square", 780, 780, 0.12, 0.22);
+              tone("square", 1170, 1170, 0.12, 0.18);
+              break;
+            case 10:
+              lnz(0, 400000, 0.07, 0.3);
+              break;
+            case 11:
+              tone("square", 2400, 90, 0.22, 0.3);
+              break;
+          }
+          return t + 1.3;
+        }
+        if (kit === 7) {
+          // War drums: big skins, timpani, a tam-tam and distant thunder, for dungeon and battle music
+          const boom = (f0, f1, dec, lv) => {
+            tone("sine", f0, f1, dec, lv);
+            tone("triangle", f0 * 1.5, f1 * 1.5, dec * 0.4, lv * 0.25);
+          };
+          switch (k) {
+            case 0:
+              boom(95, 42, 1.1, 1);
+              nz("lowpass", 600, 0.08, 0.6);
+              break;
+            case 1:
+              tone("triangle", 210, 160, 0.2, 0.45);
+              nz("bandpass", 1600, 0.35, 0.8, 0.7);
+              break;
+            case 2:
+              boom(170, 120, 0.4, 0.7);
+              nz("bandpass", 900, 0.06, 0.4);
+              break;
+            case 3:
+              nz("bandpass", 5200, 0.06, 0.85, 6);
+              break;
+            case 4:
+              nz("bandpass", 4200, 0.6, 0.75, 3);
+              break;
+            case 5:
+              boom(98, 92, 1.6, 0.85);
+              break;
+            case 6:
+              boom(147, 139, 1.3, 0.8);
+              break;
+            case 7:
+              tone("square", 1100, 900, 0.025, 0.3);
+              nz("bandpass", 2200, 0.03, 0.4, 4);
+              break;
+            case 8:
+              [1, 1.41, 1.93, 2.62, 3.17].forEach((r, i) => tone("sine", 110 * r, 105 * r, 3 - i * 0.4, 0.22));
+              nz("bandpass", 1800, 2.4, 0.25, 1.5);
+              break;
+            case 9:
+              tone("sine", 520, 520, 2.2, 0.35);
+              tone("sine", 520 * 2.76, 520 * 2.76, 1.2, 0.18);
+              tone("sine", 520 * 5.4, 520 * 5.4, 0.5, 0.08);
+              break;
+            case 10:
+              [0, 0.03, 0.055, 0.09].forEach((d) => later(d, () => nz("bandpass", 3200, 0.05, 0.7, 3)));
+              break;
+            case 11:
+              nz("lowpass", 260, 2.8, 0.9);
+              tone("sine", 55, 30, 2.2, 0.5);
+              break;
+          }
+          return t + 3.2;
+        }
+        if (kit === 4 || kit === 5) {
           // Band (acoustic-ish) and World (percussion)
           const band = kit === 4;
           switch (k) {
@@ -8216,14 +8555,20 @@
         o: Math.random() < 0.22,
       }));
       function bgTheme() {
-        bgCol = { acc: css("--acc"), acc2: css("--acc2"), blue: css("--blue"), hi: css("--hi") };
+        bgCol = {
+          acc: css("--acc"),
+          acc2: css("--acc2"),
+          blue: css("--blue"),
+          hi: css("--hi"),
+          page: getComputedStyle(document.documentElement).backgroundColor,
+        };
         bgSize();
         bgKick();
       }
       function bgSize() {
         bgc.width = Math.max(2, Math.ceil(innerWidth / 3));
         bgc.height = Math.max(2, Math.ceil(innerHeight / 3));
-        if (!bgRun) bgFrame(0);
+        bgFrame(0); // resizing wipes the canvas: repaint at once rather than waiting for the next frame
       }
       const bgPrev = [];
       function bgBins(n, t) {
@@ -8259,7 +8604,10 @@
           N = 56,
           lv = bgBins(N, t),
           bass = (lv[0] + lv[1] + lv[2]) / 3;
-        g.clearRect(0, 0, W, H);
+        // paint the page colour ourselves instead of clearing: some browsers (Safari) keep showing the
+        // previous theme's page background behind a cleared canvas after a theme switch
+        g.fillStyle = bgCol.page || "#000";
+        g.fillRect(0, 0, W, H);
         if (th === "demo") {
           for (let y = 0; y < H; y += 2) {
             const k = Math.sin(y * 0.045 + t * 0.7) + Math.sin(y * 0.012 - t * 0.4);
