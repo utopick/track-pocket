@@ -4,12 +4,12 @@
   "private": true,
   "description": "TRACK.Pocket: pocket music maker in one HTML file.",
   "pocket": {
-    "webSource": "tracker.html"
+    "webSource": "../tracker.html"
   },
   "scripts": {
     "www": "node scripts/prepare-www.js",
     "android:init": "npm run www && npx cap add android && node scripts/android-permissions.js",
-    "android:apk": "npm run www && npx cap sync android && cd android && ./gradlew assembleDebug"
+    "android:apk": "npm run www && npx cap sync android && cd native && ./gradlew assembleDebug"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",
