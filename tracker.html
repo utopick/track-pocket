@@ -891,7 +891,7 @@
       #chRow button.on {
         background: rgb(var(--ccrgb));
         border-color: rgb(var(--ccrgb));
-        color: #071009;
+        color: var(--chink, #071009);
       }
       #chRow button.mut {
         text-decoration: line-through;
@@ -1155,7 +1155,7 @@
       }
       .sq.has.play {
         background: rgb(var(--ccrgb));
-        color: #06100a;
+        color: var(--chink, #06100a);
       }
       .sq.has.play .in,
       .sq.has.play .md {
@@ -1464,10 +1464,10 @@
       .fxp.on {
         background: rgb(var(--ccrgb));
         border-color: rgb(var(--ccrgb));
-        color: #071009;
+        color: var(--chink, #071009);
       }
       .fxp.on small {
-        color: #071009;
+        color: var(--chink, #071009);
       }
       #fxLatch.on {
         background: var(--acc2);
@@ -1923,85 +1923,442 @@
         text-shadow: 2px 2px 0 #000;
       }
 
-      /* ---- Dungeon theme: candlelit parchment and moss over stone ---- */
+      /* ---- Dungeon theme: candlelight and old blood on cold stone, a grimoire by the torch ---- */
       html[data-theme="dungeon"] {
-        --bg: #171510;
-        --panel: #211e17;
-        --panel2: #2d291f;
-        --line: #514735;
-        --text: #e4d6b5;
-        --dim: #a49470;
-        --acc: #a9ad70;
-        --acc2: #d19a58;
-        --hot: #a84e43;
-        --blue: #8eaa9a;
-        --r: 6px;
-        --ink: #1b1a10;
-        --ink2: #241708;
-        --beat: #29251c;
-        --playbg: #3c4229;
-        --playbg2: #4b5030;
-        --wave: #100f0c;
-        --scope: #d19a58;
-        --tie: #343326;
-        --lcn: #312d22;
-        --hi: #f4e8c7;
-        --blink: #494333;
+        --bg: #0f0d0b;
+        --bg2: #060504;
+        --panel: #1a1612;
+        --panel2: #26201a;
+        --line: #4a3d2c;
+        --text: #e9d9b4;
+        --dim: #9a8562;
+        --acc: #d9a648;
+        --acc2: #a8392c;
+        --hot: #d0452f;
+        --blue: #8aa6b8;
+        --r: 3px;
+        --ink: #1a1206;
+        --ink2: #f6e8c8;
+        --beat: #211b15;
+        --playbg: #3b2a12;
+        --playbg2: #4e3716;
+        --wave: #0a0807;
+        --scope: #d9a648;
+        --tie: #2a2118;
+        --lcn: #211b15;
+        --hi: #ffe7a6;
+        --blink: #3d3224;
+        --chink: #160e05;
+        /* channels: candle gold, old blood, moss, moonlight, nightshade, bone */
+        --chc: 217, 166, 72 / 196, 78, 60 / 143, 160, 92 / 138, 166, 184 / 154, 116, 172 / 214, 198, 164;
+        --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
       }
       html[data-theme="dungeon"] body {
-        font-family: Georgia, "Palatino Linotype", serif;
-        background-image: radial-gradient(ellipse at 50% 0%, rgba(133, 105, 57, 0.13), transparent 65%);
+        font-family: var(--serif);
+        background:
+          radial-gradient(ellipse 90% 45% at 50% -8%, rgba(217, 166, 72, 0.16), transparent 70%),
+          radial-gradient(ellipse 120% 60% at 50% 115%, rgba(168, 57, 44, 0.12), transparent 70%),
+          var(--bg);
+      }
+      html[data-theme="dungeon"] body.pocket {
+        border-left: 1px solid #3a2f22;
+        border-right: 1px solid #3a2f22;
+        box-shadow:
+          0 0 0 4px #0a0807,
+          0 0 0 5px #4a3d2c,
+          0 0 70px rgba(217, 166, 72, 0.1),
+          0 0 160px rgba(0, 0, 0, 0.9);
+      }
+      /* vignette: the edges of the room fall into the dark */
+      html[data-theme="dungeon"] body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 60;
+        background: radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(0, 0, 0, 0.5) 100%);
+      }
+      html[data-theme="dungeon"] button {
+        background: linear-gradient(180deg, #2e271f, #211b15);
+        border: 1px solid #4a3d2c;
+        box-shadow:
+          inset 0 1px 0 rgba(233, 217, 180, 0.08),
+          inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+        font-variant: small-caps;
+        letter-spacing: 0.4px;
+      }
+      html[data-theme="dungeon"] button:active {
+        background: #1a1612;
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
       }
       html[data-theme="dungeon"] button.on {
-        box-shadow: inset 0 0 12px rgba(222, 190, 112, 0.2);
+        background: radial-gradient(ellipse at 50% 30%, #f2c66a, #d9a648 55%, #a87728);
+        border-color: #f0c870;
+        color: var(--ink);
+        box-shadow:
+          0 0 12px rgba(217, 166, 72, 0.45),
+          inset 0 1px 0 rgba(255, 240, 200, 0.6);
+      }
+      html[data-theme="dungeon"] button.rec.on {
+        background: radial-gradient(ellipse at 50% 30%, #e0604a, #a8392c);
+        border-color: #e0604a;
+        box-shadow: 0 0 14px rgba(208, 69, 47, 0.55);
+      }
+      html[data-theme="dungeon"] select,
+      html[data-theme="dungeon"] input[type="number"],
+      html[data-theme="dungeon"] input[type="text"] {
+        background: #0b0908;
+        border: 1px solid #4a3d2c;
+        color: var(--acc);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+      }
+      html[data-theme="dungeon"] header {
+        position: relative;
+        padding-bottom: 9px;
+      }
+      /* header rule: a gilded line with a diamond boss in the middle */
+      html[data-theme="dungeon"] header::after {
+        content: "";
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        bottom: 1px;
+        height: 7px;
+        background:
+          linear-gradient(45deg, transparent 35%, var(--acc) 35% 65%, transparent 65%) 50% 50% / 7px 7px
+            no-repeat,
+          linear-gradient(-45deg, transparent 35%, var(--acc) 35% 65%, transparent 65%) 50% 50% / 7px 7px
+            no-repeat,
+          linear-gradient(90deg, transparent, #7a5e2c 18%, var(--acc) 47%, transparent 47% 53%, var(--acc) 53%, #7a5e2c 82%, transparent)
+            50% 50% / 100% 1px no-repeat;
       }
       html[data-theme="dungeon"] .mark .t {
+        font-family: var(--serif);
+        font-weight: 700;
+        font-variant: small-caps;
+        letter-spacing: 3px;
+        color: #f0dcae;
+        text-shadow:
+          0 0 10px rgba(217, 166, 72, 0.55),
+          0 1px 0 #000;
+        animation: candle 3.2s ease-in-out infinite;
+      }
+      html[data-theme="dungeon"] .mark b {
+        color: var(--hot);
+        text-shadow: 0 0 8px rgba(208, 69, 47, 0.8);
+      }
+      html[data-theme="dungeon"] .mark .sub {
+        color: var(--acc2);
+        font-family: var(--serif);
+        font-style: italic;
+        font-variant: small-caps;
+        text-transform: none;
         letter-spacing: 2px;
-        text-shadow: 0 0 12px rgba(209, 154, 88, 0.3);
+        font-size: 12px;
+      }
+      html[data-theme="dungeon"] .card,
+      html[data-theme="dungeon"] .hp {
+        border: 1px solid #4a3d2c;
+        box-shadow:
+          inset 0 0 0 3px var(--panel),
+          inset 0 0 0 4px #33291e,
+          inset 0 0 30px rgba(0, 0, 0, 0.5);
+      }
+      html[data-theme="dungeon"] .sheet,
+      html[data-theme="dungeon"] .wc {
+        border: 3px double var(--acc);
+        background: radial-gradient(ellipse at 50% 0%, #2a2219, var(--panel) 70%);
+        box-shadow:
+          0 0 0 1px #000,
+          0 -6px 40px rgba(0, 0, 0, 0.85),
+          0 0 30px rgba(217, 166, 72, 0.12);
+      }
+      html[data-theme="dungeon"] .wc h2,
+      html[data-theme="dungeon"] .hh b,
+      html[data-theme="dungeon"] .hb h3 {
+        font-variant: small-caps;
+        letter-spacing: 1.5px;
+        color: var(--acc);
+        text-shadow: 0 0 10px rgba(217, 166, 72, 0.35);
+      }
+      html[data-theme="dungeon"] .hb h4 {
+        color: var(--hot);
+        font-style: italic;
+      }
+      html[data-theme="dungeon"] .hb em {
+        color: var(--blue);
+      }
+      html[data-theme="dungeon"] .sq {
+        box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+      }
+      html[data-theme="dungeon"] .sq.has {
+        box-shadow:
+          inset 0 0 10px rgba(var(--ccrgb), 0.25),
+          inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+      }
+      html[data-theme="dungeon"] .sq.has.play {
+        box-shadow: 0 0 14px rgba(var(--ccrgb), 0.6);
+      }
+      /* piano: yellowed bone and ebony */
+      html[data-theme="dungeon"] .k {
+        background: linear-gradient(180deg, #d9c9a2, #efe2c0 70%, #c9b88e);
+        color: #5a4a30;
+        border-color: #1a140d;
+      }
+      html[data-theme="dungeon"] .k.b {
+        background: linear-gradient(180deg, #0b0907, #241d16);
+        color: #9a8562;
+        border-color: #000;
+      }
+      html[data-theme="dungeon"] .k.down {
+        background: radial-gradient(ellipse at 50% 70%, #ffd77a, #d9a648) !important;
+        color: var(--ink);
+        box-shadow: 0 0 14px rgba(217, 166, 72, 0.7);
+      }
+      html[data-theme="dungeon"] .pad.down {
+        box-shadow: 0 0 16px rgba(168, 57, 44, 0.7);
+      }
+      html[data-theme="dungeon"] .ftbl th {
+        color: var(--acc);
+        font-variant: small-caps;
+      }
+      html[data-theme="dungeon"] #help,
+      html[data-theme="dungeon"] #welcome {
+        background: rgba(4, 3, 2, 0.78);
+      }
+      @keyframes candle {
+        0%,
+        100% {
+          text-shadow:
+            0 0 10px rgba(217, 166, 72, 0.55),
+            0 1px 0 #000;
+        }
+        23% {
+          text-shadow:
+            0 0 6px rgba(217, 166, 72, 0.35),
+            0 1px 0 #000;
+        }
+        41% {
+          text-shadow:
+            0 0 14px rgba(240, 180, 80, 0.7),
+            0 1px 0 #000;
+        }
+        67% {
+          text-shadow:
+            0 0 8px rgba(217, 166, 72, 0.45),
+            0 1px 0 #000;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html[data-theme="dungeon"] .mark .t {
+          animation: none;
+        }
       }
 
-      /* ---- DMG theme: classic handheld green LCD and hardware grey ---- */
+      /* ---- DMG theme: four shades of pea-green LCD behind a slate bezel ---- */
+      /* palette: #0f380f darkest, #306230 dark, #8bac0f light, #9bbc0f lightest; berry and indigo come from the case */
       html[data-theme="dmg"] {
-        --bg: #c5cbb1;
-        --panel: #d8ddc4;
-        --panel2: #e7ebd7;
-        --line: #89947b;
-        --text: #26372d;
-        --dim: #667360;
-        --acc: #526d56;
-        --acc2: #8b6659;
-        --hot: #985d63;
-        --blue: #526d56;
-        --r: 5px;
-        --ink: #e7ebd7;
-        --ink2: #f4e8d7;
-        --beat: #d0d6bd;
-        --playbg: #aab99b;
-        --playbg2: #98ac8a;
-        --wave: #b3bda0;
-        --scope: #8b6659;
-        --tie: #c3cbb0;
-        --lcn: #cbd2b8;
-        --hi: #1c3026;
-        --blink: #abb59b;
+        --bg: #9bbc0f;
+        --bg2: #8bac0f;
+        --panel: #8bac0f;
+        --panel2: #9bbc0f;
+        --line: #306230;
+        --text: #0f380f;
+        --dim: #306230;
+        --acc: #0f380f;
+        --acc2: #306230;
+        --hot: #9b2257;
+        --blue: #34366e;
+        --r: 0px;
+        --ink: #9bbc0f;
+        --ink2: #9bbc0f;
+        --beat: #84a50e;
+        --playbg: #6b8c0c;
+        --playbg2: #5d7e0b;
+        --wave: #8bac0f;
+        --scope: #0f380f;
+        --tie: #7d9d0d;
+        --lcn: #84a50e;
+        --hi: #0f380f;
+        --blink: #6b8c0c;
+        --chink: #9bbc0f;
+        /* channels: darkest, dark, berry (A/B buttons), indigo (case lettering), olive, plum */
+        --chc: 15, 56, 15 / 48, 98, 48 / 155, 34, 87 / 52, 54, 110 / 78, 98, 14 / 104, 44, 92;
+        --mono: "Courier New", ui-monospace, Menlo, Consolas, monospace;
+      }
+      html[data-theme="dmg"] * {
+        border-radius: 0 !important;
+        text-shadow: none !important;
       }
       html[data-theme="dmg"] body {
-        font-family: "Courier New", ui-monospace, monospace;
-        background-image: repeating-linear-gradient(0deg, transparent 0 3px, rgba(50, 68, 47, 0.025) 3px 4px);
+        font-family: var(--mono);
+        font-weight: 700;
       }
+      /* the bezel: slate frame with the two thin case stripes */
       html[data-theme="dmg"] body.pocket {
-        border: 5px solid #89947b;
-        box-shadow: inset 0 0 0 2px rgba(255, 255, 235, 0.35), 0 8px 24px rgba(38, 55, 45, 0.2);
+        border: 0;
+        box-shadow:
+          inset 3px 3px 0 rgba(15, 56, 15, 0.18),
+          0 0 0 3px #0f380f,
+          0 0 0 14px #5c5f70,
+          0 0 0 15px #3e4050,
+          8px 8px 0 15px rgba(15, 56, 15, 0.35);
+      }
+      /* the dot matrix: a faint pixel grid over everything */
+      html[data-theme="dmg"] body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 60;
+        background:
+          repeating-linear-gradient(0deg, rgba(15, 56, 15, 0.07) 0 1px, transparent 1px 3px),
+          repeating-linear-gradient(90deg, rgba(15, 56, 15, 0.07) 0 1px, transparent 1px 3px);
+      }
+      html[data-theme="dmg"] button {
+        background: var(--panel2);
+        border: 2px solid #0f380f;
+        box-shadow: 2px 2px 0 #306230;
+        color: var(--text);
+      }
+      html[data-theme="dmg"] button:active {
+        transform: translate(2px, 2px);
+        box-shadow: none;
       }
       html[data-theme="dmg"] button.on {
-        background: #526d56;
-        color: #edf0dc;
-        box-shadow: inset 0 2px 4px rgba(20, 35, 25, 0.3);
+        background: #0f380f;
+        border-color: #0f380f;
+        color: #9bbc0f;
+        box-shadow: 2px 2px 0 #306230;
+      }
+      html[data-theme="dmg"] button.rec.on {
+        background: var(--hot);
+        border-color: #0f380f;
+        color: #f0d8e0;
+      }
+      html[data-theme="dmg"] button:not(:disabled):hover {
+        filter: none;
+        background-image: repeating-linear-gradient(45deg, rgba(15, 56, 15, 0.12) 0 2px, transparent 2px 4px);
+      }
+      html[data-theme="dmg"] select,
+      html[data-theme="dmg"] input[type="number"],
+      html[data-theme="dmg"] input[type="text"] {
+        background: #8bac0f;
+        border: 2px solid #0f380f;
+        color: #0f380f;
+        box-shadow: inset 2px 2px 0 #306230;
+      }
+      html[data-theme="dmg"] header {
+        position: relative;
+        padding-bottom: 9px;
+      }
+      html[data-theme="dmg"] header::after {
+        content: "";
+        position: absolute;
+        left: 6px;
+        right: 6px;
+        bottom: 1px;
+        height: 5px;
+        background: linear-gradient(180deg, #9b2257 0 2px, transparent 2px 3px, #34366e 3px 5px);
       }
       html[data-theme="dmg"] .mark .t {
-        letter-spacing: 2px;
-        color: #394b3b;
-        text-shadow: 1px 1px #eef0df;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-style: italic;
+        font-weight: 900;
+        letter-spacing: 1px;
+        color: #34366e;
+      }
+      html[data-theme="dmg"] .mark b {
+        color: #9b2257;
+      }
+      html[data-theme="dmg"] .mark .sub {
+        color: #0f380f;
+        letter-spacing: 1.5px;
+      }
+      /* power LED beside the logo */
+      html[data-theme="dmg"] .mark .sub::before {
+        content: "";
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        margin-right: 5px;
+        vertical-align: 1px;
+        background: #e8304a;
+        box-shadow: 0 0 0 1px #0f380f;
+        border-radius: 50% !important;
+      }
+      html[data-theme="dmg"] .card,
+      html[data-theme="dmg"] .hp {
+        border: 2px solid #0f380f;
+        box-shadow: 4px 4px 0 #306230;
+      }
+      html[data-theme="dmg"] .hp {
+        box-shadow: none;
+      }
+      html[data-theme="dmg"] .sheet,
+      html[data-theme="dmg"] .wc {
+        border: 3px solid #0f380f;
+        background: #9bbc0f;
+        box-shadow:
+          inset 0 0 0 2px #9bbc0f,
+          inset 0 0 0 4px #306230,
+          6px 6px 0 #0f380f;
+      }
+      html[data-theme="dmg"] .sq {
+        border: 2px solid #306230;
+      }
+      html[data-theme="dmg"] .sq.has {
+        border-color: rgb(var(--ccrgb));
+        background: repeating-linear-gradient(
+            45deg,
+            rgba(var(--ccrgb), calc(0.08 + var(--v) * 0.14)) 0 2px,
+            transparent 2px 4px
+          ),
+          var(--panel);
+      }
+      html[data-theme="dmg"] .sq.has.play,
+      html[data-theme="dmg"] .sq.play {
+        color: var(--chink);
+      }
+      html[data-theme="dmg"] .sq.sel {
+        outline: 3px dashed #0f380f;
+      }
+      html[data-theme="dmg"] .k {
+        background: #9bbc0f;
+        color: #306230;
+        border: 2px solid #0f380f;
+      }
+      html[data-theme="dmg"] .k.b {
+        background: #0f380f;
+        color: #8bac0f;
+      }
+      html[data-theme="dmg"] .k.down {
+        background: #306230 !important;
+        color: #9bbc0f;
+      }
+      html[data-theme="dmg"] .pad {
+        border: 2px solid #0f380f;
+        box-shadow: 3px 3px 0 #306230;
+      }
+      html[data-theme="dmg"] .pad.down {
+        transform: translate(3px, 3px);
+        box-shadow: none;
+      }
+      html[data-theme="dmg"] .hb h3,
+      html[data-theme="dmg"] .wc h2 {
+        color: #34366e;
+        font-style: italic;
+      }
+      html[data-theme="dmg"] .hb h4,
+      html[data-theme="dmg"] .ftbl th {
+        color: #9b2257;
+      }
+      html[data-theme="dmg"] .hb em {
+        color: #306230;
+      }
+      html[data-theme="dmg"] #help,
+      html[data-theme="dmg"] #welcome {
+        background: repeating-linear-gradient(0deg, rgba(15, 56, 15, 0.6) 0 2px, rgba(15, 56, 15, 0.35) 2px 4px);
       }
 
       /* ===================== THEMES ===================== */
@@ -7106,7 +7463,7 @@
         const row = S.loopStart + (S.loopK % S.loopN);
         if (!peek) S.loopK++;
         return row;
-      }“
+      }
       function fxMap(row, len) {
         const e = S.fxs;
         if (e.rev) row = len - 1 - row;
