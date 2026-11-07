@@ -13,7 +13,7 @@
 
   localStorage keys
     track.songs.v1    saved songs: { name: JSON string }       track.songs.meta  { name: created, modified, pats, smp, slots }
-    track.autosave    last state, written every 15 s           track.theme       dark | light | demo | term
+    track.autosave    last state, written every 15 s           track.theme       dark | light | demo | term | dungeon | dmg
     track.lang        help language (en | es)                   track.welcome     "1" once the first-visit dialog was closed
     track.tools       "1" when the PAT button has the editor tool rows showing (default: hidden)
 
@@ -37,7 +37,7 @@
     </script>
     <title>TRACK. pocket music maker</title>
     <style>
-      /* Colours and sizes used everywhere. The Light, Demo and Terminal themes override these (see THEMES). */
+      /* Colours and sizes used everywhere. Themes override these (see THEMES). */
       :root {
         --bg: #0d0f12;
         --panel: #161a20;
@@ -1923,6 +1923,87 @@
         text-shadow: 2px 2px 0 #000;
       }
 
+      /* ---- Dungeon theme: candlelit parchment and moss over stone ---- */
+      html[data-theme="dungeon"] {
+        --bg: #171510;
+        --panel: #211e17;
+        --panel2: #2d291f;
+        --line: #514735;
+        --text: #e4d6b5;
+        --dim: #a49470;
+        --acc: #a9ad70;
+        --acc2: #d19a58;
+        --hot: #a84e43;
+        --blue: #8eaa9a;
+        --r: 6px;
+        --ink: #1b1a10;
+        --ink2: #241708;
+        --beat: #29251c;
+        --playbg: #3c4229;
+        --playbg2: #4b5030;
+        --wave: #100f0c;
+        --scope: #d19a58;
+        --tie: #343326;
+        --lcn: #312d22;
+        --hi: #f4e8c7;
+        --blink: #494333;
+      }
+      html[data-theme="dungeon"] body {
+        font-family: Georgia, "Palatino Linotype", serif;
+        background-image: radial-gradient(ellipse at 50% 0%, rgba(133, 105, 57, 0.13), transparent 65%);
+      }
+      html[data-theme="dungeon"] button.on {
+        box-shadow: inset 0 0 12px rgba(222, 190, 112, 0.2);
+      }
+      html[data-theme="dungeon"] .mark .t {
+        letter-spacing: 2px;
+        text-shadow: 0 0 12px rgba(209, 154, 88, 0.3);
+      }
+
+      /* ---- DMG theme: classic handheld green LCD and hardware grey ---- */
+      html[data-theme="dmg"] {
+        --bg: #c5cbb1;
+        --panel: #d8ddc4;
+        --panel2: #e7ebd7;
+        --line: #89947b;
+        --text: #26372d;
+        --dim: #667360;
+        --acc: #526d56;
+        --acc2: #8b6659;
+        --hot: #985d63;
+        --blue: #526d56;
+        --r: 5px;
+        --ink: #e7ebd7;
+        --ink2: #f4e8d7;
+        --beat: #d0d6bd;
+        --playbg: #aab99b;
+        --playbg2: #98ac8a;
+        --wave: #b3bda0;
+        --scope: #8b6659;
+        --tie: #c3cbb0;
+        --lcn: #cbd2b8;
+        --hi: #1c3026;
+        --blink: #abb59b;
+      }
+      html[data-theme="dmg"] body {
+        font-family: "Courier New", ui-monospace, monospace;
+        background-image: repeating-linear-gradient(0deg, transparent 0 3px, rgba(50, 68, 47, 0.025) 3px 4px);
+      }
+      html[data-theme="dmg"] body.pocket {
+        border: 5px solid #89947b;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 235, 0.35), 0 8px 24px rgba(38, 55, 45, 0.2);
+      }
+      html[data-theme="dmg"] button.on {
+        background: #526d56;
+        color: #edf0dc;
+        box-shadow: inset 0 2px 4px rgba(20, 35, 25, 0.3);
+      }
+      html[data-theme="dmg"] .mark .t {
+        letter-spacing: 2px;
+        color: #394b3b;
+        text-shadow: 1px 1px #eef0df;
+      }
+
       /* ===================== THEMES ===================== */
       #scroller {
         display: none;
@@ -2507,7 +2588,8 @@
           </div>
           <div class="bar" id="themeBar" style="padding: 0">
             <button data-th="dark">Dark</button><button data-th="light">Light</button
-            ><button data-th="demo">Demo</button><button data-th="term">Terminal</button>
+            ><button data-th="demo">Demo</button><button data-th="term">Terminal</button
+            ><button data-th="dungeon">Dungeon</button><button data-th="dmg">DMG</button>
           </div>
         </div>
         <div class="card" style="flex: none">
@@ -7253,7 +7335,7 @@
       // themes
       // ======================================================================
       function setTheme(t, save) {
-        if (!["dark", "light", "demo", "term"].includes(t)) t = "dark";
+        if (!["dark", "light", "demo", "term", "dungeon", "dmg"].includes(t)) t = "dark";
         document.documentElement.dataset.theme = t;
         if (save)
           try {
@@ -7272,7 +7354,7 @@
         if (b) {
           setTheme(b.dataset.th, true);
           toast(
-            { dark: "Dark", light: "Light", demo: "Demoscene", term: "Terminal" }[b.dataset.th],
+            { dark: "Dark", light: "Light", demo: "Demoscene", term: "Terminal", dungeon: "Dungeon synth", dmg: "DMG" }[b.dataset.th],
           );
         }
       };
@@ -7517,7 +7599,7 @@
           b: {
             en: [
               "- **Save**: type a name and save the song in this browser. The table lists every saved song with its dates, patterns, samples and whether it is arranged as a song; **Open** loads it, ✕ deletes it.",
-              "- **Look**: **Dark**, **Light**, **Demo** (raster bars, scanlines and a scroller, like a 90s Amiga intro) or **Terminal** (cyan and orange on black, with a blinking cursor). Your choice is remembered. On a wide screen the sides show an animated backdrop that dances with the music.",
+              "- **Look**: **Dark**, **Light**, **Demo** (raster bars, scanlines and a scroller, like a 90s Amiga intro) or **Terminal** (cyan and orange on black, with a blinking cursor), **Dungeon** (candlelit parchment, moss, and stone), or **DMG** (the classic handheld’s muted green LCD and hardware grey). Your choice is remembered. On a wide screen the sides show an animated backdrop that dances with the music.",
               "- **New song**: starts from empty.",
               "- **Export WAV**: renders the whole song to a sound file.",
               "- **Export / Import .json**: move a song to another phone or computer; samples travel inside the file.",
@@ -7527,7 +7609,7 @@
             ],
             es: [
               "- **Save**: escribe un nombre y guarda la canción en este navegador. La tabla lista cada canción guardada con sus fechas, patrones, samples y si está montada como canción; **Open** la carga y ✕ la borra.",
-              "- **Look**: **Dark**, **Light**, **Demo** (barras de raster, líneas de barrido y un scroller, como una intro de Amiga de los 90) o **Terminal** (cian y naranja sobre negro, con cursor parpadeante). Tu elección se recuerda. En una pantalla ancha, los lados muestran un fondo animado que baila con la música.",
+              "- **Look**: **Dark**, **Light**, **Demo** (barras de raster, líneas de barrido y un scroller, como una intro de Amiga de los 90) o **Terminal** (cian y naranja sobre negro, con cursor parpadeante) o **Dungeon** (pergamino a la luz de las velas, musgo y piedra) o **DMG** (la pantalla LCD verde apagada y el gris del clásico portátil). Tu elección se recuerda. En una pantalla ancha, los lados muestran un fondo animado que baila con la música.",
               "- **New song**: empieza desde cero.",
               "- **Export WAV**: convierte la canción entera en un archivo de sonido.",
               "- **Export / Import .json**: lleva una canción a otro móvil u ordenador; los samples viajan dentro del archivo.",
