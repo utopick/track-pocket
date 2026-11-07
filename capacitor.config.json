@@ -1,0 +1,11 @@
+{
+  "appId": "com.utopick.trackpocket",
+  "appName": "TRACK.Pocket",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#0d0f12"
+  }
+}

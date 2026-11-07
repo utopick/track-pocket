@@ -7031,7 +7031,26 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           }
         return new Blob([buf], { type: "audio/wav" });
       }
-      function download(blob, name) {
+      // In the Android app (Capacitor) the WebView ignores <a download>: write the file to the app cache and open the
+      // share sheet instead (save to Files / Drive, send to another app ...).
+      async function download(blob, name) {
+        const cap = window.Capacitor,
+          P = cap && cap.isNativePlatform && cap.isNativePlatform() && cap.Plugins;
+        if (P && P.Filesystem && P.Share) {
+          try {
+            const data = await new Promise((ok, bad) => {
+              const r = new FileReader();
+              r.onload = () => ok(String(r.result).split(",")[1]);
+              r.onerror = () => bad(r.error);
+              r.readAsDataURL(blob);
+            });
+            const { uri } = await P.Filesystem.writeFile({ path: name, data, directory: "CACHE" });
+            await P.Share.share({ title: name, files: [uri] });
+          } catch (e) {
+            if (!/cancel/i.test((e && e.message) || "")) toast("Could not export " + name);
+          }
+          return;
+        }
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = name;
