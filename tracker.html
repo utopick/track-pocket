@@ -1659,7 +1659,7 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: 50%;
+        top: 37.5%;
         transform: translateY(-50%);
         text-align: center;
         white-space: nowrap;
@@ -3040,9 +3040,15 @@
           <div class="dd inf" style="flex: 1.4"><span id="smpHintTxt"></span></div>
         </div>
         <div id="smpSqWrap"><div id="smpSq"></div></div>
+        <div class="bar" id="smpMoreBar" hidden style="padding: 4px 8px; gap: 8px; flex-wrap: wrap; align-items: center">
+          <button id="smpNorm">NORMALIZE</button>
+          <label>Velocity <input id="smpVelocity" type="range" min="0" max="2" step="0.01" value="1" /></label>
+          <label>Pitch <input id="smpPitch" type="range" min="-12" max="12" step="1" value="0" /></label>
+          <button id="smpHold" aria-pressed="false">HOLD: OFF</button>
+        </div>
         <div class="prow rib" id="smpRib">
           <button id="micBtn" class="rec"></button><button id="loadFile"></button
-          ><button id="smpPlay"></button><button id="smpRev"></button><button id="smpNorm"></button
+          ><button id="smpPlay"></button><button id="smpRev"></button><button id="smpMore">MORE</button
           ><button id="smpCrop"></button>
         </div>
         <div id="waveBox"><canvas id="wave"></canvas></div>
@@ -3106,6 +3112,12 @@
               </thead>
               <tbody id="fileList"></tbody>
             </table>
+          </div>
+        </div>
+        <div id="storageMeter" role="status" aria-live="polite" style="margin: 6px 12px 10px; font-size: 12px; color: var(--dim)">
+          Browser storage: checking…
+          <div style="height: 6px; margin-top: 4px; border-radius: 4px; background: var(--line); overflow: hidden">
+            <div id="storageUsedBar" style="height: 100%; width: 0; background: var(--hi); border-radius: 4px"></div>
           </div>
         </div>
         <!-- the bottom bar opens one of these panels at a time; with none open the song list gets the whole screen -->
@@ -5191,6 +5203,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       // samples
       // ======================================================================
       const samples = new Array(SLOTS).fill(null); // AudioBuffer-like: {rate, data:Float32Array}
+      const sampleSettings = Array.from({ length: SLOTS }, () => ({ velocity: 1, pitch: 0, hold: false }));
       const bufCache = new WeakMap();
       function toBuffer(c, s) {
         let m = bufCache.get(s);
@@ -5206,12 +5219,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       function sampleVoice(c, out, slot, midi, t, dur, vol, arp) {
         const s = samples[slot];
         if (!s) return t;
+        const settings = sampleSettings[slot] || { velocity: 1, pitch: 0, hold: false };
         const src = c.createBufferSource(),
           g = c.createGain();
         src.buffer = toBuffer(c, s);
-        src.playbackRate.value = Math.pow(2, (midi - 60) / 12);
+        src.playbackRate.value = Math.pow(2, (midi - 60 + settings.pitch) / 12);
         const len = s.data.length / s.rate / src.playbackRate.value,
-          end = t + Math.min(len, Math.max(dur, 0.05));
+          end = t + Math.min(len, settings.hold ? Math.max(dur, 0.05) : len);
+        vol *= settings.velocity;
         g.gain.setValueAtTime(vol, t);
         g.gain.setValueAtTime(vol, Math.max(t, end - 0.02));
         g.gain.linearRampToValueAtTime(0, end);
@@ -6327,6 +6342,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         const s = samples[S.smpSel];
         work = s ? { data: s.data, rate: s.rate } : null;
         selA = selB = 0;
+        const cfg = sampleSettings[S.smpSel];
+        $("#smpVelocity").value = cfg.velocity;
+        $("#smpPitch").value = cfg.pitch;
+        $("#smpHold").textContent = cfg.hold ? "HOLD: ON" : "HOLD: OFF";
+        $("#smpHold").setAttribute("aria-pressed", cfg.hold);
       }
       function smpPush() {
         S.undoSmp.push({ i: S.smpSel, s: samples[S.smpSel] });
@@ -6374,6 +6394,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           step = d.length / IW,
           col = "rgb(" + PC(S.smpSel) + ")",
           X = (i) => M + (i / d.length) * IW;
+        // Quiet iPhone recordings can have very low levels despite being captured
+        // correctly. Boost the display only (never the stored or played audio).
+        let peak = 0;
+        for (let i = 0; i < d.length; i++) peak = Math.max(peak, Math.abs(d[i]));
+        const displayGain = peak > 0 ? Math.min(24, 0.8 / peak) : 1;
         if (selB > selA) {
           g.fillStyle = "rgba(255,255,255,.16)";
           g.fillRect(X(selA), 0, X(selB) - X(selA), H);
@@ -6385,8 +6410,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           let mn = 1,
             mx = -1;
           for (let i = Math.floor(x * step); i < (x + 1) * step && i < d.length; i++) {
-            mn = Math.min(mn, d[i]);
-            mx = Math.max(mx, d[i]);
+            mn = Math.min(mn, d[i] * displayGain);
+            mx = Math.max(mx, d[i] * displayGain);
           }
           if (mx < mn) {
             mn = mx = 0;
@@ -6474,6 +6499,15 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (work) setWork(work.data.slice().reverse(), work.rate);
         else toast("Nothing to reverse");
       };
+      $("#smpMore").onclick = () => { $("#smpMoreBar").hidden = !$("#smpMoreBar").hidden; };
+      $("#smpVelocity").oninput = (e) => { sampleSettings[S.smpSel].velocity = +e.target.value; };
+      $("#smpPitch").oninput = (e) => { sampleSettings[S.smpSel].pitch = +e.target.value; };
+      $("#smpHold").onclick = () => {
+        const cfg = sampleSettings[S.smpSel];
+        cfg.hold = !cfg.hold;
+        $("#smpHold").textContent = cfg.hold ? "HOLD: ON" : "HOLD: OFF";
+        $("#smpHold").setAttribute("aria-pressed", cfg.hold);
+      };
       $("#smpNorm").onclick = () => {
         if (!work) return toast("Nothing to normalize");
         let p = 0;
@@ -6511,7 +6545,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           stream = await navigator.mediaDevices.getUserMedia({
             audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
           });
-          wakeAudio(); // changing the iOS audio session can pause the context
+          // iOS may suspend the context while the permission prompt is open.
+          // Explicitly await resume so the first capture starts processing immediately.
+          await ctx.resume();
           const src = ctx.createMediaStreamSource(stream),
             proc = ctx.createScriptProcessor(4096, 1, 1),
             chunks = [];
@@ -6696,24 +6732,28 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           .map((m, i) =>
             pocketOn() && i !== S.col
               ? ""
-              : `<div class="chcard"><div class="chtitle">CH${i + 1} <span class="lbl" style="font-weight:400">${instLabel(instOf(i))}</span><span class="grow"></span>
-    <select data-pre="${i}" style="min-height:30px;padding:2px 6px;font-size:12px"><option value="">Preset…</option>${Object.keys(
-      PRESETS,
-    )
-      .map((k) => `<option>${k}</option>`)
-      .join("")}</select>
+              : `<div class="chcard"><div class="chtitle">CH${i + 1} <span class="lbl" style="font-weight:400">${instLabel(instOf(i))}${m.preset ? ` · ${m.preset}` : ""}</span><span class="grow"></span>
+    <button data-pre="${i}">PRESET ▾</button>
     <button data-mm="${i}" class="${m.mute ? "on" : ""}">${m.mute ? "Muted" : "Mute"}</button></div>
+    <div class="bar" data-preset-menu="${i}" hidden style="padding: 4px; flex-wrap: wrap">${Object.keys(PRESETS).map((k) => `<button data-pick="${k}" data-i="${i}">${k}</button>`).join("")}</div>
     <div class="fx">${FXP.map(([k, l, a, b]) => `<span>${l}</span><input type="range" min="${a}" max="${b}" step=".01" value="${m[k]}" data-k="${k}" data-i="${i}">`).join("")}</div></div>`,
+
           )
           .join("");
       }
-      $("#mixRows").addEventListener("change", (e) => {
-        const s = e.target.closest("[data-pre]");
-        if (!s || !s.value) return;
-        Object.assign(song.mix[+s.dataset.pre], PRESETS[s.value], { preset: s.value });
-        applyMix();
-        renderMix();
-        pkLabels();
+      $("#mixRows").addEventListener("click", (e) => {
+        const toggle = e.target.closest("[data-pre]");
+        if (toggle) {
+          const menu = $(`[data-preset-menu="${toggle.dataset.pre}"]`);
+          menu.hidden = !menu.hidden;
+          return;
+        }
+        const pick = e.target.closest("[data-pick]");
+        if (pick) {
+          Object.assign(song.mix[+pick.dataset.i], PRESETS[pick.dataset.pick], { preset: pick.dataset.pick });
+          applyMix(); renderMix(); pkLabels();
+          return;
+        }
       });
       $("#mixRows").addEventListener("dblclick", (e) => {
         const t = e.target;
@@ -6728,8 +6768,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (t.dataset.k) {
           const m = song.mix[+t.dataset.i];
           m[t.dataset.k] = +t.value;
-          if (m.preset) {
-            delete m.preset;
+          if (m.preset !== "CUSTOM") {
+            m.preset = "CUSTOM";
+            const title = t.closest(".chcard").querySelector(".chtitle .lbl");
+            title.textContent = instLabel(instOf(+t.dataset.i)) + " · CUSTOM";
             pkLabels();
           }
           applyMix();
@@ -7509,7 +7551,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           swing: +$("#swing").value,
           echo: +$("#echo").value,
           master: +$("#master").value,
-          samples: samples.map((s) => (s ? { rate: s.rate, b64: f32ToB64(s.data) } : null)),
+          samples: samples.map((s, i) => (s ? { rate: s.rate, b64: f32ToB64(s.data), settings: sampleSettings[i] } : null)),
         });
       }
       // Replaces the whole state with a saved or imported file and fills in fields that older files lack.
@@ -7520,6 +7562,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         for (let i = 0; i < SLOTS; i++) {
           const s = o.samples && o.samples[i];
           samples[i] = s ? { rate: s.rate, data: b64ToF32(s.b64) } : null;
+          sampleSettings[i] = Object.assign({ velocity: 1, pitch: 0, hold: false }, s && s.settings || {});
         }
         $("#swing").value = o.swing || 0;
         $("#echo").value = o.echo ?? 0.35;
@@ -7626,21 +7669,85 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (b) setChannels(+b.dataset.chn);
       });
       const LS = "track.songs.v1";
-      const store = () => {
-        try {
-          return JSON.parse(localStorage.getItem(LS) || "{}");
-        } catch {
-          return {};
-        }
-      };
       const LSM = "track.songs.meta";
-      const metaStore = () => {
-        try {
-          return JSON.parse(localStorage.getItem(LSM) || "{}");
-        } catch {
-          return {};
+      // IndexedDB has a much larger browser-managed quota than localStorage.
+      // Keep strings as values to preserve the existing song serialization format.
+      let dbPromise;
+      function openStore() {
+        if (!dbPromise) dbPromise = new Promise((resolve, reject) => {
+          const req = indexedDB.open("track-pocket", 1);
+          req.onupgradeneeded = () => req.result.createObjectStore("kv");
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+        return dbPromise;
+      }
+      async function dbGet(key, fallback) {
+        const db = await openStore();
+        return new Promise((resolve, reject) => {
+          const r = db.transaction("kv").objectStore("kv").get(key);
+          r.onsuccess = () => resolve(r.result === undefined ? fallback : r.result);
+          r.onerror = () => reject(r.error);
+        });
+      }
+      async function dbSet(key, value) {
+        const db = await openStore();
+        return new Promise((resolve, reject) => {
+          const r = db.transaction("kv", "readwrite").objectStore("kv").put(value, key);
+          r.onsuccess = () => resolve();
+          r.onerror = () => reject(r.error);
+        });
+      }
+      async function updateStorageMeter() {
+        const meter = $("#storageMeter"), bar = $("#storageUsedBar");
+        if (!meter || !navigator.storage || !navigator.storage.estimate) {
+          if (meter) meter.textContent = "Browser storage usage is not available";
+          return;
         }
-      };
+        try {
+          const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+          if (!quota) throw new Error("No quota estimate");
+          const percent = Math.min(100, usage / quota * 100);
+          meter.firstChild.textContent = `Browser storage: ${(usage / 1048576).toFixed(1)} MB used · ${((quota - usage) / 1048576).toFixed(1)} MB available`;
+          bar.style.width = percent + "%";
+          bar.style.background = percent > 90 ? "#e45858" : "var(--hi)";
+        } catch {
+          meter.firstChild.textContent = "Could not check browser storage";
+        }
+      }
+      async function migrateStorage() {
+        if (await dbGet("migration-v1", false)) return;
+        try {
+          const songs = JSON.parse(localStorage.getItem(LS) || "{}");
+          const meta = JSON.parse(localStorage.getItem(LSM) || "{}");
+          for (const [name, value] of Object.entries(songs)) await dbSet("song:" + name, value);
+          await dbSet("song-meta", meta);
+          const autosave = localStorage.getItem("track.autosave");
+          if (autosave) await dbSet("autosave", autosave);
+        } catch (e) {
+          console.warn("Could not migrate existing browser saves", e);
+        }
+        await dbSet("migration-v1", true);
+      }
+      async function store() {
+        await migrateStorage();
+        const db = await openStore();
+        return new Promise((resolve, reject) => {
+          const r = db.transaction("kv").objectStore("kv").openCursor();
+          const songs = {};
+          r.onsuccess = () => {
+            const c = r.result;
+            if (!c) return resolve(songs);
+            if (String(c.key).startsWith("song:")) songs[String(c.key).slice(5)] = c.value;
+            c.continue();
+          };
+          r.onerror = () => reject(r.error);
+        });
+      }
+      async function metaStore() {
+        await migrateStorage();
+        return dbGet("song-meta", {});
+      }
       function metaOf(json) {
         try {
           const o = JSON.parse(json),
@@ -7664,9 +7771,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           : "—";
       const ftime = (t) =>
         t ? new Date(t).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : "";
-      function renderFiles() {
-        const st = store(),
-          ms = metaStore(),
+      async function renderFiles() {
+        const st = await store(),
+          ms = await metaStore(),
           names = Object.keys(st).sort();
         let dirty = false;
         names.forEach((n) => {
@@ -7686,7 +7793,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         });
         if (dirty)
           try {
-            localStorage.setItem(LSM, JSON.stringify(ms));
+            await dbSet("song-meta", ms);
           } catch {}
         const esc = (x) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
         $("#fileList").innerHTML =
@@ -7697,40 +7804,44 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             })
             .join("") ||
           '<tr><td colspan="6" class="hint">No saved songs yet. Type a name above and press Save.</td></tr>';
+        updateStorageMeter();
       }
-      $("#saveBtn").onclick = () => {
+      $("#saveBtn").onclick = async () => {
         song.name = $("#songName").value.trim() || "Song " + new Date().toLocaleString();
         $("#songName").value = song.name;
-        const st = store(),
-          json = serialize(),
-          ms = metaStore(),
+        const json = serialize(),
+          ms = await metaStore(),
           now = Date.now();
-        st[song.name] = json;
         ms[song.name] = Object.assign(
           { created: (ms[song.name] && ms[song.name].created) || now, modified: now },
           metaOf(json),
         );
         try {
-          localStorage.setItem(LS, JSON.stringify(st));
-          localStorage.setItem(LSM, JSON.stringify(ms));
+          await dbSet("song:" + song.name, json);
+          await dbSet("song-meta", ms);
           toast("Saved");
         } catch {
           toast("Storage full: export .json instead");
         }
         renderFiles();
       };
-      $("#fileList").onclick = (e) => {
+      $("#fileList").onclick = async (e) => {
         const l = e.target.closest("[data-load]"),
           d = e.target.closest("[data-del]");
-        const st = store();
         if (l) {
           if (S.playing) togglePlay();
+          const st = await store();
           loadData(JSON.parse(st[decodeURIComponent(l.dataset.load)]));
           toast("Opened");
         }
         if (d && confirm("Delete this song?")) {
-          delete st[decodeURIComponent(d.dataset.del)];
-          localStorage.setItem(LS, JSON.stringify(st));
+          const name = decodeURIComponent(d.dataset.del), ms = await metaStore();
+          await dbSet("song-meta", Object.fromEntries(Object.entries(ms).filter(([k]) => k !== name)));
+          const db = await openStore();
+          await new Promise((resolve, reject) => {
+            const r = db.transaction("kv", "readwrite").objectStore("kv").delete("song:" + name);
+            r.onsuccess = resolve; r.onerror = () => reject(r.error);
+          });
           renderFiles();
         }
       };
@@ -7755,9 +7866,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         loadData({ song: blankSong() });
       };
       function saveNow() {
-        try {
-          localStorage.setItem("track.autosave", serialize());
-        } catch {}
+        dbSet("autosave", serialize()).catch(() => {});
       }
       setInterval(saveNow, 15000);
       // pagehide also covers reloads, which Safari does not always announce with visibilitychange
@@ -7898,6 +8007,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         play: ic('<path d="M7 5l12 7-12 7z"/>'),
         rev: ic('<path d="M17 4l3 3-3 3M20 7H8M7 20l-3-3 3-3M4 17h12"/>'),
         norm: ic('<path d="M4 12h2M8 7v10M12 4v16M16 7v10M20 12h0"/>'),
+        more: ic('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'),
         crop: ic('<path d="M7 3v14h14M3 7h14v14"/>'),
       };
       [
@@ -7905,7 +8015,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         ["loadFile", "open", "OPEN"],
         ["smpPlay", "play", "PLAY"],
         ["smpRev", "rev", "REVERSE"],
-        ["smpNorm", "norm", "NORMALIZE"],
+        ["smpMore", "more", "MORE"],
         ["smpCrop", "crop", "CROP"],
       ].forEach(([id, i, cap]) => {
         $("#" + id).innerHTML = `<b>${IC[i]}</b><i>${cap}</i>`;
@@ -10444,10 +10554,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         drawWave();
       });
       document.addEventListener("visibilitychange", () => {
-        if (document.hidden)
-          try {
-            localStorage.setItem("track.autosave", serialize());
-          } catch {}
+        if (document.hidden) saveNow();
       });
 
       // boot: restore the tools preference, then the autosave if any
@@ -10457,13 +10564,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         S.kb = localStorage.getItem("track.kb") === "scroll" ? "scroll" : "fixed";
         S.scope = localStorage.getItem("track.scope") === "pat" ? "pat" : "note";
       } catch {}
-      try {
-        const a = localStorage.getItem("track.autosave");
+      migrateStorage().then(() => dbGet("autosave", null)).then((a) => {
         if (a) loadData(JSON.parse(a));
         else refreshAll();
-      } catch {
-        refreshAll();
-      }
+      }).catch(() => refreshAll());
       showTab("trk");
       setTheme(document.documentElement.dataset.theme);
       try {
