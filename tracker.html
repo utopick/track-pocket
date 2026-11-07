@@ -685,7 +685,8 @@
         gap: 2px;
         justify-content: center;
       }
-      #hViews button {
+      #hViews button,
+      #hFile {
         flex: 1 1 0;
         min-width: 0;
         max-width: 38px;
@@ -697,7 +698,8 @@
         align-items: center;
         justify-content: center;
       }
-      #hViews button.on {
+      #hViews button.on,
+      #hFile.on {
         background: var(--acc);
         border-color: var(--acc);
         color: var(--ink);
@@ -731,6 +733,11 @@
       body.pocket #rec {
         order: 2;
       }
+      #hFile {
+        order: 3;
+        flex: none;
+        width: 34px;
+      }
       #hUndo.dis {
         opacity: 0.35;
       }
@@ -757,6 +764,12 @@
         }
         body.pocket .bpm input {
           width: 40px;
+          appearance: textfield; /* no spinner arrows: they take the room "120" needs */
+        }
+        body.pocket .bpm input::-webkit-inner-spin-button,
+        body.pocket .bpm input::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
         }
         body.pocket .bpm {
           margin-left: 4px;
@@ -2824,11 +2837,6 @@
           <svg class="ic" viewBox="0 0 24 24">
             <path d="M6 4v16M12 4v16M18 4v16" />
             <path d="M3.5 14h5M9.5 8h5M15.5 15h5" />
-          </svg></button
-        ><button data-v="file" title="Files">
-          <svg class="ic" viewBox="0 0 24 24">
-            <path d="M5 4h11l3 3v13H5z" />
-            <path d="M8 4v5h7V4M8 20v-6h8v6" />
           </svg>
         </button>
       </div>
@@ -2842,6 +2850,13 @@
       </button>
       <button id="rec" class="rec" title="Record live into the pattern">●</button>
       <button id="play" class="big" title="Play / stop">▶</button>
+      <!-- a view button like the ones in #hViews, kept apart so it can sit last in the header -->
+      <button id="hFile" class="pk-only" data-v="file" title="Files">
+        <svg class="ic" viewBox="0 0 24 24">
+          <path d="M5 4h11l3 3v13H5z" />
+          <path d="M8 4v5h7V4M8 20v-6h8v6" />
+        </svg>
+      </button>
     </header>
     <div id="scroller" aria-hidden="true">
       <span
@@ -8390,7 +8405,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       }
       function hdrFace() {
         wmFace();
-        $$("#hViews button").forEach((b) => b.classList.toggle("on", b.dataset.v === S.tab));
+        $$("#hViews button, #hFile").forEach((b) => b.classList.toggle("on", b.dataset.v === S.tab));
         $("#hDel").classList.toggle("on", !!S.del);
         undoFace();
       }
@@ -10627,7 +10642,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         $("#cScale").value = S.scaleT;
         $("#pkChord").value = S.chord;
       }
-      $$("#hViews button").forEach((b) => (b.onclick = () => showTab(b.dataset.v)));
+      $$("#hViews button, #hFile").forEach((b) => (b.onclick = () => showTab(b.dataset.v)));
 
       // ======================================================================
       // tabs (showTab, refreshAll, boot)
