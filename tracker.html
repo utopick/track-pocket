@@ -612,7 +612,7 @@
       }
       @media (min-width: 760px) {
         html {
-          background: var(--bg2, var(--bg));
+          background: var(--bg);
         }
         body.pocket {
           max-width: 600px;
@@ -1926,7 +1926,6 @@
       /* ---- Dungeon theme: candlelight and old blood on cold stone, a grimoire by the torch ---- */
       html[data-theme="dungeon"] {
         --bg: #0f0d0b;
-        --bg2: #060504;
         --panel: #1a1612;
         --panel2: #26201a;
         --line: #4a3d2c;
@@ -1952,6 +1951,15 @@
         /* channels: candle gold, old blood, moss, moonlight, nightshade, bone */
         --chc: 217, 166, 72 / 196, 78, 60 / 143, 160, 92 / 138, 166, 184 / 154, 116, 172 / 214, 198, 164;
         --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      }
+      /* wide screens: the page behind the app column (explicit per theme, so switching away resets it cleanly) */
+      @media (min-width: 760px) {
+        html[data-theme="dungeon"] {
+          background: #060504;
+        }
+        html[data-theme="dmg"] {
+          background: #8bac0f;
+        }
       }
       html[data-theme="dungeon"] body {
         font-family: var(--serif);
@@ -2004,6 +2012,9 @@
         border-color: #e0604a;
         box-shadow: 0 0 14px rgba(208, 69, 47, 0.55);
       }
+      html[data-theme="dungeon"] #chRow button[data-tools] {
+        --ccrgb: 214, 198, 164 !important;
+      }
       html[data-theme="dungeon"] select,
       html[data-theme="dungeon"] input[type="number"],
       html[data-theme="dungeon"] input[type="text"] {
@@ -2031,6 +2042,12 @@
             no-repeat,
           linear-gradient(90deg, transparent, #7a5e2c 18%, var(--acc) 47%, transparent 47% 53%, var(--acc) 53%, #7a5e2c 82%, transparent)
             50% 50% / 100% 1px no-repeat;
+      }
+      html[data-theme="dungeon"] .mark,
+      html[data-theme="dmg"] .mark {
+        background: none;
+        border: 0;
+        box-shadow: none;
       }
       html[data-theme="dungeon"] .mark .t {
         font-family: var(--serif);
@@ -2159,7 +2176,6 @@
       /* palette: #0f380f darkest, #306230 dark, #8bac0f light, #9bbc0f lightest; berry and indigo come from the case */
       html[data-theme="dmg"] {
         --bg: #9bbc0f;
-        --bg2: #8bac0f;
         --panel: #8bac0f;
         --panel2: #9bbc0f;
         --line: #306230;
@@ -2240,6 +2256,13 @@
         filter: none;
         background-image: repeating-linear-gradient(45deg, rgba(15, 56, 15, 0.12) 0 2px, transparent 2px 4px);
       }
+      html[data-theme="dmg"] #chRow button[data-tools],
+      html[data-theme="dmg"] #chRow button[data-pk] {
+        --ccrgb: 15, 56, 15 !important;
+      }
+      html[data-theme="dmg"] #chRow button {
+        border-width: 2px;
+      }
       html[data-theme="dmg"] select,
       html[data-theme="dmg"] input[type="number"],
       html[data-theme="dmg"] input[type="text"] {
@@ -2247,6 +2270,9 @@
         border: 2px solid #0f380f;
         color: #0f380f;
         box-shadow: inset 2px 2px 0 #306230;
+      }
+      html[data-theme="dmg"] input[type="range"] {
+        accent-color: #0f380f;
       }
       html[data-theme="dmg"] header {
         position: relative;
@@ -6137,14 +6163,15 @@
       // pocket layout
       // ======================================================================
       const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-      const CHC = [
+      const CHC_BASE = [
         "124,242,154",
         "255,179,71",
         "106,183,255",
         "255,111,165",
         "197,139,255",
         "77,224,208",
-      ]; // channel colours (and pattern colours)
+      ]; // channel colours (and pattern colours); a theme may swap them with --chc (see setTheme)
+      const CHC = CHC_BASE.slice();
       const PC = (i) => CHC[i % CHC.length];
       const SHORT = [
         "SIN",
@@ -7699,6 +7726,20 @@
             localStorage.setItem("track.theme", t);
           } catch {}
         $$("#themeBar button").forEach((b) => b.classList.toggle("on", b.dataset.th === t));
+        // channel colours: "r, g, b / r, g, b / ..." in --chc, falling back to the default set
+        const pal = css("--chc")
+            .split("/")
+            .map((c) => c.replace(/\s/g, ""))
+            .filter(Boolean),
+          next = CHC_BASE.map((c, i) => pal[i] || c);
+        if (next.join() !== CHC.join()) {
+          CHC.splice(0, CHC.length, ...next);
+          $$("#chRow [data-ch]").forEach((b) => b.style.setProperty("--ccrgb", CHC[b.dataset.ch]));
+          try {
+            refreshAll();
+            if (S.tab === "fx") renderFx();
+          } catch {}
+        }
         const m = document.querySelector('meta[name="theme-color"]');
         if (m) m.content = css("--bg") || "#0d0f12";
         try {
@@ -8121,6 +8162,53 @@
         y: Math.random(),
         z: 0.25 + Math.random() * 0.75,
       }));
+      // dungeon: embers drifting up from the torches, and a row of carved runes that glow with the music
+      const bgEmbers = [];
+      const bgRunes = Array.from({ length: 12 }, (_, n) => {
+        let h = 2166136261 ^ (n * 7919);
+        const rnd = () => ((h = Math.imul(h ^ (h >>> 13), 16777619)) >>> 0) / 4294967296;
+        const px = [];
+        for (let y = 0; y < 7; y++)
+          for (let x = 0; x < 3; x++)
+            if (rnd() < (x === 2 ? 0.8 : 0.4)) px.push(...(x === 2 ? [[2, y]] : [[x, y], [4 - x, y]])); // 5x7 glyph, mirrored around a stave
+        return px;
+      });
+      let bgCache = null,
+        bgLcd = null;
+      function bgCached(key, W, H, paint) {
+        if (bgCache && bgCache.key === key) return bgCache.cv;
+        const cv = document.createElement("canvas");
+        cv.width = W;
+        cv.height = H;
+        paint(cv.getContext("2d"));
+        bgCache = { key, cv };
+        return cv;
+      }
+      function bgStone(g, W, H) {
+        g.fillStyle = "#060504";
+        g.fillRect(0, 0, W, H);
+        const bw = 22,
+          bh = 9;
+        for (let r = 0; r * bh < H; r++)
+          for (let c = -1; c * bw < W; c++) {
+            const x = c * bw + (r % 2 ? bw / 2 : 0),
+              y = r * bh,
+              n = Math.abs(Math.sin(r * 12.9898 + c * 78.233) * 43758.5453) % 1,
+              v = 18 + Math.floor(n * 12);
+            g.fillStyle = `rgb(${v + 4},${v},${v - 4})`;
+            g.fillRect(x + 1, y + 1, bw - 2, bh - 2);
+            g.fillStyle = "rgba(255,230,180,.05)"; // worn top edge
+            g.fillRect(x + 1, y + 1, bw - 2, 1);
+            if (n > 0.86) {
+              g.fillStyle = "rgba(0,0,0,.5)"; // a crack
+              g.fillRect(x + 3 + Math.floor(n * 9), y + 2, 1, bh - 4);
+            }
+            if (n < 0.08) {
+              g.fillStyle = "rgba(90,110,50,.35)"; // moss
+              g.fillRect(x + 1, y + bh - 3, bw - 2, 2);
+            }
+          }
+      }
       const bgDrops = Array.from({ length: 64 }, (_, i) => ({
         y: Math.random(),
         v: 0.15 + Math.random() * 0.35,
@@ -8208,6 +8296,124 @@
             }
           }
           g.globalAlpha = 1;
+        } else if (th === "dungeon") {
+          const side = Math.max(0, W / 2 - 100), // the app column covers the middle 600 css px
+            torches = side > 24 ? [side / 2, W - side / 2] : [W * 0.1, W * 0.9],
+            ty = Math.floor(H * 0.36),
+            flick = (k) =>
+              0.86 + 0.08 * Math.sin(t * 9.1 + k * 2) + 0.06 * Math.sin(t * 23.7 + k * 5) + bass * 0.35;
+          g.drawImage(
+            bgCached("dungeon" + W + "x" + H, W, H, (c) => bgStone(c, W, H)),
+            0,
+            0,
+          );
+          // darkness, with a pool of warm light around each torch
+          g.save();
+          g.fillStyle = "rgba(0,0,0,.86)";
+          g.fillRect(0, 0, W, H);
+          g.globalCompositeOperation = "lighter";
+          torches.forEach((x, k) => {
+            const rad = H * 0.55 * flick(k),
+              gr = g.createRadialGradient(x, ty, 0, x, ty, rad);
+            gr.addColorStop(0, "rgba(255,170,70,.42)");
+            gr.addColorStop(0.35, "rgba(200,110,40,.16)");
+            gr.addColorStop(1, "rgba(0,0,0,0)");
+            g.fillStyle = gr;
+            g.fillRect(x - rad, ty - rad, rad * 2, rad * 2);
+          });
+          g.restore();
+          // sconces and flames
+          torches.forEach((x, k) => {
+            const f = flick(k),
+              fx = Math.floor(x),
+              fh = Math.floor(9 + 7 * f + lv[3 + k] * 8);
+            g.fillStyle = "#1b1610";
+            g.fillRect(fx - 4, ty + 2, 9, 3);
+            g.fillRect(fx - 1, ty + 5, 3, 9);
+            g.fillStyle = "#3a2e20";
+            g.fillRect(fx - 4, ty + 2, 9, 1);
+            for (let i = 0; i < fh; i++) {
+              const u = i / fh,
+                w = Math.max(1, Math.round((1 - u * u) * 4 * (0.8 + 0.2 * Math.sin(t * 17 + i + k)))),
+                sway = Math.round(Math.sin(t * 6 + i * 0.5 + k) * u * 2);
+              g.fillStyle = u < 0.25 ? "#fff3c4" : u < 0.55 ? "#ffc35a" : u < 0.8 ? "#e2702a" : "#9c2f1c";
+              g.fillRect(fx - w + 1 + sway, ty + 1 - i, w * 2 - 1, 1);
+            }
+            // embers: more and faster when the music is loud
+            if (dt && Math.random() < dt * (3 + bass * 30))
+              bgEmbers.push({ x: x + (Math.random() - 0.5) * 6, y: ty - fh, vx: (Math.random() - 0.5) * 6, vy: -(10 + Math.random() * 18 + bass * 25), l: 1 });
+          });
+          for (let i = bgEmbers.length - 1; i >= 0; i--) {
+            const e = bgEmbers[i];
+            e.l -= dt * 0.45;
+            e.x += (e.vx + Math.sin(t * 3 + i) * 4) * dt;
+            e.y += e.vy * dt;
+            if (e.l <= 0 || e.y < 0) {
+              bgEmbers.splice(i, 1);
+              continue;
+            }
+            g.globalAlpha = e.l;
+            g.fillStyle = e.l > 0.6 ? "#ffd27a" : "#d0452f";
+            g.fillRect(Math.floor(e.x), Math.floor(e.y), 1, 1);
+          }
+          if (bgEmbers.length > 160) bgEmbers.splice(0, bgEmbers.length - 160);
+          // runes along the bottom of each wall: each one is a frequency band
+          const rw = 9,
+            per = Math.max(1, Math.floor((side - 8) / rw)),
+            ry = H - 18;
+          [0, 1].forEach((sd) => {
+            for (let j = 0; j < per; j++) {
+              const band = Math.floor((j / per) * N * 0.7),
+                glow = Math.min(1, 0.12 + lv[band] * 1.6),
+                x0 = sd ? W - side + 4 + j * rw : side - 4 - (j + 1) * rw + 2;
+              g.globalAlpha = glow;
+              g.fillStyle = glow > 0.55 ? "#ffcf6e" : "#a8392c";
+              bgRunes[(j + sd * 5) % bgRunes.length].forEach(([px, py]) =>
+                g.fillRect(x0 + px, ry + py, 1, 1),
+              );
+            }
+          });
+          g.globalAlpha = 1;
+        } else if (th === "dmg") {
+          // a dot-matrix spectrum, low bands at the outer edges; cells fade slowly like an old LCD
+          const cs = 4,
+            cols = Math.ceil(W / cs),
+            rows = Math.ceil(H / cs),
+            mid = cols / 2;
+          g.drawImage(
+            bgCached("dmg" + W + "x" + H, W, H, (c) => {
+              c.fillStyle = "#8bac0f";
+              c.fillRect(0, 0, W, H);
+              c.fillStyle = "#84a40e";
+              for (let y = 0; y < rows; y++)
+                for (let x = 0; x < cols; x++) c.fillRect(x * cs, y * cs, cs - 1, cs - 1);
+            }),
+            0,
+            0,
+          );
+          if (!bgLcd || bgLcd.c !== cols || bgLcd.r !== rows)
+            bgLcd = { c: cols, r: rows, v: new Float32Array(cols * rows), pk: new Float32Array(cols) };
+          const V = bgLcd.v,
+            up = dt ? 1 - Math.exp(-dt * 18) : 1,
+            down = dt ? 1 - Math.exp(-dt * 4) : 1,
+            shade = ["", "#6b8c0c", "#306230", "#0f380f"];
+          for (let x = 0; x < cols; x++) {
+            const gap = x % 3 === 2,
+              band = Math.min(N - 1, Math.floor((1 - Math.abs(x + 0.5 - mid) / mid) * N * 0.75)),
+              h = gap ? 0 : Math.round(lv[band] * rows * 0.75);
+            bgLcd.pk[x] = gap ? 0 : Math.max(h, bgLcd.pk[x] - dt * 9);
+            const cap = Math.ceil(bgLcd.pk[x]);
+            for (let y = 0; y < rows; y++) {
+              const hy = rows - 1 - y, // height of this cell above the floor
+                tgt = gap ? 0 : hy === cap && cap > h ? 1 : hy < h ? (hy > h - 2 ? 1 : 0.66) : 0,
+                i = y * cols + x,
+                v = (V[i] += (tgt - V[i]) * (tgt > V[i] ? up : down)),
+                s = v > 0.8 ? 3 : v > 0.5 ? 2 : v > 0.18 ? 1 : 0;
+              if (!s) continue;
+              g.fillStyle = shade[s];
+              g.fillRect(x * cs, y * cs, cs - 1, cs - 1);
+            }
+          }
         } else {
           const light = th === "light";
           for (let i = 0; i < N; i++) {
