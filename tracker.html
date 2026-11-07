@@ -4322,7 +4322,7 @@
       };
       function peekStep() {
         if (S.mode === "live")
-          return { t: nextTime + swingOff(S.gstep), gb: fxBase(S.gstep), live: S.live.slice() };
+          return { t: nextTime + swingOff(S.gstep), gb: fxBase(S.gstep, true), live: S.live.slice() };
         const oi =
             S.mode === "song"
               ? S.ordPos >= 0 && S.ordPos < song.order.length
@@ -4331,7 +4331,7 @@
               : 0,
           pi = S.mode === "song" ? song.order[oi] : S.pat,
           p = song.patterns[pi];
-        return { t: nextTime + swingOff(S.curRow), pi, r: fxMap(fxBase(S.curRow) % p.len, p.len) };
+        return { t: nextTime + swingOff(S.curRow), pi, r: fxMap(fxBase(S.curRow, true) % p.len, p.len) };
       }
       function outLat() {
         return Math.min(0.25, (ctx.outputLatency || 0) + (ctx.baseLatency || 0));
@@ -7009,19 +7009,22 @@
       }
       // step index after a loop effect: repeats `loop` steps starting at the step where the pad went down
       // Live-FX step counter: applies Loop 1/2/4/8 to the step number. fxMap then applies Reverse and Shuffle inside a pattern.
-      function fxBase(b) {
+      function fxBase(b, peek = false) {
         const e = S.fxs;
         if (!e.loop) {
-          S.loopN = 0;
+          if (!peek) S.loopN = 0;
           return b;
         }
         if (S.loopN !== e.loop) {
+          if (peek) return b;
           S.loopN = e.loop;
           S.loopStart = b;
           S.loopK = 0;
         }
-        return S.loopStart + (S.loopK++ % S.loopN);
-      }
+        const row = S.loopStart + (S.loopK % S.loopN);
+        if (!peek) S.loopK++;
+        return row;
+      }“
       function fxMap(row, len) {
         const e = S.fxs;
         if (e.rev) row = len - 1 - row;
