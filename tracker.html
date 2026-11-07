@@ -1597,6 +1597,60 @@
       #smpRib {
         margin: 2px 0 0;
       }
+      #smpMoreBar {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 2px 0;
+      }
+      .smpKnob {
+        flex: 1;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto 1fr;
+        align-items: center;
+        column-gap: 6px;
+        padding: 3px 8px 2px;
+        background: var(--panel2);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+      }
+      .smpKnob i {
+        font-style: normal;
+        font-size: 8px;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: var(--dim);
+      }
+      .smpKnob b {
+        justify-self: end;
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--acc);
+      }
+      .smpKnob.off b {
+        color: var(--text);
+      }
+      .smpKnob input {
+        grid-column: 1 / -1;
+        min-height: 0;
+        height: 18px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+      }
+      #smpMoreBar button.on {
+        background: var(--acc);
+        border-color: var(--acc);
+        color: var(--ink);
+      }
+      #smpMoreBar button.on i {
+        color: var(--ink);
+      }
       #waveBox {
         height: clamp(104px, 17dvh, 150px);
         margin: 3px 6px 6px;
@@ -3040,15 +3094,27 @@
           <div class="dd inf" style="flex: 1.4"><span id="smpHintTxt"></span></div>
         </div>
         <div id="smpSqWrap"><div id="smpSq"></div></div>
-        <div class="bar" id="smpMoreBar" hidden style="padding: 4px 8px; gap: 8px; flex-wrap: wrap; align-items: center">
-          <button id="smpNorm">NORMALIZE</button>
-          <label>Velocity <input id="smpVelocity" type="range" min="0" max="2" step="0.01" value="1" /></label>
-          <label>Pitch <input id="smpPitch" type="range" min="-12" max="12" step="1" value="0" /></label>
-          <button id="smpHold" aria-pressed="false">HOLD: OFF</button>
+        <!-- MORE: per-slot playback settings, opened from the ribbon -->
+        <div id="smpMoreBar" hidden>
+          <div class="prow">
+            <label class="smpKnob"
+              ><i>VELOCITY</i><b id="smpVelTxt">100%</b
+              ><input id="smpVelocity" type="range" min="0" max="2" step="0.01" value="1"
+            /></label>
+            <label class="smpKnob"
+              ><i>PITCH</i><b id="smpPitchTxt">±0 st</b
+              ><input id="smpPitch" type="range" min="-12" max="12" step="1" value="0"
+            /></label>
+          </div>
+          <div class="prow">
+            <button id="smpNorm">NORMALIZE<i>PEAK TO 0 dB</i></button
+            ><button id="smpHold" class="on" aria-pressed="true">HOLD<i>GATED TO NOTE</i></button
+            ><button id="smpCfgReset">RESET<i>VEL · PITCH · HOLD</i></button>
+          </div>
         </div>
         <div class="prow rib" id="smpRib">
           <button id="micBtn" class="rec"></button><button id="loadFile"></button
-          ><button id="smpPlay"></button><button id="smpRev"></button><button id="smpMore">MORE</button
+          ><button id="smpPlay"></button><button id="smpRev"></button><button id="smpMore" aria-expanded="false"></button
           ><button id="smpCrop"></button>
         </div>
         <div id="waveBox"><canvas id="wave"></canvas></div>
@@ -5203,7 +5269,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       // samples
       // ======================================================================
       const samples = new Array(SLOTS).fill(null); // AudioBuffer-like: {rate, data:Float32Array}
-      const sampleSettings = Array.from({ length: SLOTS }, () => ({ velocity: 1, pitch: 0, hold: false }));
+      const sampleSettings = Array.from({ length: SLOTS }, () => ({ velocity: 1, pitch: 0, hold: true }));
       const bufCache = new WeakMap();
       function toBuffer(c, s) {
         let m = bufCache.get(s);
@@ -5219,7 +5285,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       function sampleVoice(c, out, slot, midi, t, dur, vol, arp) {
         const s = samples[slot];
         if (!s) return t;
-        const settings = sampleSettings[slot] || { velocity: 1, pitch: 0, hold: false };
+        const settings = sampleSettings[slot] || { velocity: 1, pitch: 0, hold: true };
         const src = c.createBufferSource(),
           g = c.createGain();
         src.buffer = toBuffer(c, s);
@@ -6342,11 +6408,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         const s = samples[S.smpSel];
         work = s ? { data: s.data, rate: s.rate } : null;
         selA = selB = 0;
-        const cfg = sampleSettings[S.smpSel];
-        $("#smpVelocity").value = cfg.velocity;
-        $("#smpPitch").value = cfg.pitch;
-        $("#smpHold").textContent = cfg.hold ? "HOLD: ON" : "HOLD: OFF";
-        $("#smpHold").setAttribute("aria-pressed", cfg.hold);
+        syncSmpCfg();
       }
       function smpPush() {
         S.undoSmp.push({ i: S.smpSel, s: samples[S.smpSel] });
@@ -6476,9 +6538,13 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       function playWork() {
         if (!work) return toast("Pick a slot with a sound, or record one");
         ensureCtx();
-        const s = ctx.createBufferSource();
+        const s = ctx.createBufferSource(),
+          g = ctx.createGain(),
+          cfg = sampleSettings[S.smpSel];
         s.buffer = toBuffer(ctx, work);
-        s.connect(G.master);
+        s.playbackRate.value = Math.pow(2, cfg.pitch / 12);
+        g.gain.value = cfg.velocity;
+        s.connect(g).connect(G.master);
         const a = selB > selA ? selA / work.rate : 0,
           d = selB > selA ? (selB - selA) / work.rate : undefined;
         s.start(0, a, d);
@@ -6499,14 +6565,49 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (work) setWork(work.data.slice().reverse(), work.rate);
         else toast("Nothing to reverse");
       };
-      $("#smpMore").onclick = () => { $("#smpMoreBar").hidden = !$("#smpMoreBar").hidden; };
-      $("#smpVelocity").oninput = (e) => { sampleSettings[S.smpSel].velocity = +e.target.value; };
-      $("#smpPitch").oninput = (e) => { sampleSettings[S.smpSel].pitch = +e.target.value; };
+      // MORE panel: per-slot velocity, pitch and hold
+      const SMP_CFG0 = { velocity: 1, pitch: 0, hold: true };
+      function syncSmpCfg() {
+        const cfg = sampleSettings[S.smpSel];
+        $("#smpVelocity").value = cfg.velocity;
+        $("#smpPitch").value = cfg.pitch;
+        $("#smpVelTxt").textContent = Math.round(cfg.velocity * 100) + "%";
+        $("#smpPitchTxt").textContent = cfg.pitch ? (cfg.pitch > 0 ? "+" : "−") + Math.abs(cfg.pitch) + " st" : "±0 st";
+        $("#smpVelTxt").parentNode.classList.toggle("off", cfg.velocity === 1);
+        $("#smpPitchTxt").parentNode.classList.toggle("off", !cfg.pitch);
+        const h = $("#smpHold");
+        h.classList.toggle("on", cfg.hold);
+        h.setAttribute("aria-pressed", cfg.hold);
+        h.querySelector("i").textContent = cfg.hold ? "GATED TO NOTE" : "ONE-SHOT";
+      }
+      $("#smpMore").onclick = () => {
+        const bar = $("#smpMoreBar"),
+          open = bar.hidden;
+        bar.hidden = !open;
+        $("#smpMore").classList.toggle("on", open);
+        $("#smpMore").setAttribute("aria-expanded", open);
+        syncSmpCfg();
+        drawWave(); // the wave box keeps its size, but the squares above it shrink
+      };
+      $("#smpVelocity").oninput = (e) => {
+        sampleSettings[S.smpSel].velocity = +e.target.value;
+        syncSmpCfg();
+      };
+      $("#smpPitch").oninput = (e) => {
+        sampleSettings[S.smpSel].pitch = +e.target.value;
+        syncSmpCfg();
+      };
+      // preview the new pitch/velocity when the finger lifts
+      $("#smpVelocity").onchange = $("#smpPitch").onchange = () => work && playWork();
       $("#smpHold").onclick = () => {
         const cfg = sampleSettings[S.smpSel];
         cfg.hold = !cfg.hold;
-        $("#smpHold").textContent = cfg.hold ? "HOLD: ON" : "HOLD: OFF";
-        $("#smpHold").setAttribute("aria-pressed", cfg.hold);
+        syncSmpCfg();
+      };
+      $("#smpCfgReset").onclick = () => {
+        Object.assign(sampleSettings[S.smpSel], SMP_CFG0);
+        syncSmpCfg();
+        toast("S" + (S.smpSel + 1) + " settings reset");
       };
       $("#smpNorm").onclick = () => {
         if (!work) return toast("Nothing to normalize");
@@ -7562,7 +7663,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         for (let i = 0; i < SLOTS; i++) {
           const s = o.samples && o.samples[i];
           samples[i] = s ? { rate: s.rate, data: b64ToF32(s.b64) } : null;
-          sampleSettings[i] = Object.assign({ velocity: 1, pitch: 0, hold: false }, s && s.settings || {});
+          sampleSettings[i] = Object.assign({ velocity: 1, pitch: 0, hold: true }, s && s.settings || {});
         }
         $("#swing").value = o.swing || 0;
         $("#echo").value = o.echo ?? 0.35;
