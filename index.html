@@ -398,6 +398,29 @@
         color: var(--dim);
         font-size: 10px;
       }
+      /* the computer key of a pad, in its corner; only where there is a mouse (and so, likely, a keyboard) */
+      .pad,
+      .fxp {
+        position: relative;
+      }
+      .kk {
+        display: none;
+        position: absolute;
+        top: 3px;
+        right: 4px;
+        font: 800 9px/1 var(--mono);
+        padding: 2px 3px 1px;
+        border: 1px solid currentColor;
+        border-bottom-width: 2px;
+        border-radius: 3px;
+        opacity: 0.55;
+        pointer-events: none;
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .kk {
+          display: block;
+        }
+      }
       .pad.down {
         background: var(--acc2);
         color: #000;
@@ -3018,7 +3041,7 @@
               ><span id="pkChordTxt"></span
               ><select id="pkChord" title="Chord mode"></select
             ></label>
-            <button id="pkArp"></button>
+            <button id="pkLive" title="While the pattern plays: PLAY (the keys only sound) or WRITE (the keys write into the selected square, as when stopped)"></button>
             <button id="pkPedal" title="Pedal: volume, piano layout and what HOLD / REPEAT / VOL change">
               <i>MORE</i>PEDAL
             </button>
@@ -3036,6 +3059,7 @@
                 title="Volume of the notes you write (1 = quiet, 15 = full)"
               /><b id="pkVolN"></b>
             </div>
+            <button id="pkArp"></button>
             <button
               id="pkKb"
               title="Piano: FIXED shows 10 keys from the octave you pick; SCROLL lays out the whole range and you slide along it"
@@ -3142,6 +3166,15 @@
             ><button id="smpHold" class="on" aria-pressed="true">HOLD<i>GATED TO NOTE</i></button
             ><button id="smpRev">REVERSE<i>FLIP IN TIME</i></button
             ><button id="smpCfgReset">RESET<i>SETTINGS</i></button>
+          </div>
+          <div class="prow">
+            <label class="dd" title="A grid of the song's steps over the wave: selections snap to whole steps"
+              ><span id="smpGridTxt"></span
+              ><select id="smpGrid"
+                ><option value="0">Off</option><option value="1">1 step</option><option value="2">2 steps</option
+                ><option value="4">4 steps (a beat)</option></select
+              ></label
+            ><button id="smpQuant">QUANTIZE<i>HITS TO GRID</i></button>
           </div>
         </div>
         <!-- FX: effects baked into the slot's sound (not the live or song FX) -->
@@ -5836,7 +5869,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (!dr) held.set(id, g); // drum hits ring out on their own
         if (write) {
           if (S.playing && S.rec) recNote(id, m, ch, vol, dr, tapT);
-          else if (!S.playing) {
+          else if (!S.playing || S.liveWrite) {
             writeNote(m, S.row, ch, dr, vol);
             if (!dr) press.set(id, { live: false, row: S.row, col: ch, t: ctx.currentTime });
           }
@@ -6000,8 +6033,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         (k) => +k.dataset.m,
         (id, m, k, glide) => noteOn(id, m, S.col, !glide),
       );
-      // computer keyboard (handy on a tablet with keyboard)
+      // computer keyboard (handy on a tablet with keyboard). The same 24 keys play the piano (an octave and a half),
+      // the 16 drum pads, or the 24 FX pads while the FX panel is open; pads and FX pads show their key on screens
+      // with a mouse.
       const KEYMAP = "zsxdcvgbhnjmq2w3er5t6y7u";
+      const kk = (i) => (KEYMAP[i] ? `<kbd class="kk">${KEYMAP[i].toUpperCase()}</kbd>` : "");
       const kHeld = new Set();
       addEventListener("keydown", (e) => {
         if (e.target.tagName === "INPUT" || e.repeat || !$("#help").hidden || !$("#welcome").hidden)
@@ -6037,13 +6073,34 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         }
         const i = KEYMAP.indexOf(e.key.toLowerCase());
         if (i < 0 || !$("#trk").classList.contains("show")) return;
-        const base = instOf(S.col) === DRUM_I ? 36 : S.oct * 12 + 12;
+        if (S.fxPanel && FXS[i]) {
+          ensureCtx();
+          const id = FXS[i].id;
+          if (S.fxLatch) fxSet(id, !S.fxOn.has(id));
+          else (fxHeld.set("k" + e.key, id), fxSet(id, true));
+          return;
+        }
+        if (instOf(S.col) === DRUM_I) {
+          if (i > 15) return;
+          kHeld.add(e.key);
+          $$(`#pkPads .pad[data-p="${i}"]`).forEach((p) => p.classList.add("down"));
+          noteOn("k" + e.key, 36 + (i % 12), S.col, true, i >= 12 ? 15 : S.vol);
+          return;
+        }
+        const base = S.oct * 12 + 12;
         kHeld.add(e.key);
         kLit.set(e.key, base + i);
         kLight(base + i, true);
         noteOn("k" + e.key, base + i);
       });
       addEventListener("keyup", (e) => {
+        const fx = fxHeld.get("k" + e.key);
+        if (fx) {
+          fxHeld.delete("k" + e.key);
+          if (![...fxHeld.values()].includes(fx)) fxSet(fx, false);
+        }
+        const i = KEYMAP.indexOf(e.key.toLowerCase());
+        if (i >= 0) $$(`#pkPads .pad[data-p="${i}"]`).forEach((p) => p.classList.remove("down"));
         if (kHeld.delete(e.key)) noteOff("k" + e.key);
         if (kLit.has(e.key)) {
           const m = kLit.get(e.key);
@@ -6526,6 +6583,28 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           g.fillStyle = "rgba(255,255,255,.16)";
           g.fillRect(X(selA), 0, X(selB) - X(selA), H);
         }
+        // GRID: the song's steps, from the start of the selection (or of the sound); a long line on each beat
+        const gl = smpGridLen();
+        if (gl) {
+          const o = selB > selA ? selA : 0,
+            k0 = -Math.floor(o / gl),
+            per = 4 / S.smpGrid;
+          g.fillStyle = css("--line");
+          for (let k = k0; o + k * gl <= d.length; k++) {
+            const beat = per >= 1 ? k % per === 0 : true;
+            g.globalAlpha = beat ? 0.9 : 0.45;
+            g.fillRect(Math.round(X(o + k * gl)), beat ? 0 : H - 8 * dp, Math.max(1, dp), beat ? H : 8 * dp);
+          }
+          g.globalAlpha = 1;
+          if (selB > selA) {
+            const n = Math.round((selB - selA) / gl) * S.smpGrid;
+            g.fillStyle = css("--hi");
+            g.font = `800 ${10 * dp}px ${css("--mono") || "monospace"}`;
+            g.textAlign = "center";
+            g.fillText(n + (n === 1 ? " STEP" : " STEPS"), (X(selA) + X(selB)) / 2, 13 * dp);
+            g.textAlign = "left";
+          }
+        }
         g.strokeStyle = col;
         g.lineWidth = Math.max(1, dp * 0.8);
         g.beginPath();
@@ -6584,14 +6663,25 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           selB = pos(e);
           drawWave();
         });
+        // with a GRID, the moving end keeps the selection a whole number of grid cells long
+        const snap = (b) => {
+          const gl = smpGridLen();
+          if (!gl || !work) return b;
+          const n = work.data.length;
+          let k = Math.round((b - anchor) / gl);
+          if (!k) k = b >= anchor ? 1 : -1;
+          while (k && (anchor + k * gl > n || anchor + k * gl < 0)) k -= Math.sign(k);
+          return Math.round(anchor + k * gl);
+        };
         cv.addEventListener("pointermove", (e) => {
           if (!down) return;
           selA = anchor;
-          selB = pos(e);
+          selB = snap(pos(e));
           drawWave();
         });
         cv.addEventListener("pointerup", () => {
           down = false;
+          if (smpGridLen() && selA !== selB) selB = snap(selB);
           if (selB < selA) [selA, selB] = [selB, selA];
           drawWave();
         });
@@ -6659,6 +6749,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         h.classList.toggle("on", cfg.hold);
         h.setAttribute("aria-pressed", cfg.hold);
         h.querySelector("i").textContent = cfg.hold ? "GATED TO NOTE" : "ONE-SHOT";
+        smpGridFace();
         if (typeof bakeSync === "function" && $("#smpFxGrid").children.length) bakeSync();
       }
       $("#smpMore").onclick = () => {
@@ -6685,6 +6776,96 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         const cfg = sampleSettings[S.smpSel];
         cfg.hold = !cfg.hold;
         syncSmpCfg();
+      };
+      // GRID and QUANTIZE (both optional): the grid is the song's steps at the sample's own speed (as played on C4)
+      const smpGridLen = () => (work && S.smpGrid ? stepDur() * S.smpGrid * work.rate : 0);
+      function smpGridFace() {
+        $("#smpGrid").value = S.smpGrid || 0;
+        $("#smpGridTxt").innerHTML = "<i>GRID</i>" + (S.smpGrid ? S.smpGrid + (S.smpGrid > 1 ? " STEPS" : " STEP") : "OFF");
+        $("#smpGrid").parentNode.classList.toggle("on", !!S.smpGrid);
+        $("#smpQuant").classList.toggle("dis", !S.smpGrid || !work);
+      }
+      // the hits: where the loudness jumps (in 5 ms steps), at least 70 ms apart, ignoring the quiet ones
+      function smpHits(d, sr) {
+        const hop = Math.max(1, Math.round(sr * 0.005)),
+          nf = Math.floor(d.length / hop),
+          db = new Float32Array(nf);
+        let top = -200;
+        for (let j = 0; j < nf; j++) {
+          let e = 0;
+          for (let k = j * hop, z = k + hop; k < z; k++) e += d[k] * d[k];
+          db[j] = 10 * Math.log10(e / hop + 1e-12);
+          top = Math.max(top, db[j]);
+        }
+        const out = [];
+        let last = -99;
+        for (let j = 0; j < nf; j++) {
+          const lo = j < 4 ? -120 : Math.min(db[j - 1], db[j - 2], db[j - 3], db[j - 4]);
+          if (db[j] - lo < 9 || db[j] < top - 30 || j - last < 14) continue;
+          let k = j;
+          while (k > 0 && k > j - 4 && db[k - 1] > lo + 3) k--;
+          out.push(Math.max(0, k * hop - Math.round(sr * 0.002)));
+          last = j;
+        }
+        return out;
+      }
+      // every hit moves to its nearest grid line; the sound up to the next hit goes with it
+      function smpQuantize(seg, sr, grid) {
+        const N = seg.length,
+          hits = smpHits(seg, sr),
+          src = [],
+          tg = [];
+        for (const x of hits) {
+          const q = Math.min(N - 1, Math.round(Math.round(x / grid) * grid));
+          if (tg.length && q <= tg[tg.length - 1]) continue;
+          src.push(x);
+          tg.push(q);
+        }
+        if (!src.length) return null;
+        const out = new Float32Array(N),
+          fo = Math.round(sr * 0.003),
+          fi = Math.round(sr * 0.0005);
+        // what comes before the first hit keeps its place against it
+        for (let k = 1; k <= Math.min(src[0], tg[0]); k++) out[tg[0] - k] = seg[src[0] - k];
+        let moved = 0;
+        for (let i = 0; i < src.length; i++) {
+          const s0 = src[i],
+            g0 = tg[i],
+            len = Math.min((i + 1 < src.length ? src[i + 1] : N) - s0, (i + 1 < tg.length ? tg[i + 1] : N) - g0);
+          if (Math.abs(s0 - g0) > sr * 0.003) moved++;
+          for (let k = 0; k < len; k++) {
+            let v = seg[s0 + k];
+            if (k < fi) v *= k / fi;
+            if (len - k < fo && i + 1 < src.length) v *= (len - k) / fo;
+            out[g0 + k] = v;
+          }
+        }
+        return { out, moved, hits: src.length };
+      }
+      $("#smpGrid").onchange = (e) => {
+        S.smpGrid = +e.target.value;
+        if (S.smpGrid && selB > selA) {
+          const gl = smpGridLen();
+          selB = Math.min(work.data.length, Math.round(selA + Math.max(1, Math.round((selB - selA) / gl)) * gl));
+        }
+        smpGridFace();
+        drawWave();
+      };
+      $("#smpQuant").onclick = () => {
+        if (!work) return toast("Pick a slot with a sound first");
+        if (!S.smpGrid) return toast("Choose a GRID first: 1, 2 or 4 steps");
+        const a = selB > selA ? selA : 0,
+          b = selB > selA ? selB : work.data.length,
+          r = smpQuantize(work.data.subarray(a, b), work.rate, smpGridLen());
+        if (!r) return toast("No hits found in this sound");
+        if (!r.moved) return toast(`All ${r.hits} hits are already on the grid`);
+        const d = work.data.slice();
+        d.set(r.out, a);
+        const keep = [selA, selB];
+        setWork(d, work.rate);
+        [selA, selB] = keep;
+        drawWave();
+        toast(`${r.moved} of ${r.hits} hits moved to the grid`);
       };
       $("#smpCfgReset").onclick = () => {
         Object.assign(sampleSettings[S.smpSel], SMP_CFG0);
@@ -8476,7 +8657,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       $("#pkPads").innerHTML = Array.from(
         { length: 16 },
         (_, i) =>
-          `<div class="pad" data-p="${i}">${DRUMS[i % 12]}<small>${i >= 12 ? "accent" : ""}</small></div>`,
+          `<div class="pad" data-p="${i}">${kk(i)}${DRUMS[i % 12]}<small>${i >= 12 ? "accent" : ""}</small></div>`,
       ).join("");
       $("#pkFx").innerHTML =
         '<option value="" hidden>None</option>' +
@@ -8665,6 +8846,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         $("#pkChord").value = S.chord;
         $("#pkChordDd").classList.toggle("on", S.chord > 0);
         face($("#pkArp"), "ARP", S.arp ? ["", "↑", "↓", "↕"][S.arp] : "Off");
+        face($("#pkLive"), "PLAYING", S.liveWrite ? "WRITE" : "PLAY");
+        $("#pkLive").classList.toggle("on", !!S.liveWrite);
         $("#pkArp").classList.toggle("on", S.arp > 0);
         face($("#pkScale"), "SCALE", S.scaleT ? KEYN[S.root] + " " + SCALES[S.scaleT].s : "All");
         $("#pkScale").classList.toggle("on", S.scaleT > 0);
@@ -9124,6 +9307,13 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       $("#pkScale").onclick = () => {
         if (!$("#sheet").hidden && S.sheet === "Scale") closeSheet();
         else sheetScale();
+      };
+      // WHILE PLAYING: off (default), the keys only sound while the song plays; on, they write into the selected
+      // square as they do when stopped (REC, when on, still records on the step you hear instead)
+      $("#pkLive").onclick = () => {
+        S.liveWrite = !S.liveWrite;
+        pkLabels();
+        toast(S.liveWrite ? "While playing, the keys write into the selected square" : "While playing, the keys only play");
       };
       $("#pkArp").onclick = () => {
         if (!$("#sheet").hidden && S.sheet === "Arpeggiator") closeSheet();
@@ -10012,7 +10202,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       function renderFx() {
         const h = FXS.map(
           (d, i) =>
-            `<div class="fxp ${S.fxOn.has(d.id) ? "on" : ""}" data-f="${d.id}" style="--ccrgb:${CHC[Math.floor(i / 4)]}"><span>${d.n}</span><small>${d.h}</small></div>`,
+            `<div class="fxp ${S.fxOn.has(d.id) ? "on" : ""}" data-f="${d.id}" style="--ccrgb:${CHC[Math.floor(i / 4)]}">${kk(i)}<span>${d.n}</span><small>${d.h}</small></div>`,
         ).join("");
         $("#fxGrid").innerHTML = h;
         $("#pkFxGrid").innerHTML = h;
@@ -10182,13 +10372,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "- **−1 OCT / +1 OCT**: move the keyboard an octave.",
               "- **Scale**: choose a key and a scale; keys outside the scale are locked so you cannot hit a wrong note.",
               "- **Chords**: play a whole chord with one key.",
-              "- **Arp**: arpeggiator (up, down, up-down) at the Amiga 50 Hz speed or a number of notes per step.",
+              "- **PLAYING · PLAY / WRITE**: while the pattern plays, the keys only sound (PLAY, the default), or they write into the selected square as they do when stopped (WRITE): pick a square and play the note, and hear it come round. **●** REC, when on, records on the step you hear instead.",
               "- **PEDAL**: shows or hides one more row just above the piano (the app remembers it):",
               "- PEDAL · **VOL**: the volume of the notes you write, from 1 (quiet) to 15 (full).",
+              "- PEDAL · **ARP**: arpeggiator (up, down, up-down) at the Amiga 50 Hz speed or a number of notes per step.",
               "- PEDAL · **KEYS · FIXED / SCROLL**: FIXED shows 10 keys from the octave you pick with −1 / +1 OCT. SCROLL lays out the whole piano (A0 to C8): slide the thin strip above the keys to move along it; −1 / +1 OCT glide an octave.",
               "- PEDAL · **APPLY TO · NOTE / PATTERN**: with NOTE, HOLD / REPEAT and VOL only affect the notes you write next. With PATTERN they also change every note already written in this pattern, on all channels (↶ undoes it).",
               "## On a computer",
-              "The letters **Z S X D C V G B H N J M** (and **Q 2 W 3 E R 5 T 6 Y 7 U** above them) play the keys. Arrow keys move the cursor, **Delete** clears a step, **1** writes an OFF, **space** plays/stops.",
+              "The letters **Z S X D C V G B H N J M** (and **Q 2 W 3 E R 5 T 6 Y 7 U** above them) play the keys. On a drum channel the same keys play the 16 pads, and while the FX panel is open, its 24 effects; the pads show their key in a corner. Arrow keys move the cursor, **Delete** clears a step, **1** writes an OFF, **space** plays/stops.",
             ],
             es: [
               "Esta es la pantalla principal. La fila de botones bajo la barra superior es **PAT · CH1 · CH2 · CH3 · CH4 · LIVE/LIST** (con 8 o 16 canales, los botones CH se deslizan hacia los lados para llegar al resto). Elige un canal para trabajar en él; toca el canal que ya está seleccionado para **silenciarlo / activarlo** en el patrón que editas (su rótulo aparece tachado y los cuadrados se atenúan; los demás patrones no cambian, así puedes silenciar tres canales y dejar uno). **PAT** muestra u oculta las filas de herramientas (abajo). El botón del extremo derecho recorre tres pantallas y siempre nombra la siguiente: **LIVE/LIST** (lista de patrones) → **SONG** → **EDIT** (volver al editor).",
@@ -10208,13 +10399,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "- **−1 OCT / +1 OCT**: mueven el teclado una octava.",
               "- **Scale**: elige tonalidad y escala; las teclas fuera de la escala se bloquean para que no puedas fallar.",
               "- **Chords**: toca un acorde entero con una tecla.",
-              "- **Arp**: arpegiador (arriba, abajo, arriba-abajo) a la velocidad Amiga de 50 Hz o con un número de notas por paso.",
+              "- **PLAYING · PLAY / WRITE**: mientras suena el patrón, las teclas solo suenan (PLAY, por defecto), o escriben en el cuadrado elegido como cuando está parado (WRITE): elige un cuadrado, toca la nota y óyela cuando vuelva. **●** REC, si está activo, graba en el paso que oyes.",
               "- **PEDAL**: muestra u oculta una fila más justo encima del piano (la app lo recuerda):",
               "- PEDAL · **VOL**: el volumen de las notas que escribes, de 1 (suave) a 15 (máximo).",
+              "- PEDAL · **ARP**: arpegiador (arriba, abajo, arriba-abajo) a la velocidad Amiga de 50 Hz o con un número de notas por paso.",
               "- PEDAL · **KEYS · FIXED / SCROLL**: FIXED muestra 10 teclas desde la octava que eliges con −1 / +1 OCT. SCROLL despliega el piano entero (de A0 a C8): desliza la tira fina sobre las teclas para recorrerlo; −1 / +1 OCT se desplazan una octava.",
               "- PEDAL · **APPLY TO · NOTE / PATTERN**: con NOTE, HOLD / REPEAT y VOL solo afectan a las notas que escribas después. Con PATTERN también cambian todas las notas ya escritas en este patrón, en todos los canales (↶ lo deshace).",
               "## En ordenador",
-              "Las letras **Z S X D C V G B H N J M** (y **Q 2 W 3 E R 5 T 6 Y 7 U** encima) tocan las teclas. Las flechas mueven el cursor, **Supr** borra un paso, **1** escribe un OFF y **espacio** reproduce/para.",
+              "Las letras **Z S X D C V G B H N J M** (y **Q 2 W 3 E R 5 T 6 Y 7 U** encima) tocan las teclas. En un canal de batería las mismas teclas tocan los 16 pads, y con el panel FX abierto, sus 24 efectos; los pads muestran su tecla en una esquina. Las flechas mueven el cursor, **Supr** borra un paso, **1** escribe un OFF y **espacio** reproduce/para.",
             ],
           },
         },
@@ -10323,6 +10515,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "- **PLAY**: plays the slot; while anything from this screen sounds it becomes **STOP**, which silences it all. **CROP** keeps only the selected part.",
               "- **FX**: effects written into the sound itself, apart from the live and song FX. Tap pads to add them (they stay on): reverb, echo, lo-fi, drive, flanger, filters, radio, gates, octave up or down, unison and fifth layers. The slot is re-rendered and played after each tap; tap a pad again to take it out, or **Original** to remove them all. Record a flute, then add Reverb and Lo-fi, and S1 *is* that sound everywhere it plays.",
               "- **MORE**: velocity, pitch, **NORMALIZE** (make it louder), **HOLD** (gated to the note or one-shot), **REVERSE** and **RESET**.",
+              "- MORE · **GRID** (off by default): lays the song's steps over the wave, every 1, 2 or 4 steps, with a long line on each beat. A selection then snaps to whole steps and shows how many, so CROP makes a loop exactly 8 or 16 steps long. Start the selection on the first hit. **QUANTIZE** moves every hit in the selection (or the whole sound) to the nearest grid line, and what follows each hit moves with it: a loose beat or riff comes out tight. The grid is the sound played on C4 at the song's tempo.",
               "- **Waveform**: drag across it to select the part to keep, then CROP. Touching the margin on either side means the very start or end; drag the white edges of a selection to adjust it.",
               "- Use **↶** to undo, and ⌫ delete mode to empty slots.",
               "Then pick **Sample S1…S16** as the *Instrument* of a channel in the Tracker (your recorded samples are at the top of the list): the keys play your sample at different pitches.",
@@ -10334,6 +10527,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "- **PLAY**: reproduce el hueco; mientras suene algo de esta pantalla se convierte en **STOP**, que lo silencia todo. **CROP** conserva solo la parte seleccionada.",
               "- **FX**: efectos grabados en el propio sonido, aparte de los FX en directo y de la canción. Toca pads para añadirlos (se quedan puestos): reverb, eco, lo-fi, saturación, flanger, filtros, radio, puertas, octava arriba o abajo, capas al unísono y de quinta. El hueco se vuelve a generar y suena tras cada toque; toca un pad otra vez para quitarlo, u **Original** para quitarlos todos. Graba una flauta, añade Reverb y Lo-fi, y S1 *es* ese sonido allí donde suene.",
               "- **MORE**: velocidad, tono, **NORMALIZE** (subir volumen), **HOLD** (atado a la nota o de un golpe), **REVERSE** y **RESET**.",
+              "- MORE · **GRID** (apagado por defecto): pone los pasos de la canción sobre la onda, cada 1, 2 o 4 pasos, con una línea larga en cada pulso. Una selección se ajusta entonces a pasos enteros y muestra cuántos, así CROP deja un loop de 8 o 16 pasos exactos. Empieza la selección en el primer golpe. **QUANTIZE** (cuantizar) mueve cada golpe de la selección (o de todo el sonido) a la línea más cercana, y lo que sigue a cada golpe se mueve con él: un ritmo o un riff suelto queda justo. La rejilla es el sonido tocado en C4 al tempo de la canción.",
               "- **Forma de onda**: arrastra sobre ella para seleccionar la parte que quieres y pulsa CROP. Tocar el margen de cada lado equivale al principio o al final exactos; arrastra los bordes blancos de una selección para ajustarla.",
               "- Usa **↶** para deshacer y el modo borrar ⌫ para vaciar huecos.",
               "Después elige **Sample S1…S16** como *Instrument* de un canal en el Tracker (tus samples grabados salen los primeros de la lista): las teclas tocan tu sample a distintas alturas.",

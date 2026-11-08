@@ -8,7 +8,18 @@ Thus came TRACK.Pocket, a small, browser-based pocket music maker. It runs from 
 
 It should run fully offline, although opening the HTML file directly can cause microphone permission issues, so use the hosted GitHub page instead or self-host the HTML.
 
+I've been adding features and tweaking a lot, so they come out not fully tested, and there could be bugs. Leave me an issue and I'll fix it.
+
 There is a help wiki inside (también en español), so don't worry, but it should be quite straightforward.
+
+![TRACK.Pocket on five screens, each in a different theme](.github/readme/hero.png)
+
+## Why did I release these apps? 
+
+Because GitHub allows me to host them in a GitHub site if I make them public, and I don't want to host them myself. 
+
+Also because my friends told me that they are useful and some of you may want a free, ad-less gadget to pass the time.
+
 
 ## Ads and cookies
 
@@ -26,9 +37,18 @@ I'm not going to take credit for the code, even though I started this app from m
 
 The app itself uses no AI: everything runs on your device, and nothing you play, sing or record is sent to any AI service or anywhere else for that matter. If that isn't the case just shame me publicly and I'll fix it.
 
+I did waste a lot of tokens by making it code it in a non-minified way, so if the bubble bursts and we go back to the basics it could be maintainable. 
+
+If you want to try something made by me by hand (95%, I did use an early model to find some bugs but solved them by hand) in which I made the code, assets, music and all, check out Nanaya, my Pico-8 tower defense game: https://www.lexaloffle.com/bbs/?tid=153336
+
+![A strip of TRACK.Pocket screens](.github/readme/strip.png)
+
 ## How to run it
 
 Open `index.html` in a modern web browser. Start playback with **▶**. Your browser may ask for permission to play audio, so interact with the page first if you hear nothing.
+
+The microphone needs `https://` or `localhost` (or the Android app), which is why the hosted page is the easy way.
+
 
 ## The basics
 
@@ -36,8 +56,20 @@ If you've ever used a groovebox or tracker, you've got it. If not, it should be 
 
 - **Patterns:** add notes to the step grid, choose instruments, and build a repeating phrase.
 - **Playback:** adjust the tempo and press play to hear the current pattern. Use the song and live views to arrange or perform patterns.
+- **Playing along:** the keys play while the pattern runs without writing anything. Turn **PLAYING · WRITE** on to write into the selected step as the pattern plays, or press **●** to record each note on the step you hear. On a computer, the keyboard plays the keys, the drum pads and the FX pads, and each pad shows its key.
+- **Sampler:** record or open a sound into one of 16 slots, then crop, reverse, normalize or add effects. In **MORE**, an optional **GRID** lays the song's steps over the wave so a selection snaps to whole steps, and **QUANTIZE** moves the hits onto it to tighten a loose beat.
 - **Live FX:** open the FX pads and hold one to apply it; release to turn it off. **Latch** keeps an effect on after you release it. **Off** clears active effects. The FX board includes loop/repeat, rolls, pitch, filter, and other performance effects.
 - **Save:** use the file controls to save and load songs. TRACK.Pocket also keeps browser-local autosave data.
+
+![The views: pattern, drums, live, live FX, song and mixer](.github/readme/views.png)
+
+### Themes
+
+Six looks, from **THEME** at the bottom of the files screen: Dark, Light, Terminal, Dungeon synth, DMG and Demoscene. All three Pocket apps share them.
+
+![The drum pattern in the six themes](.github/readme/themes.png)
+
+### Your songs
 
 Songs and settings are stored in your browser (in IndexedDB, which gives you plenty of space, and you can export them); they are not uploaded anywhere. Clearing browser storage removes local saves.
 
@@ -72,6 +104,10 @@ I did not build it natively, GitHub Actions are free (to a point) and save me do
 ## License
 
 TRACK.Pocket is released under the MIT License (see `LICENSE`).
+
+AI assisted coding uses the uncredited work of a lot of coders through the years (me included) so anything I make that's not for work its as free as possible.
+
+Have fun.
 
 ### Third-party code
 
