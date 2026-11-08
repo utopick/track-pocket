@@ -2844,7 +2844,14 @@
           padding-left: 0;
         }
       }
-    </style>
+          /* help demos: live drawings inside the manual */
+      .hdemo { margin: 10px 0 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--wave); overflow: hidden; }
+      .hdemo canvas { display: block; width: 100%; cursor: pointer; }
+      .hdemo .hdb { display: flex; gap: 6px; padding: 8px; background: var(--wave); }
+      .hdemo .hdb button { flex: 1; min-width: 0; height: auto; min-height: 0; margin: 0; padding: 8px 4px; font: 800 11px var(--mono); letter-spacing: 0.04em; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--text); box-shadow: none; text-transform: none; }
+      .hdemo .hdb button.on { background: var(--acc); color: var(--ink); border-color: var(--acc); }
+      .hdemo figcaption { padding: 8px 10px; font-size: 12px; line-height: 1.45; color: var(--dim); border-top: 1px solid var(--line); background: var(--panel); }
+</style>
   </head>
   <body class="pocket">
     <canvas id="bgfx" aria-hidden="true"></canvas>
@@ -10356,6 +10363,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           b: {
             en: [
               "This is the main screen. The row of buttons under the top bar is **PAT · CH1 · CH2 · CH3 · CH4 · LIVE/LIST** (with 8 or 16 channels, the CH buttons slide sideways to reach the rest). Pick a channel to work on it; tap the channel that is already selected to **mute / unmute** it in the pattern you are editing (its label is crossed out and the squares dim; other patterns are not affected, so you can mute three channels and leave one). **PAT** shows or hides the tool rows (below). The button at the right end steps through three screens and always names the next one: **LIVE/LIST** (pattern list) → **SONG** → **EDIT** (back to the editor).",
+              "@pat",
               "## Tool rows (PAT button)",
               "Tap **PAT** to show the two rows of tools; tap it again to hide them and get bigger squares. They start hidden and the app remembers your choice. With the tools hidden, you can still change pattern: tap **LIVE/LIST** to open the pattern list and long-press a pattern to edit it.",
               "- **Pattern**: which pattern you are editing (A, B, C…). **Clear** empties it (↶ brings it back).",
@@ -10383,6 +10391,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             ],
             es: [
               "Esta es la pantalla principal. La fila de botones bajo la barra superior es **PAT · CH1 · CH2 · CH3 · CH4 · LIVE/LIST** (con 8 o 16 canales, los botones CH se deslizan hacia los lados para llegar al resto). Elige un canal para trabajar en él; toca el canal que ya está seleccionado para **silenciarlo / activarlo** en el patrón que editas (su rótulo aparece tachado y los cuadrados se atenúan; los demás patrones no cambian, así puedes silenciar tres canales y dejar uno). **PAT** muestra u oculta las filas de herramientas (abajo). El botón del extremo derecho recorre tres pantallas y siempre nombra la siguiente: **LIVE/LIST** (lista de patrones) → **SONG** → **EDIT** (volver al editor).",
+              "@pat",
               "## Filas de herramientas (botón PAT)",
               "Toca **PAT** para mostrar las dos filas de herramientas; tócalo otra vez para ocultarlas y tener cuadrados más grandes. Empiezan ocultas y la app recuerda tu elección. Con las herramientas ocultas puedes cambiar de patrón: toca **LIVE/LIST** para abrir la lista de patrones y mantén pulsado un patrón para editarlo.",
               "- **Pattern**: qué patrón estás editando (A, B, C…). **Clear** lo vacía (↶ lo recupera).",
@@ -10488,6 +10497,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           b: {
             en: [
               "**LIVE FX** opens a pad of 24 performance effects over the squares, in the pattern list and song screens. Hold a pad to apply it, let go to release.",
+              "@fx",
               "- **Loops and rolls**: Loop 8/4/2/1, Roll ×2/×4 (stutter).",
               "- **Playback**: Reverse, Shuffle, Half time, Double time, Gate 1/8 and 1/16.",
               "- **Pitch**: Octave up/down, Unison, Fifth.",
@@ -10496,6 +10506,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             ],
             es: [
               "**LIVE FX** abre un panel de 24 efectos de directo sobre los cuadrados, en las pantallas de lista de patrones y de canción. Mantén un pad para aplicarlo y suéltalo para quitarlo.",
+              "@fx",
               "- **Bucles y redobles**: Loop 8/4/2/1, Roll ×2/×4 (tartamudeo).",
               "- **Reproducción**: Reverse, Shuffle, Half time, Double time, Gate 1/8 y 1/16.",
               "- **Tono**: Octave arriba/abajo, Unison, Fifth.",
@@ -10510,6 +10521,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           b: {
             en: [
               "Record or load your own sounds and play them as instruments. There are **16 slots** (S1–S16), shown as squares; the selected one is outlined.",
+              "@smp",
               "- **RECORD**: records from the microphone (your browser will ask permission). Tap again to stop.",
               "- **OPEN**: loads an audio file from your device (WAV, MP3, OGG, M4A…; the first 20 seconds).",
               "- **PLAY**: plays the slot; while anything from this screen sounds it becomes **STOP**, which silences it all. **CROP** keeps only the selected part.",
@@ -10522,6 +10534,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             ],
             es: [
               "Graba o carga tus propios sonidos y tócalos como instrumentos. Hay **16 huecos** (S1–S16), mostrados como cuadrados; el seleccionado lleva un borde.",
+              "@smp",
               "- **RECORD**: graba con el micrófono (el navegador pedirá permiso). Toca de nuevo para parar.",
               "- **OPEN**: carga un archivo de audio de tu dispositivo (WAV, MP3, OGG, M4A…; los primeros 20 segundos).",
               "- **PLAY**: reproduce el hueco; mientras suene algo de esta pantalla se convierte en **STOP**, que lo silencia todo. **CROP** conserva solo la parte seleccionada.",
@@ -10645,6 +10658,572 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       } catch {}
       const hfmt = (t) =>
         t.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\*(.+?)\*/g, "<em>$1</em>");
+      // ---------------------------------------------------------------------------------------------
+      // HELP DEMOS: small live drawings inside the manual. A help line "@name" becomes the demo HD[name]:
+      // a canvas drawn every frame with the theme's colours, that takes taps and drags, with optional
+      // buttons under it (tap, or hold) and a caption. They only run while the manual is open.
+      // ---------------------------------------------------------------------------------------------
+      const HD = {};
+      let hdLive = [],
+        hdRaf = 0,
+        hdAC = null,
+        hdNoiseBuf = null;
+      const HDN = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+      const hdNote = (m) => HDN[((Math.round(m) % 12) + 12) % 12] + (Math.floor(Math.round(m) / 12) - 1);
+      const hdHz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+      const hdT = (o) => (typeof o === "string" ? o : o[HLANG] || o.en);
+      const hdClamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      function hdHtml(name) {
+        const d = HD[name];
+        if (!d) return "";
+        const b = (d.btns || [])
+          .map(([id, t, hold]) => `<button data-hdb="${id}"${hold ? " data-hold" : ""}>${hdT(t)}</button>`)
+          .join("");
+        return (
+          `<figure class="hdemo" data-demo="${name}"><canvas style="height:${d.h || 150}px;touch-action:${d.drag ? "none" : "manipulation"}"></canvas>` +
+          (b ? `<div class="hdb">${b}</div>` : "") +
+          `<figcaption>${hfmt(hdT(d.cap))}</figcaption></figure>`
+        );
+      }
+      function hdPal() {
+        const c = (n, f) => css(n) || f;
+        return {
+          bg: c("--wave", "#0a0c0f"),
+          panel: c("--panel", "#161a20"),
+          panel2: c("--panel2", "#1d222a"),
+          line: c("--line", "#2a313b"),
+          text: c("--text", "#e8ecf1"),
+          dim: c("--dim", "#8a94a3"),
+          acc: c("--acc", "#7cf29a"),
+          ok: c("--ok", c("--acc", "#7cf29a")),
+          acc2: c("--acc2", "#ffb347"),
+          hot: c("--hot", "#ff5e7a"),
+          blue: c("--blue", "#6ab7ff"),
+          hi: c("--hi", "#fff"),
+          ink: c("--ink", "#082012"),
+          mono: c("--mono", "monospace"),
+        };
+      }
+      function hdTxt(g, P, s, x, y, o = {}) {
+        g.font = `${o.w || 800} ${o.sz || 10}px ${o.font || P.mono}`;
+        g.fillStyle = o.c || P.dim;
+        g.textAlign = o.a || "left";
+        g.textBaseline = o.b || "alphabetic";
+        g.fillText(s, x, y);
+      }
+      function hdStop() {
+        hdLive.forEach((d) => d.o.stop && d.o.stop());
+        hdLive = [];
+      }
+      function hdMount() {
+        hdStop();
+        const P = hdPal();
+        hdLive = $$("#hBody .hdemo").map((el) => {
+          const def = HD[el.dataset.demo],
+            cv = el.querySelector("canvas"),
+            d = { el, cv, def, P, down: false };
+          d.o = def.make(d);
+          const at = (e) => {
+            const r = cv.getBoundingClientRect();
+            return [e.clientX - r.left, e.clientY - r.top, r.width, r.height];
+          };
+          cv.addEventListener("pointerdown", (e) => {
+            cv.setPointerCapture(e.pointerId);
+            d.down = true;
+            d.o.down && d.o.down(...at(e));
+          });
+          cv.addEventListener("pointermove", (e) => d.down && d.o.move && d.o.move(...at(e)));
+          const up = () => {
+            if (!d.down) return;
+            d.down = false;
+            d.o.up && d.o.up();
+          };
+          cv.addEventListener("pointerup", up);
+          cv.addEventListener("pointercancel", up);
+          el.querySelectorAll("[data-hdb]").forEach((b) => {
+            const id = b.dataset.hdb;
+            if (b.hasAttribute("data-hold")) {
+              b.addEventListener("pointerdown", (e) => {
+                b.setPointerCapture(e.pointerId);
+                d.o.hold(id, true);
+              });
+              const off = () => d.o.hold(id, false);
+              b.addEventListener("pointerup", off);
+              b.addEventListener("pointercancel", off);
+            } else b.addEventListener("click", () => d.o.btn(id));
+          });
+          return d;
+        });
+        if (hdLive.length && !hdRaf) hdRaf = requestAnimationFrame(hdTick);
+      }
+      function hdTick(ms) {
+        hdRaf = 0;
+        if ($("#help").hidden || !hdLive.length) return hdStop();
+        const box = $("#hBody").getBoundingClientRect(),
+          dp = Math.min(2, devicePixelRatio || 1),
+          t = ms / 1000;
+        for (const d of hdLive) {
+          d.dt = Math.min(0.05, d.t ? t - d.t : 0);
+          d.t = t;
+          if (d.o.tick) d.o.tick(t, d.dt); // timing and sound keep going while it is scrolled away
+          const r = d.cv.getBoundingClientRect();
+          if (!(r.width > 0 && r.bottom > box.top && r.top < box.bottom)) continue;
+          const W = Math.round(r.width * dp),
+            H = Math.round(r.height * dp);
+          if (d.cv.width !== W || d.cv.height !== H) ((d.cv.width = W), (d.cv.height = H));
+          const g = d.cv.getContext("2d");
+          g.setTransform(dp, 0, 0, dp, 0, 0);
+          g.clearRect(0, 0, r.width, r.height);
+          g.lineCap = g.lineJoin = "round";
+          d.o.draw(g, r.width, r.height, t, d.dt);
+          d.el.querySelectorAll("[data-hdb]").forEach((b) => {
+            if (d.o.on) b.classList.toggle("on", !!d.o.on(b.dataset.hdb));
+            const l = d.o.label && d.o.label(b.dataset.hdb);
+            if (l != null && b.textContent !== l) b.textContent = l;
+          });
+        }
+        hdRaf = requestAnimationFrame(hdTick);
+      }
+      // sound for the demos: their own small audio graph, only ever started by a tap inside a demo
+      function hdAudio() {
+        if (!hdAC) hdAC = new (window.AudioContext || window.webkitAudioContext)();
+        if (hdAC.state === "suspended") hdAC.resume();
+        return hdAC;
+      }
+      function hdTone(f, dur = 0.2, type = "triangle", vol = 0.16, when, dest) {
+        const c = hdAudio(),
+          t = when ?? c.currentTime,
+          o = c.createOscillator(),
+          g = c.createGain();
+        o.type = type;
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(vol, t + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+        o.connect(g).connect(dest || c.destination);
+        o.start(t);
+        o.stop(t + dur + 0.05);
+        return o;
+      }
+      function hdNoise(when, dur, hp, vol, dest) {
+        const c = hdAudio(),
+          t = when ?? c.currentTime;
+        if (!hdNoiseBuf) {
+          hdNoiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
+          const d = hdNoiseBuf.getChannelData(0);
+          for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
+        }
+        const s = c.createBufferSource(),
+          f = c.createBiquadFilter(),
+          g = c.createGain();
+        s.buffer = hdNoiseBuf;
+        f.type = "highpass";
+        f.frequency.value = hp;
+        g.gain.setValueAtTime(vol, t);
+        g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+        s.connect(f).connect(g).connect(dest || c.destination);
+        s.start(t, Math.random() * 0.5);
+        s.stop(t + dur + 0.05);
+      }
+      // a sustained tone whose pitch can follow a drag: { set(f), off() }
+      function hdHold(f, type = "triangle", vol = 0.1) {
+        const c = hdAudio(),
+          o = c.createOscillator(),
+          g = c.createGain();
+        o.type = type;
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0, c.currentTime);
+        g.gain.linearRampToValueAtTime(vol, c.currentTime + 0.05);
+        o.connect(g).connect(c.destination);
+        o.start();
+        return {
+          set: (f) => o.frequency.setTargetAtTime(f, c.currentTime, 0.02),
+          off: () => {
+            g.gain.setTargetAtTime(0, c.currentTime, 0.03);
+            o.stop(c.currentTime + 0.2);
+          },
+        };
+      }
+      // QUANTIZE, in miniature: one bar played a little loose; each hit slides to the nearest grid line.
+      // o: { bpm, grids: [[label, lines a beat]], gi (the grid to start on), select (drag a selection
+      //      that snaps to the grid), unit (a selection's length in beats -> its label) }
+      function hdQuant(o) {
+        return (d) => {
+          const BEATS = 4,
+            spb = 60 / o.bpm,
+            bar = BEATS * spb,
+            POS = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5], // where the hits mean to be, in beats
+            s = { gi: o.gi || 0, hits: [], play: false, next: 0, t0: 0, sel: null, a: null, w: 1, x0: 0 },
+            sub = () => o.grids[s.gi][1],
+            mess = () => (s.hits = POS.map((b, i) => ({ b: i ? b + (Math.random() - 0.5) * 0.3 : b + 0.03, from: 0, to: 0, k: 1 })).map((h) => ((h.from = h.to = h.b), h)));
+          // the first hit opens the bar; the others are early or late by up to a sixth of a beat
+          mess();
+          const snap = (b) => {
+            const n = sub();
+            return n ? Math.round(b * n) / n : b;
+          };
+          const X = (b, w) => 8 + (b / BEATS) * (w - 16),
+            B = (x, w) => hdClamp(((x - 8) / (w - 16)) * BEATS, 0, BEATS);
+          // the selection keeps a whole number of grid cells
+          const selSnap = (a, b) => {
+            const n = sub();
+            if (!n) return b;
+            let k = Math.round((b - a) * n);
+            if (!k) k = b >= a ? 1 : -1;
+            while (a + k / n > BEATS + 1e-6 || a + k / n < -1e-6) k -= Math.sign(k);
+            return a + k / n;
+          };
+          return {
+            btn(id) {
+              if (id === "q") {
+                const [a, b] = s.sel || [0, BEATS];
+                s.hits.forEach((h) => {
+                  if (h.b < a - 0.06 || h.b >= b - 0.06) return;
+                  h.from = h.b;
+                  h.to = snap(h.b);
+                  h.k = 0;
+                });
+                if (!sub()) toast(HLANG === "es" ? "Elige una GRID primero" : "Choose a GRID first");
+              }
+              if (id === "mess") ((s.sel = null), mess());
+              if (id === "grid") {
+                s.gi = (s.gi + 1) % o.grids.length;
+                if (s.sel && sub()) s.sel[1] = selSnap(s.sel[0], s.sel[1]);
+              }
+              if (id === "play") {
+                s.play = !s.play;
+                if (s.play) ((s.t0 = hdAudio().currentTime + 0.05), (s.next = 0));
+              }
+            },
+            on: (id) => (id === "play" ? s.play : id === "grid" ? !!sub() : false),
+            label: (id) => (id === "grid" ? "GRID " + o.grids[s.gi][0] : null),
+            down(x, y, w) {
+              if (!o.select) return;
+              s.a = B(x, w);
+              if (sub()) s.a = Math.floor(s.a * sub()) / sub();
+              s.sel = null;
+            },
+            move(x, y, w) {
+              if (!o.select || s.a == null) return;
+              const b = selSnap(s.a, B(x, w));
+              s.sel = b > s.a ? [s.a, b] : [b, s.a];
+            },
+            up() {
+              s.a = null;
+              if (s.sel && s.sel[1] - s.sel[0] < 0.05) s.sel = null;
+            },
+            tick(t, dt) {
+              s.hits.forEach((h) => {
+                if (h.k >= 1) return;
+                h.k = Math.min(1, h.k + dt / 0.35);
+                const e = 1 - Math.pow(1 - h.k, 3);
+                h.b = h.from + (h.to - h.from) * e;
+              });
+              if (!s.play) return;
+              // schedule each bar a little ahead: a soft tick on the beats, the hits where they are now
+              const c = hdAudio();
+              while (s.t0 + s.next * bar < c.currentTime + 0.15) {
+                const t0 = s.t0 + s.next * bar;
+                for (let i = 0; i < BEATS; i++) hdTone(i ? 1500 : 2000, 0.03, "sine", 0.05, t0 + i * spb);
+                s.hits.forEach((h, i) => {
+                  const when = t0 + h.b * spb;
+                  if (when < c.currentTime) return;
+                  hdNoise(when, 0.07, 1800, 0.35);
+                  hdTone(i % 2 ? 330 : 220, 0.12, "triangle", 0.18, when);
+                });
+                s.next++;
+              }
+            },
+            draw(g, w, h, t) {
+              const P = d.P,
+                n = sub(),
+                top = 20,
+                mid = (h + top) / 2,
+                amp = (h - top) / 2 - 6,
+                ph = s.play ? (((hdAudio().currentTime - s.t0) / bar) % 1 + 1) % 1 : (t / bar) % 1;
+              g.fillStyle = P.bg;
+              g.fillRect(0, 0, w, h);
+              if (s.sel) {
+                g.fillStyle = P.hi;
+                g.globalAlpha = 0.1;
+                g.fillRect(X(s.sel[0], w), top, X(s.sel[1], w) - X(s.sel[0], w), h - top);
+                g.globalAlpha = 1;
+              }
+              // the grid: a long line on each beat, a short one on each grid line
+              for (let b = 0; b <= BEATS + 1e-6; b += n ? 1 / n : 1) {
+                const beat = Math.abs(b - Math.round(b)) < 1e-6;
+                g.fillStyle = beat ? P.line : P.dim;
+                g.globalAlpha = beat ? 1 : 0.45;
+                g.fillRect(Math.round(X(b, w)), beat ? top : h - 10, 1, beat ? h - top : 10);
+              }
+              g.globalAlpha = 1;
+              // the wave: each hit a quick attack and a decay
+              const cols = Math.floor((w - 16) / 2);
+              g.fillStyle = P.acc;
+              g.globalAlpha = 0.75;
+              for (let i = 0; i < cols; i++) {
+                const b = (i / cols) * BEATS;
+                let a = 0;
+                for (const hh of s.hits) if (b >= hh.b) a += Math.exp(-(b - hh.b) / 0.11);
+                a = Math.min(1, a) * (0.55 + 0.45 * Math.abs(Math.sin(i * 12.9898)));
+                if (a > 0.02) g.fillRect(8 + i * 2, mid - a * amp, 1.4, 2 * a * amp);
+              }
+              g.globalAlpha = 1;
+              // the hits: green on the grid, red off it
+              let off = 0;
+              s.hits.forEach((hh) => {
+                const on = n ? Math.abs(hh.b - snap(hh.b)) < 0.012 : false;
+                off += !on;
+                g.fillStyle = !n ? P.dim : on ? P.ok : P.hot;
+                const x = X(hh.b, w);
+                g.beginPath();
+                g.moveTo(x, top + 8);
+                g.lineTo(x - 4, top);
+                g.lineTo(x + 4, top);
+                g.fill();
+              });
+              g.fillStyle = P.hi;
+              g.fillRect(X(ph * BEATS, w), top, 1.5, h - top);
+              const es = HLANG === "es";
+              hdTxt(g, P, `GRID ${o.grids[s.gi][0]}`, 8, 12, { c: P.text });
+              if (!n) hdTxt(g, P, es ? "SIN REJILLA" : "NO GRID", w - 8, 12, { a: "right" });
+              else hdTxt(g, P, off ? `${off} ${es ? "FUERA DE LA REJILLA" : "OFF THE GRID"}` : es ? "TODO A TIEMPO ✓" : "ALL ON THE GRID ✓", w - 8, 12, { a: "right", c: off ? P.hot : P.ok });
+              if (s.sel && o.unit) hdTxt(g, P, o.unit(s.sel[1] - s.sel[0]), (X(s.sel[0], w) + X(s.sel[1], w)) / 2, top + 22, { a: "center", c: P.hi, sz: 10 });
+            },
+          };
+        };
+      }
+      // the demos of TRACK's manual: a little band of four channels, 16 steps at 120 BPM
+      const HD_SD = 60 / 120 / 4,
+        HD_CH = [
+          { n: { en: "KICK", es: "BOMBO" }, s: [0, 4, 8, 10] },
+          { n: { en: "SNARE", es: "CAJA" }, s: [4, 12] },
+          { n: "HAT", s: [0, 2, 4, 6, 8, 10, 12, 14] },
+          { n: { en: "BASS", es: "BAJO" }, s: [0, 3, 6, 8, 11, 14], m: { 0: 36, 3: 36, 6: 43, 8: 41, 11: 41, 14: 43 } },
+        ],
+        HD_BASS = [36, 39, 41, 43, 46, 48];
+      // one channel's sound at a time (or now)
+      function hdPlay(ch, v, when, dest) {
+        const c = hdAudio(),
+          t = when ?? c.currentTime,
+          out = dest || c.destination;
+        if (ch === 0) {
+          const o = c.createOscillator(),
+            g = c.createGain();
+          o.frequency.setValueAtTime(150, t);
+          o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+          g.gain.setValueAtTime(0.9, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          o.connect(g).connect(out);
+          o.start(t);
+          o.stop(t + 0.4);
+        } else if (ch === 1) (hdNoise(t, 0.16, 1500, 0.4, out), hdTone(190, 0.08, "triangle", 0.25, t, out));
+        else if (ch === 2) hdNoise(t, 0.04, 7000, 0.22, out);
+        else hdTone(hdHz(v), 0.22, "square", 0.07, t, out);
+      }
+      const hdPat = () => HD_CH.map((c) => [...Array(16)].map((_, i) => (c.s.includes(i) ? (c.m ? c.m[i] : true) : null)));
+      // TRACKER: one channel's 16 squares; all four play together
+      HD.pat = {
+        h: 230,
+        btns: [
+          ["c0", HD_CH[0].n],
+          ["c1", HD_CH[1].n],
+          ["c2", HD_CH[2].n],
+          ["c3", HD_CH[3].n],
+          ["play", "▶"],
+        ],
+        cap: {
+          en: "A pattern in miniature: the **16 squares** are the steps of the channel picked below, played left to right and top to bottom. **Tap a square** to switch it on or off, pick another channel to see its part, and **▶** to hear the four together. In the app each square holds a note with its instrument, volume and effect.",
+          es: "Un patrón en miniatura: los **16 cuadrados** son los pasos del canal elegido abajo, que suenan de izquierda a derecha y de arriba abajo. **Toca un cuadrado** para encenderlo o apagarlo, elige otro canal para ver su parte, y **▶** para oír los cuatro juntos. En la app cada cuadrado guarda una nota con su instrumento, volumen y efecto.",
+        },
+        make(d) {
+          const s = { ch: 0, pat: hdPat(), play: false, t0: 0, next: 0, q: [], cur: -1 };
+          return {
+            btn(id) {
+              if (id === "play") {
+                s.play = !s.play;
+                if (s.play) ((s.t0 = hdAudio().currentTime + 0.05), (s.next = 0), (s.q = []));
+                else s.cur = -1;
+              } else s.ch = +id.slice(1);
+            },
+            on: (id) => (id === "play" ? s.play : id === "c" + s.ch),
+            down(x, y, w, h) {
+              const i = Math.floor((y / h) * 4) * 4 + Math.floor((x / w) * 4),
+                row = s.pat[s.ch];
+              row[i] = row[i] ? null : s.ch === 3 ? HD_BASS[i % HD_BASS.length] : true;
+              if (row[i]) hdPlay(s.ch, row[i]);
+            },
+            tick() {
+              if (!s.play) return;
+              const c = hdAudio();
+              while (s.t0 + s.next * HD_SD < c.currentTime + 0.12) {
+                const t = s.t0 + s.next * HD_SD,
+                  i = s.next % 16;
+                s.pat.forEach((row, ch) => row[i] && hdPlay(ch, row[i], t));
+                s.q.push([t, i]);
+                s.next++;
+              }
+              while (s.q.length && s.q[0][0] <= c.currentTime) s.cur = s.q.shift()[1];
+            },
+            draw(g, w, h) {
+              const P = d.P,
+                cw = w / 4,
+                chh = h / 4,
+                row = s.pat[s.ch];
+              g.fillStyle = P.bg;
+              g.fillRect(0, 0, w, h);
+              for (let i = 0; i < 16; i++) {
+                const x = (i % 4) * cw + 3,
+                  y = Math.floor(i / 4) * chh + 3,
+                  v = row[i],
+                  now = i === s.cur;
+                g.fillStyle = now ? P.acc : v ? P.panel2 : P.panel;
+                g.beginPath();
+                g.roundRect(x, y, cw - 6, chh - 6, 6);
+                g.fill();
+                if (v && !now) {
+                  g.strokeStyle = P.acc;
+                  g.globalAlpha = 0.6;
+                  g.lineWidth = 1;
+                  g.stroke();
+                  g.globalAlpha = 1;
+                }
+                hdTxt(g, P, i + 1, x + 5, y + 12, { sz: 8, w: 700, c: now ? P.ink : P.dim });
+                const cx = x + (cw - 6) / 2,
+                  cy = y + (chh - 6) / 2;
+                if (v) {
+                  hdTxt(g, P, s.ch === 3 ? hdNote(v) : "●", cx, cy + 6, { a: "center", sz: 16, w: 900, c: now ? P.ink : P.text });
+                  hdTxt(g, P, hdT(HD_CH[s.ch].n), cx, cy + 20, { a: "center", sz: 7, c: now ? P.ink : P.acc });
+                } else hdTxt(g, P, "—", cx, cy + 5, { a: "center", sz: 14, c: now ? P.ink : P.line });
+              }
+            },
+          };
+        },
+      };
+      // SAMPLER: the GRID over a loose beat, a selection that snaps to steps, QUANTIZE
+      HD.smp = {
+        h: 150,
+        drag: true,
+        btns: [
+          ["grid", "GRID"],
+          ["q", "QUANTIZE"],
+          ["mess", { en: "MESS UP", es: "DESORDENAR" }],
+          ["play", "▶"],
+        ],
+        cap: {
+          en: "A recorded beat that drags and rushes: the marks over the wave are the hits, **red** off the grid. **GRID** lays the song's steps over it (or turns it off). **Drag** over the wave to select: with a grid the selection is whole steps, as CROP will cut it. **QUANTIZE** slides the hits in the selection (or all of them) onto the grid. **MESS UP** starts again, **▶** plays it.",
+          es: "Un ritmo grabado que se adelanta y se atrasa: las marcas sobre la onda son los golpes, **rojas** fuera de la rejilla. **GRID** pone encima los pasos de la canción (o la quita). **Arrastra** sobre la onda para seleccionar: con rejilla la selección son pasos enteros, como los cortará CROP. **QUANTIZE** lleva a la rejilla los golpes de la selección (o todos). **DESORDENAR** vuelve a empezar, **▶** lo toca.",
+        },
+        make: hdQuant({
+          bpm: 120,
+          gi: 1,
+          select: true,
+          grids: [
+            ["OFF", 0],
+            ["1 STEP", 4],
+            ["2 STEPS", 2],
+            ["4 STEPS", 1],
+          ],
+          unit: (b) => Math.round(b * 4) + (HLANG === "es" ? " PASOS" : " STEPS"),
+        }),
+      };
+      // LIVE FX: hold a pad; the song keeps its place underneath
+      HD.fx = {
+        h: 110,
+        btns: [
+          ["play", "▶"],
+          ["l4", "LOOP 4", 1],
+          ["l1", "LOOP 1", 1],
+          ["rev", "REVERSE", 1],
+          ["lp", "LOW PASS", 1],
+        ],
+        cap: {
+          en: "**Hold** a pad: **LOOP 4** repeats the beat you are on, **LOOP 1** stutters one step, **REVERSE** plays backwards, **LOW PASS** muffles it. The outline is where the song really is: let go and it carries on from there, as the real FX pads do. Holding a pad starts it playing.",
+          es: "**Mantén** un pad: **LOOP 4** repite el pulso en el que estás, **LOOP 1** tartamudea un paso, **REVERSE** toca hacia atrás, **LOW PASS** lo apaga. El contorno es donde va de verdad la canción: suelta y sigue desde ahí, como los pads de efectos de verdad. Mantener un pad lo pone a sonar.",
+        },
+        make(d) {
+          const s = { pat: hdPat(), play: false, t0: 0, next: 0, q: [], pos: -1, cur: -1, held: {}, lp: null };
+          const bus = () => {
+            if (!s.lp) {
+              const c = hdAudio();
+              s.lp = c.createBiquadFilter();
+              s.lp.type = "lowpass";
+              s.lp.frequency.value = 18000;
+              s.lp.connect(c.destination);
+            }
+            return s.lp;
+          };
+          return {
+            btn(id) {
+              if (id !== "play") return;
+              s.play = !s.play;
+              if (s.play) ((s.t0 = hdAudio().currentTime + 0.05), (s.next = 0), (s.q = []), bus());
+              else ((s.cur = s.pos = -1), (s.held = {}));
+            },
+            hold(id, on) {
+              if (on && !s.play) this.btn("play");
+              if (on) s.held[id] = Math.max(0, s.next % 16);
+              else delete s.held[id];
+              if (id === "lp") bus().frequency.setTargetAtTime(on ? 420 : 18000, hdAudio().currentTime, 0.04);
+            },
+            on: (id) => (id === "play" ? s.play : id in s.held),
+            stop() {
+              s.play = false;
+            },
+            tick() {
+              if (!s.play) return;
+              const c = hdAudio(),
+                H = s.held;
+              while (s.t0 + s.next * HD_SD < c.currentTime + 0.1) {
+                const t = s.t0 + s.next * HD_SD,
+                  p = s.next % 16,
+                  q =
+                    "l1" in H
+                      ? H.l1
+                      : "l4" in H
+                        ? Math.floor(H.l4 / 4) * 4 + (p % 4)
+                        : "rev" in H
+                          ? (((H.rev - (p - H.rev)) % 16) + 16) % 16
+                          : p;
+                s.pat.forEach((row, ch) => row[q] && hdPlay(ch, row[q], t, bus()));
+                s.q.push([t, p, q]);
+                s.next++;
+              }
+              while (s.q.length && s.q[0][0] <= c.currentTime) [, s.pos, s.cur] = s.q.shift();
+            },
+            draw(g, w, h, t) {
+              const P = d.P,
+                bw = (w - 16) / 16,
+                y0 = 22,
+                bh = h - y0 - 26,
+                es = HLANG === "es";
+              g.fillStyle = P.bg;
+              g.fillRect(0, 0, w, h);
+              for (let i = 0; i < 16; i++) {
+                const x = 8 + i * bw;
+                g.fillStyle = i === s.cur ? P.acc : i % 4 ? P.panel : P.panel2;
+                g.fillRect(x + 1, y0, bw - 2, bh);
+                // what plays on each step: kick, snare, hat, bass, from the bottom up
+                s.pat.forEach((row, ch) => {
+                  if (!row[i]) return;
+                  g.fillStyle = i === s.cur ? P.ink : [P.acc2, P.hot, P.dim, P.blue][ch];
+                  g.fillRect(x + bw / 2 - 2.5, y0 + bh - 9 - ch * ((bh - 8) / 4), 5, 5);
+                });
+                if (i === s.pos && s.pos !== s.cur) {
+                  g.strokeStyle = P.hi;
+                  g.lineWidth = 1.5;
+                  g.strokeRect(x + 1, y0, bw - 2, bh);
+                }
+              }
+              const act = Object.keys(s.held)
+                .map((k) => ({ l4: "LOOP 4", l1: "LOOP 1", rev: "REVERSE", lp: "LOW PASS" })[k])
+                .join(" + ");
+              hdTxt(g, P, act || (s.play ? (es ? "MANTÉN UN PAD" : "HOLD A PAD") : es ? "▶ O MANTÉN UN PAD" : "▶ OR HOLD A PAD"), 8, 14, { c: act ? P.acc : P.acc2 });
+              hdTxt(g, P, es ? "BOMBO · CAJA · HAT · BAJO ↑" : "KICK · SNARE · HAT · BASS ↑", w - 8, h - 9, { a: "right", sz: 8 });
+            },
+          };
+        },
+      };
       function helpRender() {
         const L = HLANG,
           U = HELPUI[L];
@@ -10670,10 +11249,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               h += "</ul>";
               ul = false;
             }
-            h += l.startsWith("## ") ? `<h4>${hfmt(l.slice(3))}</h4>` : `<p>${hfmt(l)}</p>`;
+            h += l.startsWith("@") ? hdHtml(l.slice(1)) : l.startsWith("## ") ? `<h4>${hfmt(l.slice(3))}</h4>` : `<p>${hfmt(l)}</p>`;
           });
           return h + (ul ? "</ul>" : "");
         }).join("");
+        hdMount();
       }
       function openHelp(sec) {
         closeSheet();
