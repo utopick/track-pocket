@@ -3271,11 +3271,16 @@
             <span id="chNote"></span>With more than four, slide the CH buttons sideways to reach the rest (with a mouse: drag
             them or use the wheel). Fewer channels asks first if the ones removed have notes.
           </p>
+          <div class="lbl" style="margin: 12px 0 6px">Note names</div>
+          <div class="bar" id="nnSet" style="padding: 0">
+            <button data-nn="abc">A B C</button><button data-nn="sol">Do Re Mi</button>
+          </div>
+          <p class="hint" style="margin: 8px 0 0">Letters or solfège, for every app: TRACK, TUNE and SING.Pocket.</p>
         </div>
         <div class="prow" id="fileTabs">
           <button data-fpb="file"><i>SONG</i>FILE</button>
           <button data-fpb="theme"><i>LOOK</i>THEME</button>
-          <button data-fpb="opts"><i>SONG</i>OPTIONS</button>
+          <button data-fpb="opts"><i>SETTINGS</i>OPTIONS</button>
           <button id="helpBtn"><i>MANUAL</i>HELP</button>
         </div>
       </section>
@@ -3654,6 +3659,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       const $ = (s) => document.querySelector(s),
         $$ = (s) => [...document.querySelectorAll(s)];
       const NN = ["C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"];
+      // Note names: letters (C D E...) or solfège (Do Re Mi...). One setting, "pocket.notes", shared by the three
+      // Pocket apps (TRACK, TUNE, SING) when they are served from the same site. Only what is shown changes.
+      const NN_ABC = NN.slice(),
+        SOLF = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
+      let NOTES_SOL = false;
+      try {
+        NOTES_SOL = localStorage.getItem("pocket.notes") === "sol";
+      } catch {}
       const noteName = (m) => NN[m % 12] + (Math.floor(m / 12) - 1);
       const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -6469,7 +6482,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           (S.smpSel + 1) +
           (s ? " · " + (s.data.length / s.rate).toFixed(2) + " s" : " · empty");
         $("#smpHintTxt").innerHTML =
-          "<i>TRACKER INSTRUMENT</i>Sample S" + (S.smpSel + 1) + " · C-4 = original";
+          "<i>TRACKER INSTRUMENT</i>Sample S" + (S.smpSel + 1) + " · " + noteName(60).replace("-", "") + " = original";
       }
       // The waveform sits between two side margins (WAVE_M css px). A touch in a margin means the very start / end, so the
       // ends of the sound are easy to reach on a phone; the edges of a selection can be dragged.
@@ -7981,6 +7994,18 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         $$("#chSet [data-chn]").forEach((b) => b.classList.toggle("on", +b.dataset.chn === CH));
         $("#chNote").textContent = CH_SIZES.includes(CH) ? "" : "This song has " + CH + " channels. ";
       }
+      $("#nnSet").addEventListener("click", (e) => {
+        const b = e.target.closest("[data-nn]");
+        if (!b) return;
+        NOTES_SOL = b.dataset.nn === "sol";
+        try {
+          localStorage.setItem("pocket.notes", NOTES_SOL ? "sol" : "abc");
+        } catch {}
+        notesApply();
+        refreshAll();
+        smpInfo();
+        toast(NOTES_SOL ? "Notes: Do Re Mi" : "Notes: A B C");
+      });
       $("#chSet").addEventListener("click", (e) => {
         const b = e.target.closest("[data-chn]");
         if (b) setChannels(+b.dataset.chn);
@@ -8275,6 +8300,13 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       const instFace = (i) => (i === DRUM_I ? "Drums: " + KITS[song.kit || 0] : instLabel(i));
       const CSHORT = ["", "Maj", "Min", "7", "M7", "m7", "S2", "S4", "5", "8ve"];
       const KEYN = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+      const KEYN_ABC = KEYN.slice();
+      function notesApply() {
+        NN.splice(0, 12, ...(NOTES_SOL ? SOLF : NN_ABC));
+        KEYN.splice(0, 12, ...(NOTES_SOL ? SOLF : KEYN_ABC));
+        $$("#nnSet [data-nn]").forEach((b) => b.classList.toggle("on", (b.dataset.nn === "sol") === NOTES_SOL));
+      }
+      notesApply();
       const SCALES = [
         { n: "All notes", s: "All", iv: null },
         { n: "Major", s: "Maj", iv: [0, 2, 4, 5, 7, 9, 11] },
@@ -10326,7 +10358,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           t: { en: "Files and looks", es: "Archivos y aspecto" },
           b: {
             en: [
-              "The four buttons at the bottom open one panel each (tap again to close): **FILE** (new song, demo, .json, sound files and MIDI), **THEME** (the looks), **OPTIONS** (4, 8 or 16 channels) and **HELP** (this manual). With no panel open, the list of songs gets the whole screen. A big faint word in the middle of every screen tells you where you are: TRACKER, LIVE, SONG, SAMPLER, MIXER or FILES.",
+              "The four buttons at the bottom open one panel each (tap again to close): **FILE** (new song, demo, .json, sound files and MIDI), **THEME** (the looks), **OPTIONS** (4, 8 or 16 channels, note names) and **HELP** (this manual). With no panel open, the list of songs gets the whole screen. A big faint word in the middle of every screen tells you where you are: TRACKER, LIVE, SONG, SAMPLER, MIXER or FILES.",
               "- **Save**: type a name and save the song in this browser. The table lists every saved song with when it was last changed, its patterns, samples and whether it is arranged as a song; **Open** loads it, ✕ deletes it.",
               "## FILE",
               "- **New song**: starts from empty.",
@@ -10339,12 +10371,13 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "- **Look**: **Dark**, **Light**, **Demo** (raster bars, scanlines and a scroller, like a 90s Amiga intro), **Terminal** (cyan and orange on black, with a blinking cursor), **Dungeon** (candlelit parchment, moss and stone) or **DMG** (the classic handheld’s muted green LCD and hardware grey). Your choice is remembered. On a wide screen the sides show an animated backdrop that dances with the music.",
               "## OPTIONS",
               "- **Channels 4 / 8 / 16**: how many channels this song has (16 is the most). With more than four the CH buttons slide sideways (on a computer: drag them with the mouse, turn the mouse wheel over them, or use the ← → arrow keys). Choosing fewer asks before removing channels that have notes.",
+              "- **Note names**: letters (**A B C**) or solfège (**Do Re Mi**). The choice is shared with TUNE.Pocket and SING.Pocket.",
               "## HELP",
               "- **Help**: the HELP button at the bottom (or the TRACK. logo) opens this manual again.",
               "The current work is also autosaved when you leave the page. Add the page to your home screen to use it like an app.",
             ],
             es: [
-              "Los cuatro botones de abajo abren un panel cada uno (tócalo otra vez para cerrarlo): **FILE** (canción nueva, demo, .json, archivos de sonido y MIDI), **THEME** (los aspectos), **OPTIONS** (4, 8 o 16 canales) y **HELP** (este manual). Sin ningún panel abierto, la lista de canciones ocupa toda la pantalla. Una palabra grande y tenue en el centro de cada pantalla te dice dónde estás: TRACKER, LIVE, SONG, SAMPLER, MIXER o FILES.",
+              "Los cuatro botones de abajo abren un panel cada uno (tócalo otra vez para cerrarlo): **FILE** (canción nueva, demo, .json, archivos de sonido y MIDI), **THEME** (los aspectos), **OPTIONS** (4, 8 o 16 canales, nombres de las notas) y **HELP** (este manual). Sin ningún panel abierto, la lista de canciones ocupa toda la pantalla. Una palabra grande y tenue en el centro de cada pantalla te dice dónde estás: TRACKER, LIVE, SONG, SAMPLER, MIXER o FILES.",
               "- **Save**: escribe un nombre y guarda la canción en este navegador. La tabla lista cada canción guardada con su última modificación, sus patrones, samples y si está montada como canción; **Open** la carga y ✕ la borra.",
               "## FILE",
               "- **New song**: empieza desde cero.",
@@ -10357,6 +10390,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "- **Look**: **Dark**, **Light**, **Demo** (barras de raster, líneas de barrido y un scroller, como una intro de Amiga de los 90), **Terminal** (cian y naranja sobre negro, con cursor parpadeante), **Dungeon** (pergamino a la luz de las velas, musgo y piedra) o **DMG** (la pantalla LCD verde apagada y el gris del clásico portátil). Tu elección se recuerda. En una pantalla ancha, los lados muestran un fondo animado que baila con la música.",
               "## OPTIONS",
               "- **Channels 4 / 8 / 16**: cuántos canales tiene esta canción (16 como máximo). Con más de cuatro, los botones CH se deslizan hacia los lados (en ordenador: arrástralos con el ratón, gira la rueda sobre ellos o usa las flechas ← →). Si eliges menos, pregunta antes de quitar canales que tengan notas.",
+              "- **Note names**: letras (**A B C**) o solfeo (**Do Re Mi**). La elección se comparte con TUNE.Pocket y SING.Pocket.",
               "## HELP",
               "- **Help**: el botón HELP de abajo (o el logo TRACK.) vuelve a abrir este manual.",
               "El trabajo actual también se guarda solo al salir de la página. Añade la página a la pantalla de inicio para usarla como una app.",
