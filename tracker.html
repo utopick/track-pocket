@@ -1656,6 +1656,19 @@
         border: 0;
         background: none;
       }
+      #smpFxBar {
+        flex: none;
+        margin: 2px 6px;
+      }
+      #smpFxGrid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        grid-auto-rows: 44px;
+        gap: 4px;
+      }
+      #smpFxGrid.busy .fxp {
+        opacity: 0.6;
+      }
       #smpMoreBar button.on {
         background: var(--acc);
         border-color: var(--acc);
@@ -3124,12 +3137,17 @@
           <div class="prow">
             <button id="smpNorm">NORMALIZE<i>PEAK TO 0 dB</i></button
             ><button id="smpHold" class="on" aria-pressed="true">HOLD<i>GATED TO NOTE</i></button
-            ><button id="smpCfgReset">RESET<i>VEL · PITCH · HOLD</i></button>
+            ><button id="smpRev">REVERSE<i>FLIP IN TIME</i></button
+            ><button id="smpCfgReset">RESET<i>SETTINGS</i></button>
           </div>
+        </div>
+        <!-- FX: effects baked into the slot's sound (not the live or song FX) -->
+        <div id="smpFxBar" hidden>
+          <div id="smpFxGrid"></div>
         </div>
         <div class="prow rib" id="smpRib">
           <button id="micBtn" class="rec"></button><button id="loadFile"></button
-          ><button id="smpPlay"></button><button id="smpRev"></button><button id="smpMore" aria-expanded="false"></button
+          ><button id="smpPlay"></button><button id="smpFx" aria-expanded="false"></button><button id="smpMore" aria-expanded="false"></button
           ><button id="smpCrop"></button>
         </div>
         <div id="waveBox"><canvas id="wave"></canvas></div>
@@ -3775,7 +3793,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             : "?"
           : i < INST.length
             ? INST[i].name
-            : "S" + (i - INST.length + 1) + (samples[i - INST.length] ? "" : " (empty)");
+            : "Sample S" + (i - INST.length + 1) + (samples[i - INST.length] ? "" : " (empty)");
       const DRUM_I = INST.findIndex((x) => x.drum);
 
       // Extra instruments (own recipes in the spirit of Music Forge's families). They live at index 1000+ so the numbers of old songs
@@ -4587,15 +4605,17 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       }
       // <option>s grouped by family: basic instruments, extra families, then the sample slots.
       function instOptions() {
-        const o = (i) => `<option value="${i}">${instLabel(i)}</option>`;
-        let h = `<optgroup label="Basic">${INST.map((x, i) => (i === DRUM_I ? "" : o(i))).join("")}</optgroup>`;
+        const o = (i) => `<option value="${i}">${instLabel(i)}</option>`,
+          slots = Array.from({ length: SLOTS }, (_, k) => k),
+          rec = slots.filter((k) => samples[k]),
+          empty = slots.filter((k) => !samples[k]);
+        // the recorded samples come first, so they are at hand without scrolling the whole list
+        let h = rec.length ? `<optgroup label="Your samples">${rec.map((k) => o(INST.length + k)).join("")}</optgroup>` : "";
+        h += `<optgroup label="Basic">${INST.map((x, i) => (i === DRUM_I ? "" : o(i))).join("")}</optgroup>`;
         [...new Set(EXT.map((x) => x.fam))].forEach((fm) => {
           h += `<optgroup label="${fm}">${EXT.map((x, i) => (x.fam === fm ? o(EXT_BASE + i) : "")).join("")}</optgroup>`;
         });
-        return (
-          h +
-          `<optgroup label="Samples">${Array.from({ length: SLOTS }, (_, k) => o(INST.length + k)).join("")}</optgroup>`
-        );
+        return h + (empty.length ? `<optgroup label="Empty sample slots">${empty.map((k) => o(INST.length + k)).join("")}</optgroup>` : "");
       }
 
       // ======================================================================
@@ -6003,11 +6023,21 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (i < 0 || !$("#trk").classList.contains("show")) return;
         const base = instOf(S.col) === DRUM_I ? 36 : S.oct * 12 + 12;
         kHeld.add(e.key);
+        kLit.set(e.key, base + i);
+        kLight(base + i, true);
         noteOn("k" + e.key, base + i);
       });
       addEventListener("keyup", (e) => {
         if (kHeld.delete(e.key)) noteOff("k" + e.key);
+        if (kLit.has(e.key)) {
+          const m = kLit.get(e.key);
+          kLit.delete(e.key);
+          if (![...kLit.values()].includes(m)) kLight(m, false);
+        }
       });
+      // the on-screen piano shows the keys played from the computer keyboard
+      const kLit = new Map();
+      const kLight = (m, on) => $$(`#kbd .k[data-m="${m}"], #pkbd .k[data-m="${m}"]`).forEach((k) => k.classList.toggle("down", on));
 
       // ======================================================================
       // pads (classic view; hidden in Pocket)
@@ -6439,7 +6469,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           (S.smpSel + 1) +
           (s ? " · " + (s.data.length / s.rate).toFixed(2) + " s" : " · empty");
         $("#smpHintTxt").innerHTML =
-          "<i>TRACKER INSTRUMENT</i>S" + (S.smpSel + 1) + " · C-4 = original pitch";
+          "<i>TRACKER INSTRUMENT</i>Sample S" + (S.smpSel + 1) + " · C-4 = original";
       }
       // The waveform sits between two side margins (WAVE_M css px). A touch in a margin means the very start / end, so the
       // ends of the sound are easy to reach on a phone; the edges of a selection can be dragged.
@@ -6563,8 +6593,27 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         const a = selB > selA ? selA / work.rate : 0,
           d = selB > selA ? (selB - selA) / work.rate : undefined;
         s.start(0, a, d);
+        smpPlaying.add(s);
+        s.onended = () => (smpPlaying.delete(s), smpPlayFace());
+        smpPlayFace();
       }
-      $("#smpPlay").onclick = playWork;
+      // PLAY turns into STOP while anything played from this screen still sounds; STOP silences all of it
+      const smpPlaying = new Set();
+      function smpPlayFace() {
+        const on = smpPlaying.size > 0;
+        $("#smpPlay").innerHTML = `<b>${IC[on ? "stop" : "play"]}</b><i>${on ? "STOP" : "PLAY"}</i>`;
+        $("#smpPlay").classList.toggle("on", on);
+      }
+      function smpStopAll() {
+        smpPlaying.forEach((x) => {
+          try {
+            x.stop();
+          } catch {}
+        });
+        smpPlaying.clear();
+        smpPlayFace();
+      }
+      $("#smpPlay").onclick = () => (smpPlaying.size ? smpStopAll() : playWork());
       // every edit is written into the selected slot
       function setWork(data, rate) {
         smpPush();
@@ -6594,10 +6643,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         h.classList.toggle("on", cfg.hold);
         h.setAttribute("aria-pressed", cfg.hold);
         h.querySelector("i").textContent = cfg.hold ? "GATED TO NOTE" : "ONE-SHOT";
+        if (typeof bakeSync === "function" && $("#smpFxGrid").children.length) bakeSync();
       }
       $("#smpMore").onclick = () => {
         const bar = $("#smpMoreBar"),
           open = bar.hidden;
+        if (open) smpFxPanel(false);
         bar.hidden = !open;
         $("#smpMore").classList.toggle("on", open);
         $("#smpMore").setAttribute("aria-expanded", open);
@@ -6613,7 +6664,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         syncSmpCfg();
       };
       // preview the new pitch/velocity when the finger lifts
-      $("#smpVelocity").onchange = $("#smpPitch").onchange = () => work && playWork();
+      $("#smpVelocity").onchange = $("#smpPitch").onchange = () => work && (smpStopAll(), playWork());
       $("#smpHold").onclick = () => {
         const cfg = sampleSettings[S.smpSel];
         cfg.hold = !cfg.hold;
@@ -6624,6 +6675,137 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         syncSmpCfg();
         toast("S" + (S.smpSel + 1) + " settings reset");
       };
+      // FX: effects written into the slot's sound. Pads latch; every change re-renders the effects from the sound as it was
+      // before the first pad (the "dry" sound), so a pad can be turned off again. Any other edit (crop, reverse, a new
+      // recording...) makes the result the new dry sound and clears the pads.
+      const BFX = [
+        ["rvb", "Reverb", "big wash"],
+        ["ech", "Echo", "dotted 8th"],
+        ["lofi", "Lo-fi", "crunch"],
+        ["drv", "Drive", "distort"],
+        ["fln", "Flanger", "whoosh"],
+        ["flo", "Filter ↓", "darker"],
+        ["fhi", "Filter ↑", "thinner"],
+        ["rad", "Radio", "tiny speaker"],
+        ["g8", "Gate 1/8", "chop"],
+        ["g16", "Gate 1/16", "chop fast"],
+        ["o1", "Octave ↑", "one up"],
+        ["o2", "Octave ↓", "one down"],
+        ["uni", "Unison", "+ octave below"],
+        ["fif", "Fifth", "+ a fifth"],
+        ["off", "Original", "remove all"],
+      ];
+      const bake = { slot: -1, dry: null, out: null, ids: [], job: 0 };
+      // the bake state belongs to one slot and one result; anything else starts again from the slot's current sound
+      function bakeSync() {
+        const s = samples[S.smpSel];
+        if (bake.slot !== S.smpSel || !s || s.data !== bake.out) Object.assign(bake, { slot: S.smpSel, dry: null, out: null, ids: [] });
+        $$("#smpFxGrid [data-bf]").forEach((e) => e.classList.toggle("on", bake.ids.includes(e.dataset.bf)));
+        const n = bake.ids.length;
+        $("#smpFx i").textContent = n ? "FX · " + n : "FX";
+      }
+      async function bakeRender(dry, ids) {
+        const on = (id) => ids.includes(id),
+          rate = dry.rate,
+          tr = (on("o1") ? 12 : 0) + (on("o2") ? -12 : 0),
+          layers = [0, ...(on("uni") ? [-12] : []), ...(on("fif") ? [7] : [])],
+          rates = layers.map((l) => Math.pow(2, (tr + l) / 12)),
+          body = dry.data.length / Math.min(...rates),
+          tail = (on("rvb") ? 3.5 : 0) + (on("ech") ? 3 : 0),
+          len = Math.ceil(body + Math.min(5, tail) * rate),
+          c = new OfflineAudioContext(1, len, rate),
+          buf = c.createBuffer(1, dry.data.length, rate);
+        buf.getChannelData(0).set(dry.data);
+        const f = buildFxChain(c);
+        f.lp.frequency.value = on("flo") ? 220 : on("rad") ? 3400 : 20000;
+        f.hp.frequency.value = on("fhi") ? 3200 : on("rad") ? 700 : 10;
+        f.lp.Q.value = on("flo") ? 6 : 0.7;
+        f.hp.Q.value = on("fhi") ? 6 : 0.7;
+        f.drive.fix(on("drv") ? 1 : 0);
+        f.crush.fix(on("lofi") ? 1 : 0);
+        f.flange.fix(on("fln") ? 1 : 0);
+        f.es.gain.value = on("ech") ? 1 : 0;
+        f.dl.delayTime.value = (60 / song.bpm) * 0.75;
+        f.rs.gain.value = on("rvb") ? 1.2 : 0;
+        f.dry.gain.value = on("rvb") ? 0.55 : 1;
+        const gd = on("g16") ? 2 : on("g8") ? 4 : 0;
+        if (gd) {
+          const o = c.createOscillator(),
+            ag = c.createGain();
+          o.type = "square";
+          o.frequency.value = 1 / ((60 / song.bpm / 4) * gd);
+          ag.gain.value = 0.5;
+          f.gate.gain.value = 0.5;
+          o.connect(ag).connect(f.gate.gain);
+          o.start(0);
+        }
+        f.out.connect(c.destination);
+        rates.forEach((r) => {
+          const src = c.createBufferSource(),
+            g = c.createGain();
+          src.buffer = buf;
+          src.playbackRate.value = r;
+          g.gain.value = 1 / Math.sqrt(rates.length);
+          src.connect(g).connect(f.in);
+          src.start(0);
+        });
+        const out = (await c.startRendering()).getChannelData(0);
+        // cut the silent end of the tail, keep the peak under 0 dB, fade the last 20 ms
+        let end = out.length,
+          peak = 0;
+        while (end > body && Math.abs(out[end - 1]) < 0.0015) end--;
+        const d = out.slice(0, Math.max(1, end));
+        for (const v of d) peak = Math.max(peak, Math.abs(v));
+        if (peak > 0.99) for (let i = 0; i < d.length; i++) d[i] *= 0.95 / peak;
+        const fl = Math.min(d.length, Math.round(rate * 0.02));
+        if (end < out.length || tail) for (let i = 0; i < fl; i++) d[d.length - 1 - i] *= i / fl;
+        return d;
+      }
+      async function bakeToggle(id) {
+        if (!work) return toast("Record or open a sound first");
+        bakeSync();
+        if (!bake.dry) bake.dry = { data: work.data, rate: work.rate };
+        bake.ids = id === "off" ? [] : bake.ids.includes(id) ? bake.ids.filter((x) => x !== id) : [...bake.ids, id];
+        // octave up and down cancel each other: the newest one wins
+        if (id === "o1") bake.ids = bake.ids.filter((x) => x !== "o2");
+        if (id === "o2") bake.ids = bake.ids.filter((x) => x !== "o1");
+        if (id === "g8") bake.ids = bake.ids.filter((x) => x !== "g16");
+        if (id === "g16") bake.ids = bake.ids.filter((x) => x !== "g8");
+        const job = ++bake.job,
+          ids = bake.ids.slice(),
+          dry = bake.dry;
+        $$("#smpFxGrid [data-bf]").forEach((e) => e.classList.toggle("on", ids.includes(e.dataset.bf)));
+        $("#smpFxGrid").classList.add("busy");
+        const d = ids.length ? await bakeRender(dry, ids) : dry.data;
+        if (job !== bake.job) return; // a newer tap is already rendering
+        $("#smpFxGrid").classList.remove("busy");
+        setWork(d, dry.rate);
+        bake.out = samples[S.smpSel].data;
+        bakeSync();
+        smpStopAll(); // the new version replaces the one still sounding
+        playWork();
+      }
+      function smpFxPanel(open) {
+        if (open && !$("#smpMoreBar").hidden) $("#smpMore").click();
+        $("#smpFxBar").hidden = !open;
+        $("#smpFx").classList.toggle("on", open);
+        $("#smpFx").setAttribute("aria-expanded", open);
+        if (open) {
+          $("#smpFxGrid").innerHTML = BFX.map(
+            ([id, n, h], i) =>
+              `<div class="fxp" data-bf="${id}" style="--ccrgb:${id === "off" ? "232,236,243" : CHC[Math.floor(i / 3) % CHC.length]}"><span>${n}</span><small>${h}</small></div>`,
+          ).join("");
+          bakeSync();
+        }
+        drawWave();
+      }
+      $("#smpFx").onclick = () => smpFxPanel($("#smpFxBar").hidden);
+      $("#smpFxGrid").addEventListener("click", (e) => {
+        const p = e.target.closest("[data-bf]");
+        if (!p) return;
+        ensureCtx();
+        bakeToggle(p.dataset.bf);
+      });
       $("#smpNorm").onclick = () => {
         if (!work) return toast("Nothing to normalize");
         let p = 0;
@@ -8140,6 +8322,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         rec: ic('<circle cx="12" cy="12" r="6" fill="currentColor"/>'),
         open: ic('<path d="M3 7h6l2 2h10v10H3z"/>'),
         play: ic('<path d="M7 5l12 7-12 7z"/>'),
+        stop: ic('<rect x="6" y="6" width="12" height="12" rx="1.5"/>'),
         rev: ic('<path d="M17 4l3 3-3 3M20 7H8M7 20l-3-3 3-3M4 17h12"/>'),
         norm: ic('<path d="M4 12h2M8 7v10M12 4v16M16 7v10M20 12h0"/>'),
         more: ic('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'),
@@ -8149,7 +8332,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         ["micBtn", "rec", "RECORD"],
         ["loadFile", "open", "OPEN"],
         ["smpPlay", "play", "PLAY"],
-        ["smpRev", "rev", "REVERSE"],
+        ["smpFx", "fx", "FX"],
         ["smpMore", "more", "MORE"],
         ["smpCrop", "crop", "CROP"],
       ].forEach(([id, i, cap]) => {
@@ -9654,6 +9837,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           return {
             i,
             o,
+            fix(x) {
+              d.gain.value = 1 - x * (1 - dryMin);
+              w.gain.value = x;
+            },
             set(x) {
               const t = c.currentTime;
               d.gain.setTargetAtTime(1 - x * (1 - dryMin), t, 0.02);
@@ -10098,19 +10285,23 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "Record or load your own sounds and play them as instruments. There are **16 slots** (S1–S16), shown as squares; the selected one is outlined.",
               "- **RECORD**: records from the microphone (your browser will ask permission). Tap again to stop.",
               "- **OPEN**: loads an audio file from your device (WAV, MP3, OGG, M4A…; the first 20 seconds).",
-              "- **PLAY**: plays the slot. **REVERSE**, **NORMALIZE** (make it louder) and **CROP** (keep only the selected part) edit the sound.",
+              "- **PLAY**: plays the slot; while anything from this screen sounds it becomes **STOP**, which silences it all. **CROP** keeps only the selected part.",
+              "- **FX**: effects written into the sound itself, apart from the live and song FX. Tap pads to add them (they stay on): reverb, echo, lo-fi, drive, flanger, filters, radio, gates, octave up or down, unison and fifth layers. The slot is re-rendered and played after each tap; tap a pad again to take it out, or **Original** to remove them all. Record a flute, then add Reverb and Lo-fi, and S1 *is* that sound everywhere it plays.",
+              "- **MORE**: velocity, pitch, **NORMALIZE** (make it louder), **HOLD** (gated to the note or one-shot), **REVERSE** and **RESET**.",
               "- **Waveform**: drag across it to select the part to keep, then CROP. Touching the margin on either side means the very start or end; drag the white edges of a selection to adjust it.",
               "- Use **↶** to undo, and ⌫ delete mode to empty slots.",
-              "Then pick **S1…S16** as the *Instrument* of a channel in the Tracker: the keys play your sample at different pitches.",
+              "Then pick **Sample S1…S16** as the *Instrument* of a channel in the Tracker (your recorded samples are at the top of the list): the keys play your sample at different pitches.",
             ],
             es: [
               "Graba o carga tus propios sonidos y tócalos como instrumentos. Hay **16 huecos** (S1–S16), mostrados como cuadrados; el seleccionado lleva un borde.",
               "- **RECORD**: graba con el micrófono (el navegador pedirá permiso). Toca de nuevo para parar.",
               "- **OPEN**: carga un archivo de audio de tu dispositivo (WAV, MP3, OGG, M4A…; los primeros 20 segundos).",
-              "- **PLAY**: reproduce el hueco. **REVERSE**, **NORMALIZE** (subir volumen) y **CROP** (conservar solo la parte seleccionada) editan el sonido.",
+              "- **PLAY**: reproduce el hueco; mientras suene algo de esta pantalla se convierte en **STOP**, que lo silencia todo. **CROP** conserva solo la parte seleccionada.",
+              "- **FX**: efectos grabados en el propio sonido, aparte de los FX en directo y de la canción. Toca pads para añadirlos (se quedan puestos): reverb, eco, lo-fi, saturación, flanger, filtros, radio, puertas, octava arriba o abajo, capas al unísono y de quinta. El hueco se vuelve a generar y suena tras cada toque; toca un pad otra vez para quitarlo, u **Original** para quitarlos todos. Graba una flauta, añade Reverb y Lo-fi, y S1 *es* ese sonido allí donde suene.",
+              "- **MORE**: velocidad, tono, **NORMALIZE** (subir volumen), **HOLD** (atado a la nota o de un golpe), **REVERSE** y **RESET**.",
               "- **Forma de onda**: arrastra sobre ella para seleccionar la parte que quieres y pulsa CROP. Tocar el margen de cada lado equivale al principio o al final exactos; arrastra los bordes blancos de una selección para ajustarla.",
               "- Usa **↶** para deshacer y el modo borrar ⌫ para vaciar huecos.",
-              "Después elige **S1…S16** como *Instrument* de un canal en el Tracker: las teclas tocan tu sample a distintas alturas.",
+              "Después elige **Sample S1…S16** como *Instrument* de un canal en el Tracker (tus samples grabados salen los primeros de la lista): las teclas tocan tu sample a distintas alturas.",
             ],
           },
         },
