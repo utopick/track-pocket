@@ -37,6 +37,9 @@
       } catch {}
     </script>
     <title>TRACK.Pocket music maker</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20108%20108%22%3E%3Crect%20width%3D%22108%22%20height%3D%22108%22%20rx%3D%2222%22%20fill%3D%22%230d0f12%22%2F%3E%3Cg%20transform%3D%22translate(54%2054)%20scale(1.3)%20translate(-54%20-54)%22%3E%3Cpath%20d%3D%22M37%2069.5V38.5H47.5a7.75%207.75%200%200%201%200%2015.5H37M47.5%2054L57%2069.5%22%20fill%3D%22none%22%20stroke%3D%22%23e8ecf1%22%20stroke-width%3D%229%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2270.5%22%20cy%3D%2269.5%22%20r%3D%225.5%22%20fill%3D%22%23ffb347%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" />
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACDElEQVR4nMSXv0vDQBTHv0lbUgutWvHHKuIiOOhgBC2IOPgvKA4O4lYrOOkfoIuI1VEEEVFwcHPT4qDQuPgHiDi4KGL8NVhbNd5rTbkGm7RJm3zg6N31yH3v3XvveH5whJubh/AjzLPuKGtR1BaVtRREbf39+flCnxSKmze2LAPaIlxBWHl/fVqins/9zfPEpGBIyn5+nAp/Zj+HF4jasE+SQmus2wMv0ISIEG6MPqH2Dlcpqt/DzYmoCI/xWy2Q5UHEE4mSuUtFyf8q6TQUJQ0nkA9oZguub27N/sbmRhIbyXXYxdQCdHor4nMF69gVYXkFPLy5eXEDsgy7VCVgM5ksiiABe/sHxb4rAnjkQfub2hZA0RBH4c75UzuJhKoElDO1HpZ1F/AfTsOwqkzoNOk4FkBR0N3VWTJHecBJFNh6C6YmJ0rGxlTtEwV0dQRRNwF0FcakpFsh1hPG/XY/rlZ7cbjQDVGogwCCroNHt8L0SBukQOGz431NmBlrg20BRqfjx9SnCNDRQ/Hru/Rty+RM3zrrMCSnm0vM559eI3z46f2t0weM9kbQ3hTAUVrF7tmj6fctn2O7tEYCeHzLWa5znIjKUcnmBPmACu9QSUAK3pESqVaDV7C9fdlM5o7KJDaMwVVYffii7uRrQ6rR3BVhKE6LIkLBEyqX2LCDtQbUFnL2Y2b2WTq5PvkLAAD//2GicI0AAAAGSURBVAMAbyuq0UQDkxsAAAAASUVORK5CYII=" />
+    <link rel="apple-touch-icon" href="data:image/png;base64,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" />
     <style>
       /* Colours and sizes used everywhere. Themes override these (see THEMES). */
       :root {
@@ -10394,6 +10397,24 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "## HELP",
               "- **Help**: el botón HELP de abajo (o el logo TRACK.) vuelve a abrir este manual.",
               "El trabajo actual también se guarda solo al salir de la página. Añade la página a la pantalla de inicio para usarla como una app.",
+            ],
+          },
+        },
+        {
+          id: "about",
+          t: { en: "About", es: "Acerca de" },
+          b: {
+            en: [
+              "**TRACK.Pocket** is part of a family of three pocket music apps: **TRACK.Pocket** (make music), **TUNE.Pocket** (tune, scales, jam) and **SING.Pocket** (warm up and sing).",
+              "## Made with AI help",
+              "I built these apps starting from my own older code, with the help of an AI coding assistant (Claude, by Anthropic), which wrote and reworked much of the code following my directions and ideas.",
+              "The apps themselves use no AI: everything runs on your device, and nothing you play, sing or record is sent to any AI service.",
+            ],
+            es: [
+              "**TRACK.Pocket** forma parte de una familia de tres apps de música de bolsillo: **TRACK.Pocket** (hacer música), **TUNE.Pocket** (afinar, escalas, jam) y **SING.Pocket** (calentar y cantar).",
+              "## Hecho con ayuda de IA",
+              "He creado estas apps partiendo de mi propio código antiguo, con la ayuda de un asistente de programación con IA (Claude, de Anthropic), que escribió y rehízo buena parte del código siguiendo mis indicaciones e ideas.",
+              "Las apps en sí no usan IA: todo funciona en tu dispositivo, y nada de lo que tocas, cantas o grabas se envía a ningún servicio de IA.",
             ],
           },
         },

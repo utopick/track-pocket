@@ -36,8 +36,15 @@ npm run android:apk    # android/native/app/build/outputs/apk/debug/app-debug.ap
 ## Files
 
 - `tracker.html` — the complete app (markup, styles, and audio code)
+- `index.html` — sends a bare web address (such as GitHub Pages) to `tracker.html`
 - `android/` and `.github/workflows/android.yml` — Android build
 - `LICENSE` — license terms
+
+## AI use
+
+I built this app starting from my own older code, with the help of an AI coding assistant (Claude, by Anthropic), which wrote and reworked much of the code following my directions and ideas.
+
+The app itself uses no AI: everything runs on your device, and nothing you play, sing or record is sent to any AI service.
 
 ## License
 
