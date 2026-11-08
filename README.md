@@ -16,6 +16,8 @@ There is a help wiki inside (también en español), so don't worry, but it shoul
 
 ![TRACK.Pocket on five screens, each in a different theme](.github/readme/hero.png)
 
+<p align="center"><img src=".github/readme/demo.gif" width="320" alt="TRACK.Pocket in use: a pattern playing, the drums, the live FX pads and the mixer"></p>
+
 ## Why did I release these apps? 
 
 Because GitHub allows me to host them in a GitHub site if I make them public, and I don't want to host them myself. 
