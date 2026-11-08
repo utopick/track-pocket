@@ -2,20 +2,44 @@
 
 # TRACK.Pocket
 
-TRACK.Pocket is a small, browser-based pocket music maker. It runs from one self-contained HTML file, with no install or network connection required. Its one third-party library (the MP3 encoder) is bundled inside that file; see [Third-party code](#third-party-code).
+So, after collecting a lot of gadgets and buying lots of music apps, I found out that I was still missing some simplicity for quick music making. I love the Pico-8 tracker and my Pocket Operator KO, so I took some old code, spent some time furiously drawing on notebooks and fed it all to the token burner machine. 
 
-## Run it
+Thus came TRACK.Pocket, a small, browser-based pocket music maker. It runs from one self-contained HTML file, with no install or network connection required. Its one third-party library (the MP3 encoder) is bundled inside that file, so there are no other requests or dependencies. 
 
-Open `index.html` in a modern web browser. Start playback with **▶**. Your browser may ask for permission to play audio; interact with the page first if you hear nothing.
+It should run fully offline, although opening the HTML file directly can cause microphone permission issues, so use the hosted GitHub page instead or self-host the HTML.
+
+There is a help wiki inside (también en español), so don't worry, but it should be quite straightforward.
+
+## Ads and cookies
+
+Yeah, no. 
+
+No ads, no cookies, no nothing. This is free and clean. No hidden stealers, no weird intentions. 
+
+Why is it free? Because not everything should be a product. 
+
+## AI use
+
+I'm a programmer and I have been coding for a living for over two decades, but life has given me too little free time that I want to spend offline and outside, making music and art. So I used a lot of AI to build this in a quick and easy way.
+
+I'm not going to take credit for the code, even though I started this app from my own older code. I built it with the help of an AI coding assistant (Claude, by Anthropic), which wrote and reworked much of the code following my literally scanned designs and notes. And some hyperfocused allnighters too. Also Codex helped, so yeah, he tried his best.
+
+The app itself uses no AI: everything runs on your device, and nothing you play, sing or record is sent to any AI service or anywhere else for that matter. If that isn't the case just shame me publicly and I'll fix it.
+
+## How to run it
+
+Open `index.html` in a modern web browser. Start playback with **▶**. Your browser may ask for permission to play audio, so interact with the page first if you hear nothing.
 
 ## The basics
+
+If you've ever used a groovebox or tracker, you've got it. If not, it should be pretty intuitive, and if it's not, then it's my fault.
 
 - **Patterns:** add notes to the step grid, choose instruments, and build a repeating phrase.
 - **Playback:** adjust the tempo and press play to hear the current pattern. Use the song and live views to arrange or perform patterns.
 - **Live FX:** open the FX pads and hold one to apply it; release to turn it off. **Latch** keeps an effect on after you release it. **Off** clears active effects. The FX board includes loop/repeat, rolls, pitch, filter, and other performance effects.
 - **Save:** use the file controls to save and load songs. TRACK.Pocket also keeps browser-local autosave data.
 
-Songs and settings are stored in your browser; they are not uploaded anywhere. Clearing browser storage removes local saves.
+Songs and settings are stored in your browser (in IndexedDB, which gives you plenty of space, and you can export them); they are not uploaded anywhere. Clearing browser storage removes local saves.
 
 ## Android app (APK)
 
@@ -35,17 +59,15 @@ npm run android:init   # once: creates android/native/
 npm run android:apk    # android/native/app/build/outputs/apk/debug/app-debug.apk
 ```
 
+I did not build it natively, GitHub Actions are free (to a point) and save me dozens of gigabytes from the SDK (seriously?).
+
 ## Files
 
 - `index.html` — the complete app (markup, styles, and audio code)
 - `android/` and `.github/workflows/android.yml` — Android build
 - `LICENSE` — license terms
 
-## AI use
 
-I built this app starting from my own older code, with the help of an AI coding assistant (Claude, by Anthropic), which wrote and reworked much of the code following my directions and ideas.
-
-The app itself uses no AI: everything runs on your device, and nothing you play, sing or record is sent to any AI service.
 
 ## License
 
