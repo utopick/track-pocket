@@ -1,5 +1,7 @@
 ![TRACK.Pocket](.github/banner.png)
 
+![TRACK.Pocket on five screens, each in a different theme](.github/readme/hero.png)
+
 # TRACK.Pocket
 
 So, after collecting a lot of gadgets and buying lots of music apps, I found out that I was still missing some simplicity for quick music making. I love the Pico-8 tracker and my Pocket Operator KO, so I took some old code, spent some time furiously drawing on notebooks and fed it all to the token burner machine. 
@@ -14,7 +16,7 @@ I've been adding features and tweaking a lot, so they come out not fully tested,
 
 There is a help wiki inside (también en español), so don't worry, but it should be quite straightforward. It has small interactive demos you can touch and hear: a pattern, the live FX pads and the sampler's grid and quantize.
 
-![TRACK.Pocket on five screens, each in a different theme](.github/readme/hero.png)
+
 
 <p align="center"><img src=".github/readme/demo.gif" width="320" alt="TRACK.Pocket in use: a pattern playing, the drums, the live FX pads and the mixer"></p>
 
@@ -33,6 +35,8 @@ No ads, no cookies, no nothing. This is free and clean. No hidden stealers, no w
 
 Why is it free? Because not everything should be a product. 
 
+![A strip of TRACK.Pocket screens](.github/readme/strip.png)
+
 ## AI use
 
 I'm a programmer and I have been coding for a living for over two decades, but life has given me too little free time that I want to spend offline and outside, making music and art. So I used a lot of AI to build this in a quick and easy way.
@@ -45,7 +49,8 @@ I did waste a lot of tokens by making it code it in a non-minified way, so if th
 
 If you want to try something made by me by hand (95%, I did use an early model to find some bugs but solved them by hand) in which I made the code, assets, music and all, check out Nanaya, my Pico-8 tower defense game: https://www.lexaloffle.com/bbs/?tid=153336
 
-![A strip of TRACK.Pocket screens](.github/readme/strip.png)
+![alt text](.github/readme/nanaya.png)
+
 
 ## How to run it
 
@@ -118,3 +123,10 @@ Have fun.
 The banner, app icons and favicons are lettered in [Inter](https://rsms.me/inter/) (SIL Open Font License 1.1), converted to shapes, so no font file is included.
 
 `index.html` bundles **lamejs 1.2.1** (the MP3 encoder, a JavaScript port of LAME) in its own `<script id="lamejs">` block. lamejs is **not** covered by the MIT License: it is licensed under the [GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.html). It is included unmodified; its source is at <https://github.com/zhuker/lamejs> (npm package `lamejs@1.2.1`). You may replace that block with any other compatible build of lamejs.
+
+## The readmes
+
+Yeah. They are all similar. I copied and pasted. No one ever reads them all. Kilroy was here.
+
+
+Anyway, listen to me: You matter. A lot. I don't know you stranger, but you have my admiration and love. Keep making art.
