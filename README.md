@@ -6,7 +6,7 @@ TRACK.Pocket is a small, browser-based pocket music maker. It runs from one self
 
 ## Run it
 
-Open `tracker.html` in a modern web browser. Start playback with **▶**. Your browser may ask for permission to play audio; interact with the page first if you hear nothing.
+Open `index.html` in a modern web browser. Start playback with **▶**. Your browser may ask for permission to play audio; interact with the page first if you hear nothing.
 
 ## The basics
 
@@ -19,7 +19,7 @@ Songs and settings are stored in your browser; they are not uploaded anywhere. C
 
 ## Android app (APK)
 
-The same `tracker.html` is packaged as an Android app with [Capacitor](https://capacitorjs.com). GitHub Actions builds a debug APK on every push (or from **Actions → Android APK → Run workflow**). Download it from the run page under **Artifacts**, unzip it, and open the `.apk` on the phone (Android asks you to allow installing from that source once).
+The same `index.html` is packaged as an Android app with [Capacitor](https://capacitorjs.com). GitHub Actions builds a debug APK on every push (or from **Actions → Android APK → Run workflow**). Download it from the run page under **Artifacts**, unzip it, and open the `.apk` on the phone (Android asks you to allow installing from that source once).
 
 - The first time you record, Android asks for microphone permission. If you refused it, allow it in **Settings → Apps → TRACK.Pocket → Permissions**.
 - In the app, exports (JSON, WAV, MP3, MIDI) open the Android share sheet, so you can save them to Files or Drive or send them to another app.
@@ -37,8 +37,7 @@ npm run android:apk    # android/native/app/build/outputs/apk/debug/app-debug.ap
 
 ## Files
 
-- `tracker.html` — the complete app (markup, styles, and audio code)
-- `index.html` — sends a bare web address (such as GitHub Pages) to `tracker.html`
+- `index.html` — the complete app (markup, styles, and audio code)
 - `android/` and `.github/workflows/android.yml` — Android build
 - `LICENSE` — license terms
 
@@ -56,4 +55,4 @@ TRACK.Pocket is released under the MIT License (see `LICENSE`).
 
 The banner, app icons and favicons are lettered in [Inter](https://rsms.me/inter/) (SIL Open Font License 1.1), converted to shapes, so no font file is included.
 
-`tracker.html` bundles **lamejs 1.2.1** (the MP3 encoder, a JavaScript port of LAME) in its own `<script id="lamejs">` block. lamejs is **not** covered by the MIT License: it is licensed under the [GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.html). It is included unmodified; its source is at <https://github.com/zhuker/lamejs> (npm package `lamejs@1.2.1`). You may replace that block with any other compatible build of lamejs.
+`index.html` bundles **lamejs 1.2.1** (the MP3 encoder, a JavaScript port of LAME) in its own `<script id="lamejs">` block. lamejs is **not** covered by the MIT License: it is licensed under the [GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.html). It is included unmodified; its source is at <https://github.com/zhuker/lamejs> (npm package `lamejs@1.2.1`). You may replace that block with any other compatible build of lamejs.

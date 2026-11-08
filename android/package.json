@@ -4,7 +4,7 @@
   "private": true,
   "description": "TRACK.Pocket: pocket music maker in one HTML file.",
   "pocket": {
-    "webSource": "../tracker.html"
+    "webSource": "../index.html"
   },
   "scripts": {
     "www": "node scripts/prepare-www.js",
