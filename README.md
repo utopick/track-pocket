@@ -1,3 +1,5 @@
+![TRACK.Pocket](.github/banner.png)
+
 # TRACK.Pocket
 
 TRACK.Pocket is a small, browser-based pocket music maker. It runs from one self-contained HTML file, with no install or network connection required. Its one third-party library (the MP3 encoder) is bundled inside that file; see [Third-party code](#third-party-code).
@@ -51,5 +53,7 @@ The app itself uses no AI: everything runs on your device, and nothing you play,
 TRACK.Pocket is released under the MIT License (see `LICENSE`).
 
 ### Third-party code
+
+The banner, app icons and favicons are lettered in [Inter](https://rsms.me/inter/) (SIL Open Font License 1.1), converted to shapes, so no font file is included.
 
 `tracker.html` bundles **lamejs 1.2.1** (the MP3 encoder, a JavaScript port of LAME) in its own `<script id="lamejs">` block. lamejs is **not** covered by the MIT License: it is licensed under the [GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.html). It is included unmodified; its source is at <https://github.com/zhuker/lamejs> (npm package `lamejs@1.2.1`). You may replace that block with any other compatible build of lamejs.
