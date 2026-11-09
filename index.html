@@ -3288,7 +3288,13 @@
             <button id="midiIn" title="Opens a .mid file as a new song: as many channels and patterns as it needs">
               Import MIDI
             </button>
+            <button id="midiDev" title="Play TRACK from a MIDI keyboard or pad controller (experimental)">Connect device</button>
           </div>
+          <p class="hint" id="midiHint" style="margin: 6px 0 0">
+            <b>MIDI device</b> (experimental): a keyboard plays the channel you are on and writes into the pattern like
+            the keys on screen, velocity is the volume. On a drum channel notes 36 to 51 are the 16 pads. Chrome, Edge or
+            Firefox; not Safari.
+          </p>
           <input type="file" id="jsonFile" accept=".json,application/json" hidden />
           <input type="file" id="midiFile" accept=".mid,.midi,audio/midi,audio/x-midi" hidden />
           <p class="hint" style="margin: 8px 0 0">
@@ -6118,6 +6124,80 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       // the on-screen piano shows the keys played from the computer keyboard
       const kLit = new Map();
       const kLight = (m, on) => $$(`#kbd .k[data-m="${m}"], #pkbd .k[data-m="${m}"]`).forEach((k) => k.classList.toggle("down", on));
+      const MI_KEY = "track.midi";
+      // ---------------------------------------------------------------------------------------------
+      // MIDI IN (experimental, from the "midi" branch): keyboards and pad controllers through Web MIDI (Chrome, Edge,
+      // Firefox; not Safari or iPhone). Every input is listened to; the app sets MI.on(note, velocity), MI.off(note)
+      // and MI.cc(controller, value). MI.held: the notes down now.
+      // ---------------------------------------------------------------------------------------------
+      const MI = { acc: null, names: [], held: new Map(), on: null, off: null, cc: null };
+      if (/index_midi\.html$/.test(location.pathname)) document.title += " · MIDI dev";
+      async function midiConnect(quiet) {
+        if (!navigator.requestMIDIAccess) {
+          if (!quiet) toast("No MIDI in this browser: try Chrome, Edge or Firefox (not Safari)");
+          return midiFace();
+        }
+        try {
+          MI.acc = MI.acc || (await navigator.requestMIDIAccess());
+        } catch {
+          if (!quiet) toast("MIDI was not allowed");
+          return midiFace();
+        }
+        localStorage.setItem(MI_KEY, "1");
+        MI.acc.onstatechange = midiBind;
+        midiBind();
+        if (!quiet) toast(MI.names.length ? "MIDI: " + MI.names.join(", ") : "MIDI is on: plug in a keyboard or pad controller");
+      }
+      function midiBind() {
+        MI.names = [];
+        MI.acc.inputs.forEach((i) => {
+          i.onmidimessage = midiMsg;
+          if (i.state !== "disconnected") MI.names.push(i.name);
+        });
+        midiFace();
+      }
+      function midiMsg(e) {
+        const [st, a, b] = e.data,
+          cmd = st & 0xf0;
+        if (cmd === 0x90 && b > 0) {
+          MI.held.set(a, b);
+          if (MI.on) MI.on(a, b);
+        } else if (cmd === 0x80 || cmd === 0x90) {
+          MI.held.delete(a);
+          if (MI.off) MI.off(a);
+        } else if (cmd === 0xb0 && MI.cc) MI.cc(a, b);
+      }
+      // on the next visit, reconnect by itself when the browser already allows it (no question asked)
+      if (localStorage.getItem(MI_KEY) && navigator.permissions)
+        navigator.permissions
+          .query({ name: "midi" })
+          .then((p) => p.state === "granted" && midiConnect(true))
+          .catch(() => {});
+      function midiFace() {
+        const b = $("#midiDev");
+        b.textContent = MI.names.length ? "MIDI: " + MI.names.join(", ") : MI.acc ? "No device plugged in" : "Connect device";
+        b.classList.toggle("on", !!MI.names.length);
+      }
+      $("#midiDev").onclick = () => midiConnect();
+      // the keys play the channel you are on and write in the tracker like the keys on screen (velocity = volume);
+      // on a drum channel notes 36-51 are the 16 pads (any other note falls on one of the first 12)
+      const midiPad = (n) => (n >= 36 && n < 52 ? n - 36 : ((n % 12) + 12) % 12);
+      MI.on = (n, v) => {
+        const vol = Math.max(1, Math.round((v / 127) * 15)),
+          write = $("#trk").classList.contains("show");
+        if (instOf(S.col) === DRUM_I) {
+          const p = midiPad(n);
+          $$(`#pkPads .pad[data-p="${p}"]`).forEach((x) => x.classList.add("down"));
+          return noteOn("m" + n, 36 + (p % 12), S.col, write, p >= 12 ? 15 : vol);
+        }
+        kLight(n, true);
+        noteOn("m" + n, n, S.col, write, vol);
+      };
+      MI.off = (n) => {
+        $$(`#pkPads .pad[data-p="${midiPad(n)}"]`).forEach((x) => x.classList.remove("down"));
+        kLight(n, false);
+        noteOff("m" + n);
+      };
 
       // ======================================================================
       // pads (classic view; hidden in Pocket)
