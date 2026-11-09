@@ -1540,6 +1540,328 @@
       .sheet .fx {
         grid-template-columns: 62px 1fr;
       }
+      /* VARIATOR */
+      #var {
+        padding: 4px 8px 6px;
+        gap: 6px;
+      }
+      #var i {
+        font: 800 9px var(--mono);
+        letter-spacing: 1.5px;
+        color: var(--dim);
+        font-style: normal;
+      }
+      .vTop {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 4px 8px 6px;
+        flex: none;
+      }
+      .vSeed {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #vSeed {
+        width: 100%;
+        max-width: 280px;
+        text-align: center;
+        font: 900 30px var(--mono);
+        letter-spacing: 6px;
+        background: none;
+        border: none;
+        color: var(--acc);
+        padding: 0;
+        min-height: 0;
+      }
+      #vInfo {
+        font: 700 10px var(--mono);
+        color: var(--dim);
+      }
+      #vStrips {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        flex: none;
+        padding-bottom: 2px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .vs {
+        flex: 0 0 88px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-top: 3px solid rgb(var(--ccrgb));
+        border-radius: 10px;
+        padding: 4px;
+      }
+      .vs select {
+        font-size: 10px;
+        min-height: 28px;
+        padding: 0 2px;
+        width: 100%;
+      }
+      .vs b {
+        font: 800 9px var(--mono);
+        letter-spacing: 1px;
+        text-align: center;
+        color: rgb(var(--ccrgb));
+      }
+      .vk {
+        width: 62px;
+        height: 62px;
+        margin: 0 auto;
+        touch-action: none;
+        cursor: ns-resize;
+      }
+      .vk svg {
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .vk .kt {
+        fill: none;
+        stroke: var(--line);
+        stroke-width: 5;
+        stroke-linecap: round;
+      }
+      .vk .kv {
+        fill: none;
+        stroke: rgb(var(--ccrgb));
+        stroke-width: 5;
+        stroke-linecap: round;
+      }
+      .vk .kb {
+        fill: var(--panel2);
+        stroke: var(--line);
+      }
+      .vk .kp {
+        stroke: var(--text);
+        stroke-width: 3;
+        stroke-linecap: round;
+      }
+      .vk text {
+        fill: var(--text);
+        font: 800 11px var(--mono);
+        text-anchor: middle;
+      }
+      .vms {
+        display: flex;
+        gap: 3px;
+      }
+      .vms button {
+        flex: 1;
+        min-height: 26px;
+        padding: 0;
+        font: 800 11px var(--mono);
+      }
+      .vms button.on {
+        background: var(--hot);
+        border-color: var(--hot);
+        color: var(--ink);
+      }
+      .vms button[data-vso].on {
+        background: var(--acc2);
+        border-color: var(--acc2);
+      }
+      .vSty {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: none;
+      }
+      .vSty select {
+        flex: 1;
+        font: 800 14px var(--mono);
+        min-height: 36px;
+      }
+      #vPats {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 4px;
+        flex: none;
+      }
+      .vp {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        background: rgba(var(--ccrgb), 0.22);
+        border: 2px solid rgba(var(--ccrgb), 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: none;
+        user-select: none;
+        cursor: pointer;
+      }
+      .vp span {
+        position: absolute;
+        top: 2px;
+        left: 4px;
+        font: 700 8px var(--mono);
+        color: var(--dim);
+      }
+      .vp b {
+        font: 900 13px var(--mono);
+      }
+      .vp.play {
+        background: rgb(var(--ccrgb));
+        color: var(--ink);
+        border-color: var(--text);
+      }
+      .vp.queued {
+        border-style: dashed;
+        border-color: var(--text);
+      }
+      #vMode {
+        font: 700 9px var(--mono);
+        color: var(--dim);
+        text-align: center;
+        flex: none;
+      }
+      .vBody {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+      #vCtl {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2px 0;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 6px 10px;
+      }
+      #vCtl label {
+        display: grid;
+        grid-template-columns: 72px 1fr 30px;
+        align-items: center;
+        gap: 8px;
+        font: 800 10px var(--mono);
+        letter-spacing: 1px;
+        color: var(--dim);
+      }
+      #vCtl em {
+        font-style: normal;
+        text-align: right;
+        color: var(--text);
+      }
+      #vFxWrap {
+        flex: 1;
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+      }
+      #vFxWrap[hidden],
+      #vCtl[hidden] {
+        display: none;
+      }
+      .vFxBar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font: 800 10px var(--mono);
+        color: var(--dim);
+      }
+      .vFxBar button {
+        min-height: 28px;
+        font: 800 10px var(--mono);
+      }
+      #varFxGrid {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(6, 1fr);
+        gap: 4px;
+        padding: 4px 0;
+        touch-action: none;
+      }
+      .vRib {
+        display: flex;
+        gap: 6px;
+        flex: none;
+      }
+      .vRib button {
+        flex: 1;
+        min-height: 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font: 800 9px var(--mono);
+        letter-spacing: 1px;
+        padding: 0;
+      }
+      .vRib button b {
+        font-size: 18px;
+        line-height: 1.1;
+      }
+      .vRib button.on {
+        background: var(--acc);
+        border-color: var(--acc);
+        color: var(--ink);
+      }
+      #vExpBox {
+        position: fixed;
+        inset: 0;
+        z-index: 95;
+        background: rgba(0, 0, 0, 0.62);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      #vExpBox .mlBox {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px;
+        width: min(380px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #vExpBox i {
+        font: 800 10px var(--mono);
+        color: var(--dim);
+        font-style: normal;
+        letter-spacing: 1px;
+      }
+      #vExpBox button {
+        min-height: 46px;
+        font: 800 12px var(--mono);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+      #vExpBox small {
+        font: 600 10px var(--mono);
+        color: var(--dim);
+      }
+      #vExpBox .vxs {
+        display: flex;
+        gap: 6px;
+      }
+      #vExpBox .vxs input {
+        flex: 1;
+        min-width: 0;
+      }
+      #vExpBox .vxc {
+        min-height: 36px;
+      }
       /* live effects */
       #fx {
         padding-top: 2px;
@@ -2864,9 +3186,6 @@
         ><span class="sub">Pocket</span>
       </button>
       <div class="grow"></div>
-      <label class="bpm"
-        ><span class="bl">BPM</span><input id="bpm" type="number" min="40" max="240" value="120"
-      /></label>
       <div id="hViews" class="pk-only">
         <button data-v="trk" class="on" title="Tracker">
           <svg class="ic" viewBox="0 0 24 24">
@@ -2883,6 +3202,11 @@
           <svg class="ic" viewBox="0 0 24 24">
             <path d="M6 4v16M12 4v16M18 4v16" />
             <path d="M3.5 14h5M9.5 8h5M15.5 15h5" />
+          </svg></button
+        ><button data-v="var" title="Variator: songs generated from a seed">
+          <svg class="ic" viewBox="0 0 24 24">
+            <path d="M3 16c2.5 0 3-8 5.5-8s3 8 5.5 8 2.5-5 4.5-5" />
+            <path d="M18 3v4M16 5h4" />
           </svg>
         </button>
       </div>
@@ -3210,6 +3534,7 @@
           <div class="card">
             <div class="lbl">Master</div>
             <div class="fx">
+              <span>BPM</span><input id="bpm" type="number" min="40" max="240" value="120" /><span></span><span></span>
               <span>Volume</span
               ><input id="master" type="range" min="0" max="1" step=".01" value=".8" /><span
                 >Swing</span
@@ -3226,6 +3551,27 @@
             </div>
           </div>
           <div class="card"><canvas id="scope" height="80"></canvas></div>
+        </div>
+      </section>
+      <!-- VARIATOR -->
+      <section id="var">
+        <div class="vTop">
+          <label class="vSeed"><i>SEED</i><input id="vSeed" type="text" inputmode="numeric" maxlength="9" /></label>
+          <div id="vInfo"></div>
+        </div>
+        <div id="vStrips"></div>
+        <label class="vSty"><i>STYLE</i><select id="vStyle"></select></label>
+        <div id="vPats"></div>
+        <div id="vMode"></div>
+        <div class="vBody">
+          <div id="vCtl"></div>
+          <div id="vFxWrap" hidden>
+            <div class="vFxBar"><span>LIVE FX · hold a pad</span><button id="vLatch">LATCH</button></div>
+            <div id="varFxGrid"></div>
+          </div>
+        </div>
+        <div class="vRib">
+          <button id="vExp"><b>⇪</b>EXPORT</button><button id="vRnd"><b>⚄</b>RANDOM</button><button id="vFx"><b>FX</b>LIVE FX</button>
         </div>
       </section>
       <!-- FILES -->
@@ -6696,6 +7042,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       $("#bpm").onchange = (e) => {
         song.bpm = clamp(+e.target.value || 120, 40, 240);
         e.target.value = song.bpm;
+        if (varAway) (VAR.bpm = song.bpm), varStore();
         applyMix();
       };
 
@@ -8677,6 +9024,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         loadData({ song: blankSong() });
       };
       function saveNow() {
+        if (varAway) return; // the Variator's song is not the user's: theirs was saved on the way in
         dbSet("autosave", serialize()).catch(() => {});
       }
       setInterval(saveNow, 15000);
@@ -9073,7 +9421,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       // big faint name of the screen you are on
       function wmFace() {
         const t =
-          S.tab === "smp"
+          S.tab === "var"
+            ? "VARIATOR"
+            : S.tab === "smp"
             ? "SAMPLER"
             : S.tab === "mix"
               ? "MIXER"
@@ -10500,6 +10850,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         ).join("");
         $("#fxGrid").innerHTML = h;
         $("#pkFxGrid").innerHTML = h;
+        $("#varFxGrid").innerHTML = h;
       }
       function fxSet(id, on) {
         if (on) S.fxOn.add(id);
@@ -10528,6 +10879,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       };
       $("#fxGrid").addEventListener("pointerdown", fxDown);
       $("#pkFxGrid").addEventListener("pointerdown", fxDown);
+      $("#varFxGrid").addEventListener("pointerdown", fxDown);
       const fxUp = (e) => {
         const id = fxHeld.get(e.pointerId);
         if (id) {
@@ -10593,6 +10945,793 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           );
         }
       };
+      // ======================================================================
+      // VARIATOR: songs generated from a seed
+      // ======================================================================
+      // The Variator plays a song of its own, made from a SEED number and a STYLE: key, chord progression, form and every
+      // part come from them, so the same seed and settings always give the same song. Six channels with fixed roles
+      // (drums, bass, chords, lead, arp, pad); each one draws from its own random stream, and its VARIATION knob picks
+      // another stream for that part only. Entering the view swaps the Variator's song in (the user's song waits aside and
+      // autosave pauses); leaving swaps it back. The mixer still works on the Variator's channels in between.
+      // EXPORT copies the result into the user's song, opens it as a new song, or saves it in Files.
+      const V_ROLES = ["DRUMS", "BASS", "CHORDS", "LEAD", "ARP", "PAD"];
+      // drums: 16 steps per bar for kick (k), snare (s), hats (h), open hat (o), extra (x, drum xd). sn / hd: drums used.
+      const V_STY = {
+        rock: {
+          n: "Rock", bpm: [112, 136], kit: 4, sw: 0, minor: 0.35, lead: "pent", bass: "8th", comp: "8th",
+          ins: ["Picked bass", "Overdrive guitar", "Square lead", "Clean guitar", "Warm pad"],
+          dr: { k: ["x.......x.x.....", "x.....x.x.x.....", "x.......x...x..."], s: "....x.......x...", h: "x.x.x.x.x.x.x.x.", sn: 1, hd: 3 },
+          prog: { maj: ["I V vi IV", "IV IV I V", "vi IV I V", "I IV vi V", "I bVII IV I"], min: ["i VI III VII", "iv iv i v", "i VII VI VII", "i iv VI V"] },
+        },
+        blues: {
+          n: "Blues", bpm: [76, 96], kit: 4, sw: 0.66, minor: 0.25, lead: "blues", bass: "walk", comp: "shuffle",
+          ins: ["Fingered bass", "Jazz organ", "Harmonica", "Clean guitar", "Slow strings"],
+          dr: { k: ["x.......x.......", "x.....x.x......."], s: "....x.......x...", h: "x.x.x.x.x.x.x.x.", sn: 1, hd: 3 },
+          prog: { maj: ["I7 I7 I7 I7 IV7 IV7 I7 I7 V7 IV7 I7 V7", "I7 IV7 I7 I7 IV7 IV7 I7 I7 V7 IV7 I7 V7"], min: ["i7 i7 i7 i7 iv7 iv7 i7 i7 VI7 V7 i7 V7", "i7 iv7 i7 i7 iv7 iv7 i7 i7 VI7 V7 i7 V7"] },
+        },
+        funk: {
+          n: "Funk", bpm: [96, 116], kit: 1, sw: 0.15, minor: 0.55, lead: "scale", bass: "funk", comp: "16th",
+          ins: ["Slap bass", "Clavinet", "Synth brass", "Muted guitar", "Rhodes"],
+          dr: { k: ["x.....x...x..x..", "x..x..x...x.....", "x.....x.x..x...."], s: "....x.......x...", g: "......x..x....x.", h: "xxxxxxxxxxxxxxxx", o: "..............x.", sn: 1, hd: 3 },
+          prog: { maj: ["I7 I7 IV7 I7", "IV7 IV7 V7 V7", "I7 I7 I7 IV7"], min: ["i7 i7 iv7 i7", "VI7 VI7 v7 v7", "i7 iv7 i7 iv7"] },
+        },
+        reggae: {
+          n: "Reggae", bpm: [70, 86], kit: 4, sw: 0.25, minor: 0.4, lead: "pent", bass: "dub", comp: "skank",
+          ins: ["Fingered bass", "Muted guitar", "Pluck lead", "Jazz organ", "Warm pad"],
+          dr: { k: ["........x.......", "x.......x......."], s: "........x.......", h: "x.x.x.x.x.x.x.x.", sn: 7, hd: 3 },
+          prog: { maj: ["I IV I V", "vi IV I V", "I I IV IV", "I vi IV V"], min: ["i iv i v", "VI VII i i", "i VII i VII"] },
+        },
+        metal: {
+          n: "Metal", bpm: [148, 180], kit: 4, sw: 0, minor: 0.9, lead: "scale", bass: "chug", comp: "chug",
+          ins: ["Picked bass", "Distortion guitar", "Saw lead 2", "Distortion guitar", "Choir pad"],
+          dr: { k: ["x.x.x.x.x.x.x.x.", "xxxxxxxxxxxxxxxx", "x..x..x.x..x..x."], s: "....x.......x...", h: "x...x...x...x...", sn: 1, hd: 4 },
+          prog: { maj: ["I5 bVI5 bVII5 I5", "bVI5 bVII5 I5 I5"], min: ["i5 VI5 VII5 i5", "VI5 VII5 i5 i5", "i5 i5 VI5 VII5", "i5 bII5 i5 VII5"] },
+        },
+        jazz: {
+          n: "Jazz", bpm: [118, 160], kit: 4, sw: 0.66, minor: 0.35, lead: "scale", bass: "walk", comp: "charleston",
+          ins: ["Upright bass", "Rhodes", "Sax", "Vibraphone", "Slow strings"],
+          dr: { k: ["x.......x......."], s: "", g: "......x.......x.", h: "x...x..xx...x..x", sn: 1, hd: 3, soft: 1 },
+          prog: { maj: ["ii7 V7 Imaj7 Imaj7", "Imaj7 vi7 ii7 V7", "iii7 vi7 ii7 V7", "IVmaj7 iii7 ii7 V7"], min: ["iiø7 V7 i7 i7", "i7 iv7 VImaj7 V7", "i7 i7 iiø7 V7"] },
+        },
+        bossa: {
+          n: "Bossa", bpm: [112, 132], kit: 5, sw: 0, minor: 0.4, lead: "scale", bass: "bossa", comp: "bossa",
+          ins: ["Upright bass", "Nylon guitar", "Flute", "Vibraphone", "Warm pad"],
+          dr: { k: ["x..xx..xx..xx..x"], s: "x..x..x...x..x..", h: "xxxxxxxxxxxxxxxx", sn: 7, hd: 10, soft: 1 },
+          prog: { maj: ["Imaj7 Imaj7 ii7 V7", "ii7 V7 Imaj7 VI7", "Imaj7 IVmaj7 iii7 vi7"], min: ["i7 i7 iv7 iv7", "iiø7 V7 i7 i7", "i7 iv7 VImaj7 V7"] },
+        },
+        hiphop: {
+          n: "Hip-hop", bpm: [84, 96], kit: 0, sw: 0.45, minor: 0.7, lead: "pent", bass: "hiphop", comp: "stab",
+          ins: ["Moog bass", "Rhodes", "Pluck lead", "Vibraphone", "Warm pad"],
+          dr: { k: ["x......x..x.....", "x.........x.....", "x......xx.x....."], s: "....x.......x...", h: "x.x.x.x.x.x.x.x.", sn: 2, hd: 3 },
+          prog: { maj: ["Imaj7 Imaj7 vi7 vi7", "IVmaj7 IVmaj7 V7 V7", "Imaj7 iii7 vi7 IVmaj7"], min: ["i7 i7 iv7 iv7", "VImaj7 VImaj7 v7 v7", "i7 VImaj7 iv7 v7"] },
+        },
+      };
+      const V_KNOBS = [
+        ["dens", "DENSITY", "How many notes and hits"],
+        ["swing", "SWING", "Late off-beats, for a groove"],
+        ["fill", "FILLS", "Drum fills and pickups at the end of the sections"],
+        ["chg", "CHORDS", "How often the chords change"],
+        ["range", "RANGE", "How far the melodies travel"],
+        ["rep", "REPEAT", "Low: sections come back changed. High: they repeat"],
+        ["len", "LENGTH", "8 to 16 patterns"],
+      ];
+      const VAR = Object.assign(
+        {
+          seed: 25562379,
+          style: "rock",
+          vari: [0, 0, 0, 0, 0, 0],
+          ins: [null, null, null, null, null, null],
+          mute: [false, false, false, false, false, false],
+          solo: -1,
+          bpm: null,
+          k: { dens: 0.5, swing: 0, fill: 0.5, chg: 0.5, range: 0.5, rep: 0.6, len: 0.5 },
+        },
+        (() => {
+          try {
+            return JSON.parse(localStorage.getItem("track.var") || "{}");
+          } catch {
+            return {};
+          }
+        })(),
+      );
+      VAR.liveSlot = -1;
+      VAR.fx = false;
+      const varStore = () => {
+        const { seed, style, vari, ins, mute, solo, bpm, k } = VAR;
+        localStorage.setItem("track.var", JSON.stringify({ seed, style, vari, ins, mute, solo, bpm, k }));
+      };
+      // ---- random streams: one per name, so each part can change alone
+      function vHash(s) {
+        let h = 1779033703 ^ s.length;
+        for (let i = 0; i < s.length; i++) {
+          h = Math.imul(h ^ s.charCodeAt(i), 3432918353);
+          h = (h << 13) | (h >>> 19);
+        }
+        h = Math.imul(h ^ (h >>> 16), 2246822507);
+        h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return (h ^ (h >>> 16)) >>> 0;
+      }
+      function vRng(...key) {
+        let a = vHash(key.join("|"));
+        const f = () => {
+          a = (a + 0x6d2b79f5) | 0;
+          let t = Math.imul(a ^ (a >>> 15), 1 | a);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        f.pick = (arr) => arr[Math.floor(f() * arr.length)];
+        f.int = (lo, hi) => lo + Math.floor(f() * (hi - lo + 1));
+        return f;
+      }
+      // a chord symbol of the key ("ii7", "bVII5", "Imaj7"...) -> { root: pitch class from the key, iv: intervals }
+      function vChord(sym, minor, key) {
+        const x = /^([b#]?)(VII|VI|V|IV|III|II|I|vii|vi|v|iv|iii|ii|i)(maj7|ø7|7|5)?$/.exec(sym),
+          deg = ["i", "ii", "iii", "iv", "v", "vi", "vii"].indexOf(x[2].toLowerCase()),
+          up = x[2] === x[2].toUpperCase(),
+          q = x[3] || "";
+        const root = (key + (minor ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, 11])[deg] + (x[1] === "b" ? -1 : x[1] === "#" ? 1 : 0) + 24) % 12;
+        let iv = q === "5" ? [0, 7] : up ? [0, 4, 7] : [0, 3, 7];
+        if (q === "ø7") iv = [0, 3, 6, 10];
+        else if (q === "maj7") iv = [...iv, 11];
+        else if (q === "7") iv = [...iv, 10];
+        return { root, iv, pow: q === "5" };
+      }
+      // the notes of a chord close to `center`, moving as little as possible from the last voicing -> [low note, offsets]
+      function vVoice(ch, center, prev) {
+        if (ch.pow) {
+          const lo = center - 12 + ((ch.root - center + 120) % 12);
+          return [lo, [7, 12], lo + 12];
+        }
+        let best = null,
+          bs = 1e9;
+        const pcs = ch.iv.map((i) => (ch.root + i) % 12);
+        for (let inv = 0; inv < pcs.length; inv++)
+          for (let o = -1; o <= 0; o++) {
+            const lo0 = center + o * 12 + ((pcs[inv] - center + 120) % 12),
+              ns = [lo0];
+            for (let k = 1; k < pcs.length; k++) {
+              const pc = pcs[(inv + k) % pcs.length];
+              ns.push(ns[k - 1] + ((pc - ns[k - 1] + 120) % 12 || 12));
+            }
+            const mid = (ns[0] + ns[ns.length - 1]) / 2,
+              sc = Math.abs(mid - center) * 0.6 + (prev ? Math.abs(ns[0] - prev[0]) + Math.abs(ns[ns.length - 1] - prev[1]) : 0);
+            if (sc < bs) (bs = sc), (best = ns);
+          }
+        return [best[0], best.slice(1).map((n) => n - best[0]), best[best.length - 1]];
+      }
+      // "x" hit, "-" hold, "." rest: the first rest after a note gets an OFF
+      function vRhythm(tpl, fn) {
+        let sounding = false;
+        for (let r = 0; r < 16; r++) {
+          const t = tpl[r] || ".";
+          if (t === "x") fn(r, true), (sounding = true);
+          else if (t === ".") {
+            if (sounding) fn(r, false);
+            sounding = false;
+          }
+        }
+      }
+      const V_LEN = 64; // 4 bars of 16 steps
+      // ---- the song
+      function varBuild() {
+        const st = V_STY[VAR.style] || V_STY.rock,
+          K = VAR.k,
+          seed = String(VAR.seed),
+          sr = vRng(seed, VAR.style, "song"),
+          minor = sr() < st.minor,
+          key = sr.pick(VAR.style === "metal" ? [4, 9, 2, 7] : VAR.style === "blues" ? [4, 9, 7, 0, 2] : [0, 2, 4, 5, 7, 9, 10, 11]),
+          scale = minor ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, 11],
+          lscale = st.lead === "blues" ? (minor ? [0, 3, 5, 6, 7, 10] : [0, 3, 4, 7, 9, 10]) : st.lead === "pent" ? (minor ? [0, 3, 5, 7, 10] : [0, 2, 4, 7, 9]) : scale,
+          progs = st.prog[minor ? "min" : "maj"],
+          pv = sr.pick(progs),
+          pc = progs.length > 1 ? sr.pick(progs.filter((p) => p !== pv)) : pv,
+          pb = sr.pick(progs.filter((p) => p !== pv && p !== pc).concat(minor ? ["VI VII i i", "iv v VI VII"] : ["IV V iii vi", "vi V IV V"]).filter((p) => VAR.style !== "metal" || /5/.test(p))),
+          bpm = VAR.bpm || sr.int(st.bpm[0], st.bpm[1]),
+          L = 8 + Math.round(K.len * 8),
+          insIdx = st.ins.map((n, i) => (VAR.ins[i + 1] != null ? VAR.ins[i + 1] : instByName(n)));
+        // the parts: verse (A), chorus (B), bridge (C), each as 4-bar chunks of chord symbols
+        const chunks = (p) => {
+          const s = p.split(" "),
+            out = [];
+          for (let i = 0; i < s.length; i += 4) out.push(s.slice(i, i + 4));
+          return out.map((c) => (c.length < 4 ? c.concat(c).slice(0, 4) : c));
+        };
+        const parts = { V: chunks(pv), C: chunks(pc), B: chunks(VAR.style === "blues" ? "IV7 IV7 I7 I7" : pb) };
+        // the form, in chunks: intro, verses and choruses, a bridge, the end
+        const form = [];
+        if (sr() < 0.7) form.push(["I", 0]);
+        const seq = sr.pick([["V", "C", "V", "C", "B", "C"], ["V", "V", "C", "V", "C", "B", "C"], ["V", "C", "C", "V", "B", "C", "C"]]);
+        for (let i = 0; form.length < L - 1; i++) {
+          const pt = seq[i % seq.length];
+          parts[pt].forEach((_, ci) => form.length < L - 1 && form.push([pt, ci]));
+        }
+        form.push(["E", 0]);
+        // repeats of a part come back the same, or changed (REPEAT); the variant number feeds the streams
+        const seen = {},
+          specs = [],
+          order = [],
+          index = {};
+        const rr = vRng(seed, VAR.style, "rep");
+        form.forEach(([pt, ci], slot) => {
+          const k = pt + ci;
+          seen[k] = (seen[k] || 0) + 1;
+          let vn = 0;
+          if (seen[k] > 1 && rr() > K.rep) vn = Math.min(seen[k] - 1, 2);
+          const fillNext = slot < form.length - 1 && form[slot + 1][0] !== pt,
+            id = k + ":" + vn + (fillNext ? "f" : "");
+          if (!(id in index)) {
+            index[id] = specs.length;
+            specs.push({ pt, ci, vn, fillNext, id });
+          }
+          order.push(index[id]);
+        });
+        const ctx2 = { st, K, seed, minor, key, scale, lscale, parts, chI: [DRUM_I, ...insIdx] };
+        const patterns = specs.map((sp) => vPattern(sp, ctx2));
+        // names: A = verse, B = chorus, C = bridge; a digit for the chunk, ' for a changed repeat
+        specs.forEach((sp, i) => {
+          patterns[i].name = { I: "IN", E: "END", V: "A", C: "B", B: "C" }[sp.pt] + (parts[sp.pt === "I" || sp.pt === "E" ? "V" : sp.pt].length > 1 && sp.pt !== "I" && sp.pt !== "E" ? sp.ci + 1 : "") + "'".repeat(sp.vn) + (sp.fillNext && specs.some((o) => o.pt === sp.pt && o.ci === sp.ci && o.vn === sp.vn && !o.fillNext) ? "·" : "");
+        });
+        const mix = [0.85, 0.75, 0.5, 0.55, 0.38, 0.36].map((vol, c) => ({
+          vol,
+          pan: [0, 0, -0.25, 0.15, 0.3, -0.1][c],
+          rev: [0.05, 0.05, 0.2, 0.3, 0.3, 0.45][c],
+          mute: false,
+        }));
+        return {
+          name: "Variator " + VAR.seed,
+          bpm,
+          kit: VAR.ins[0] != null ? VAR.ins[0] : st.kit,
+          chN: 6,
+          chInst: [DRUM_I, ...insIdx],
+          patterns,
+          order,
+          scale: { root: key, type: minor ? 2 : 1 },
+          mix,
+          variator: { seed: VAR.seed, style: VAR.style },
+        };
+      }
+      // one pattern (4 bars) from its spec: part, chunk, variant, and whether a fill leads into the next part
+      function vPattern(sp, X) {
+        const { st, K, seed, minor, key } = X,
+          P = { name: "", len: V_LEN, ch: Array.from({ length: 6 }, () => Array(V_LEN).fill(null)) },
+          src = sp.pt === "I" || sp.pt === "E" ? "V" : sp.pt,
+          syms = X.parts[src][sp.ci],
+          energy = { I: 0.3, V: 0.55, C: 0.85, B: 0.65, E: 0.5 }[sp.pt],
+          rs = (role, ...more) => vRng(seed, VAR.style, role, VAR.vari[V_ROLES.indexOf(role)], sp.pt === "E" ? "V" : sp.pt, sp.ci, ...more);
+        // chords per half bar; CHORDS: fewer changes (a chord held for two bars) or more (a passing chord before the next)
+        const rc = vRng(seed, VAR.style, "chg", src, sp.ci),
+          half = [];
+        let prevSym = null;
+        syms.forEach((sym, b) => {
+          let s = sym;
+          if (VAR.style !== "blues" && b % 2 === 1 && rc() < (0.4 - K.chg) * 2.5) s = prevSym;
+          prevSym = s;
+          const c = vChord(s, minor, key);
+          half.push(c, c);
+        });
+        for (let b = 0; b < 4; b++) {
+          const nx = half[((b + 1) % 4) * 2];
+          if (rc() < (K.chg - 0.55) * 2 && nx.root !== half[b * 2].root)
+            half[b * 2 + 1] = st === V_STY.metal ? { root: (nx.root + 10) % 12, iv: [0, 7], pow: true } : { root: (nx.root + 7) % 12, iv: [0, 4, 7, 10] };
+        }
+        const chordAt = (r) => half[Math.floor(r / 8)];
+        const put = (c, r, n, v, off) => {
+          if (r < 0 || r >= V_LEN) return;
+          P.ch[c][r] = n < 0 ? { n: -1 } : Object.assign({ n, i: X.chI[c], v: clamp(Math.round(v), 1, 15) }, off && off.length ? { c: off } : {});
+        };
+        const dens = clamp(K.dens + (energy - 0.55) * 0.5, 0, 1),
+          endAt = sp.pt === "E" ? 33 : V_LEN; // the ending stops on bar 3
+        // which parts play: the intro is thin, the ending ends
+        const ar = vRng(seed, VAR.style, "arr", sp.pt, sp.ci, sp.vn),
+          plays = {
+            DRUMS: sp.pt !== "I" || ar() < 0.6,
+            BASS: sp.pt !== "I" || ar() < 0.3,
+            CHORDS: sp.pt !== "I" || ar() < 0.5,
+            LEAD: (sp.pt === "C" || sp.pt === "B" || (sp.pt === "V" && ar() < 0.75)) && !(sp.vn === 0 && sp.pt === "V" && ar() < 0.2),
+            ARP: sp.pt === "C" || sp.pt === "I" ? ar() < 0.8 : ar() < 0.4,
+            PAD: sp.pt !== "V" || ar() < 0.4,
+          };
+        // ---- DRUMS (channel 1): several hits on one step are one cell with chord offsets
+        if (plays.DRUMS) {
+          const r = rs("DRUMS"),
+            d = st.dr,
+            kick = d.k[Math.floor(r() * d.k.length)],
+            hats = sp.pt === "I" && r() < 0.5,
+            soft = d.soft ? 3 : 0;
+          for (let b = 0; b < 4; b++) {
+            const kb = r() < 0.25 + VAR.vari[0] * 0.05 ? d.k[Math.floor(r() * d.k.length)] : kick;
+            for (let s = 0; s < 16; s++) {
+              const R = b * 16 + s;
+              if (R >= endAt) break;
+              const hits = [];
+              let v = 0;
+              const add = (dr, vv) => (hits.includes(dr) || hits.push(dr), (v = Math.max(v, vv)));
+              if (!hats && kb[s] === "x" && (dens > 0.25 || s % 8 === 0)) add(0, 13 - soft);
+              if (!hats && d.s[s] === "x") add(d.sn, 12 - soft);
+              if (!hats && d.g && d.g[s] === "x" && r() < dens) add(d.sn, 5);
+              const hs = d.h[s] === "x" && (dens > 0.35 || s % 4 === 0) && (dens > 0.15 || s % 8 === 0);
+              if (hs) add(d.o && d.o[s] === "x" && energy > 0.5 ? 4 : d.hd, (s % 4 === 0 ? 8 : 6) + (energy > 0.7 ? 1 : 0));
+              if (!hats && dens > 0.7 && s % 2 === 1 && r() < (dens - 0.7) * 0.8) add(0, 9);
+              if (R === 0 && (sp.pt === "C" || sp.pt === "E" || (sp.pt === "B" && sp.ci === 0))) add(8, 13);
+              if (hits.length) put(0, R, 36 + hits[0], v, hits.slice(1).map((h) => h - hits[0]));
+            }
+          }
+          // a fill into the next part: snare and toms over the last 4 or 8 steps
+          if (sp.fillNext && r() < 0.25 + K.fill * 0.75) {
+            const n = K.fill > 0.6 && r() < 0.6 ? 8 : 4,
+              kind = r.int(0, 2);
+            for (let s = V_LEN - n; s < V_LEN; s++) {
+              const i = s - (V_LEN - n),
+                dr = kind === 0 ? 1 : kind === 1 ? [1, 6, 6, 5][Math.floor((i * 4) / n)] : i % 2 ? 6 : 1;
+              if (kind === 2 && i % 2 === 1 && n === 4) continue;
+              put(0, s, 36 + dr, 9 + Math.round((i / n) * 5));
+            }
+          }
+          if (sp.pt === "E") put(0, 32, 36, 14, [8]);
+        }
+        // ---- BASS (channel 2), in A1..G#2
+        const bn = (pc) => 33 + ((pc - 9 + 24) % 12);
+        if (plays.BASS) {
+          const r = rs("BASS"),
+            sty = st.bass,
+            ex = VAR.vari[1] * 0.04;
+          for (let b = 0; b < 4; b++)
+            for (let h = 0; h < 2; h++) {
+              const ch = half[b * 2 + h],
+                nx = half[(b * 2 + h + 1) % 8],
+                root = bn(ch.root),
+                five = root + 7 > 45 ? root - 5 : root + 7,
+                o = b * 16 + h * 8;
+              if (o >= endAt) break;
+              const third = root + (ch.iv[1] || 4);
+              if (sty === "walk") {
+                const tones = [root, r() < 0.5 ? third : five, r() < 0.5 ? five : root + X.scale[r.int(1, 5)], bn(nx.root) + (r() < 0.5 ? -1 : 1)];
+                for (let q = 0; q < 2; q++) put(1, o + q * 4, tones[h * 2 + q] || root, 11);
+              } else if (sty === "8th" || sty === "chug") {
+                for (let s = 0; s < 8; s += sty === "chug" && dens > 0.6 ? 1 : 2) {
+                  if (s && dens < 0.35 && s % 4) continue;
+                  const last = h === 1 && s === 6 && r() < 0.35 + ex;
+                  put(1, o + s, last ? (r() < 0.5 ? five : bn(nx.root) - 1) : root, s ? 10 : 12);
+                  if (sty === "chug") put(1, o + s + 1, -1);
+                }
+              } else {
+                const T = {
+                  funk: ["x..x..x.", "x.x...xx", "x...x.x.", "x..x.x.."],
+                  dub: ["x---..x-", "x-----x.", "x--.x-x."],
+                  bossa: ["x-----x-", "x-----x."],
+                  hiphop: ["x-----..", "x----.x.", "x--.....", "x.....x-"],
+                }[sty];
+                const t = T[Math.floor(r() * T.length)];
+                let snd = false;
+                for (let s = 0; s < 8; s++) {
+                  if (t[s] === "x") {
+                    const n = s === 0 ? root : sty === "funk" ? r.pick([root + 12, root, five, root + 10]) : sty === "bossa" ? five : r.pick([root, five, root + 12]);
+                    put(1, o + s, n, s ? 10 : 12);
+                    snd = true;
+                  } else if (t[s] === "." && snd) {
+                    put(1, o + s, -1);
+                    snd = false;
+                  }
+                }
+              }
+            }
+          if (sp.pt === "E") (put(1, 32, bn(half[0].root), 12), put(1, 40, -1));
+        }
+        // ---- CHORDS (channel 3): the style's comping rhythm, voiced around middle C
+        if (plays.CHORDS) {
+          const r = rs("CHORDS"),
+            T = {
+              "8th": dens > 0.5 ? ["x.x.x.x.x.x.x.x.", "x-x-x-x-x-x-x-x-", "x--x--x-x--x--x-"] : ["x-------x-------", "x-----x-x-------"],
+              shuffle: ["x-------x-------", "x-----x-------x-", "x--x----x--x----"],
+              "16th": ["..x..x.x..x..xx.", "x..x.x...x.x.x..", ".x.x..x..x.x..x.", "x.x..x.x..x.x..."],
+              skank: dens > 0.6 ? ["....x.x.....x.x."] : ["....x-......x-.."],
+              chug: dens > 0.5 ? ["x..x..x.x..x..x.", "x.x.x.x.x.x.x.x."] : ["x-------x-------", "x-----x-x-------"],
+              charleston: ["x.....x.........", "...x......x.....", "x.......x.x.....", "......x.....x..."],
+              bossa: ["x..x..x...x..x..", "x..x..x...x.x..."],
+              stab: ["x-------........", "x-----....x-----", "x---------x-----"],
+            }[st.comp],
+            center = st.comp === "chug" ? 48 : 60;
+          let prev = null,
+            t = T[Math.floor(r() * T.length)];
+          for (let b = 0; b < 4; b++) {
+            if (r() < 0.3 + VAR.vari[2] * 0.05) t = T[Math.floor(r() * T.length)];
+            vRhythm(t, (s, on) => {
+              const R = b * 16 + s;
+              if (R >= endAt) return;
+              if (!on) return put(2, R, -1);
+              const [lo, off, hi] = vVoice(chordAt(R), center, prev);
+              prev = [lo, hi];
+              put(2, R, lo, s % 4 === 0 ? 11 : 9, off);
+            });
+          }
+          if (sp.pt === "E") {
+            const [lo, off] = vVoice(half[0], center, prev);
+            put(2, 32, lo, 12, off);
+          }
+        }
+        // ---- LEAD (channel 4): a two-bar motif and its answer, chord tones on the beats
+        if (plays.LEAD && sp.pt !== "E") {
+          const r = rs("LEAD", sp.vn),
+            sc = X.lscale,
+            span = 7 + Math.round(K.range * 17),
+            lo = 64 - Math.round(span / 2),
+            hi = lo + span,
+            inSc = (n) => sc.includes((((n - key) % 12) + 12) % 12),
+            snap = (n, pcs) => {
+              for (let d = 0; d < 12; d++) for (const s of [n + d, n - d]) if (s >= lo - 2 && s <= hi + 2 && pcs((((s % 12) + 12) % 12))) return s;
+              return n;
+            },
+            nNotes = Math.round(3 + dens * 6 + (energy - 0.5) * 4),
+            motif = [];
+          // rhythm: steps in 2 bars (32), mostly on 8ths
+          const pos = new Set([0]);
+          while (pos.size < nNotes) pos.add(r() < 0.25 + dens * 0.3 ? r.int(0, 31) : r.int(0, 15) * 2);
+          const ps = [...pos].sort((a, b) => a - b);
+          let n = snap(lo + Math.round(span * (0.3 + r() * 0.4)), (pc) => inSc(pc));
+          ps.forEach((p) => {
+            const st2 = r() < 0.7 ? (r() < 0.5 ? 1 : -1) : r() < 0.5 ? 2 : -2;
+            let k = n;
+            for (let i = 0; i < Math.abs(st2); i++) {
+              k += Math.sign(st2);
+              while (!inSc(((k % 12) + 12) % 12)) k += Math.sign(st2);
+            }
+            if (k > hi || k < lo) k = n - (k - n);
+            n = k;
+            motif.push([p, n, r() < 0.3]); // [step, note, rest after]
+          });
+          const play = (from, m, answer) => {
+            m.forEach(([p, nn, rest], i) => {
+              const R = from + p,
+                ch = chordAt(R),
+                pcs = ch.iv.map((x) => (ch.root + x) % 12);
+              let note = p % 8 === 0 || i === m.length - 1 ? snap(nn, (pc) => pcs.includes(pc)) : nn;
+              if (answer && i >= m.length - 2) note = snap(i === m.length - 1 ? nn - 2 : nn, (pc) => pc === ch.root || pcs.includes(pc));
+              put(3, R, note, p % 4 === 0 ? 12 : 10);
+              const nextP = i < m.length - 1 ? m[i + 1][0] : 32;
+              if (rest && nextP - p > 2) put(3, from + p + Math.max(1, Math.floor((nextP - p) / 2)), -1);
+            });
+          };
+          play(0, motif, false);
+          // the answer: the same rhythm, its ending moved (REPEAT keeps more of it)
+          const ans = motif.map(([p, nn, rest], i) => [p, i >= motif.length * K.rep ? snap(nn + r.pick([-3, -2, 2, 3]), (pc) => inSc(pc)) : nn, rest]);
+          play(32, ans, true);
+          if (!P.ch[3][V_LEN - 4]) put(3, V_LEN - 4, -1);
+        }
+        // ---- ARP (channel 5): chord tones up / down / both, 8ths or 16ths
+        if (plays.ARP && sp.pt !== "E") {
+          const r = rs("ARP"),
+            kind = r.int(0, 3),
+            stp = dens > 0.55 ? 1 : 2,
+            oct = K.range > 0.6 ? 2 : 1;
+          for (let R = 0; R < V_LEN; R += stp) {
+            const ch = chordAt(R),
+              tones = [];
+            for (let o = 0; o < oct; o++) ch.iv.forEach((x) => tones.push(60 + ((ch.root - 0 + 12) % 12) + x + o * 12 - (ch.root > 7 ? 12 : 0)));
+            const k = R / stp,
+              L2 = tones.length,
+              i = kind === 0 ? k % L2 : kind === 1 ? L2 - 1 - (k % L2) : kind === 2 ? (k % (2 * L2 - 2) < L2 ? k % (2 * L2 - 2) : 2 * L2 - 2 - (k % (2 * L2 - 2))) : r.int(0, L2 - 1);
+            put(4, R, tones[i], R % 4 === 0 ? 9 : 7);
+          }
+        }
+        // ---- PAD (channel 6): the chord held while it lasts
+        if (plays.PAD) {
+          let prev = null,
+            last = null;
+          for (let h = 0; h < 8; h++) {
+            const R = h * 8;
+            if (R >= endAt) break;
+            if (half[h] === last) continue;
+            last = half[h];
+            const [lo, off, hi] = vVoice(half[h], 57, prev);
+            prev = [lo, hi];
+            put(5, R, lo, 9, off);
+          }
+          if (sp.pt === "E") put(5, 32, vVoice(half[0], 57, prev)[0], 9, vVoice(half[0], 57, prev)[1]);
+        }
+        return P;
+      }
+      // ---- swapping the Variator's song in and out
+      var varAway = null; // (var: saveNow and showTab may ask before this line runs) the user's song and screen state while the Variator plays its own
+      function varGraph() {
+        fixChannels();
+        if (ctx) {
+          G.comp.disconnect();
+          G = buildGraph(ctx);
+          G.comp.connect(FXC.in);
+        }
+        chResize();
+        S.live.fill(null);
+        S.queue.clear();
+        S.playOrd = -1;
+        $("#bpm").value = song.bpm;
+      }
+      function varEnter() {
+        if (varAway) return;
+        if (S.playing) togglePlay();
+        saveNow(); // the user's song is safe before autosave pauses
+        varAway = { song, pk: S.pk, pat: S.pat, ordSel: S.ordSel, swing: $("#swing").value };
+        song = varBuild();
+        S.pk = "song";
+        S.pat = 0;
+        S.ordSel = 0;
+        varGraph();
+        varMix();
+        $("#swing").value = VAR.k.swing * 0.5;
+        applyMix();
+        refreshAll();
+      }
+      // back to the user's song; keep = the Variator's song stays as the song being edited (EXPORT: open as new)
+      function varLeave(keep) {
+        if (!varAway) return;
+        if (S.playing) togglePlay();
+        fxAllOff();
+        const a = varAway;
+        varAway = null;
+        VAR.liveSlot = -1;
+        if (keep) {
+          delete song.variator;
+          song.mix.forEach((m) => (m.mute = false));
+          S.pk = "song";
+        } else {
+          song = a.song;
+          S.pk = a.pk;
+          $("#swing").value = a.swing;
+        }
+        S.pat = keep ? 0 : a.pat;
+        S.ordSel = keep ? 0 : a.ordSel;
+        varGraph();
+        applyMix();
+        refreshAll();
+      }
+      // a new song from the settings, keeping the mixer and what is playing
+      function varRegen() {
+        varStore();
+        if (!varAway) return varRender();
+        const old = song;
+        song = varBuild();
+        song.mix = old.mix;
+        song.bpm = VAR.bpm || song.bpm;
+        $("#bpm").value = song.bpm;
+        varMix();
+        S.pat = clamp(S.pat, 0, song.patterns.length - 1);
+        S.ordSel = clamp(S.ordSel, 0, song.order.length - 1);
+        $("#swing").value = VAR.k.swing * 0.5;
+        applyMix();
+        fillSelects();
+        varRender();
+      }
+      function varMix() {
+        song.mix.forEach((m, c) => (m.mute = !!VAR.mute[c] || (VAR.solo >= 0 && VAR.solo !== c)));
+        applyMix();
+      }
+      // ---- the view
+      function varKnob(v) {
+        const a0 = 0.75 * Math.PI,
+          a = a0 + (v / 12) * 1.5 * Math.PI,
+          P = (ang, rr) => [32 + Math.cos(ang) * rr, 32 + Math.sin(ang) * rr].map((x) => x.toFixed(1)).join(" ");
+        const arc = (from, to, rr) => `M${P(from, rr)} A${rr} ${rr} 0 ${to - from > Math.PI ? 1 : 0} 1 ${P(to, rr)}`;
+        return `<svg viewBox="0 0 64 64"><path class="kt" d="${arc(a0, a0 + 1.5 * Math.PI, 26)}"/>${v ? `<path class="kv" d="${arc(a0, a, 26)}"/>` : ""}<circle class="kb" cx="32" cy="32" r="18"/><path class="kp" d="M${P(a, 8)} L${P(a, 17)}"/><text x="32" y="36.5">${v || "·"}</text></svg>`;
+      }
+      function varRender() {
+        if (!$("#var").classList.contains("show")) return;
+        const st = V_STY[VAR.style];
+        $("#vSeed").value = VAR.seed;
+        $("#vStyle").value = VAR.style;
+        $("#vInfo").textContent = varAway
+          ? `${NOTE_NAMES_V[song.scale.root]} ${song.scale.type === 2 ? "minor" : "major"} · ${song.bpm} BPM · ${song.order.length} patterns`
+          : "";
+        $("#vStrips").innerHTML = V_ROLES.map((role, c) => {
+          const sel =
+            c === 0
+              ? KITS.map((k, i) => `<option value="${i}">${k}</option>`).join("")
+              : instOptions();
+          return `<div class="vs" data-c="${c}" style="--ccrgb:${PC(c)}"><select data-vi="${c}">${sel}</select><b>${role}</b><div class="vk" data-vk="${c}" title="Variation: drag up or down, tap for the next one">${varKnob(VAR.vari[c])}</div><div class="vms"><button data-vm="${c}" class="${VAR.mute[c] ? "on" : ""}">M</button><button data-vso="${c}" class="${VAR.solo === c ? "on" : ""}">S</button></div></div>`;
+        }).join("");
+        $$("#vStrips select").forEach((s) => {
+          const c = +s.dataset.vi;
+          s.value = c === 0 ? (VAR.ins[0] != null ? VAR.ins[0] : st.kit) : VAR.ins[c] != null ? VAR.ins[c] : instByName(st.ins[c - 1]);
+        });
+        $("#vCtl").innerHTML = V_KNOBS.map(
+          ([k, n, h]) =>
+            `<label title="${h}"><span>${n}</span><input type="range" min="0" max="1" step=".05" data-vc="${k}" value="${VAR.k[k]}"><em>${k === "len" ? 8 + Math.round(VAR.k.len * 8) : Math.round(VAR.k[k] * 100)}</em></label>`,
+        ).join("");
+        varPats();
+        $("#vCtl").hidden = VAR.fx;
+        $("#vFxWrap").hidden = !VAR.fx;
+        $("#vFx").classList.toggle("on", VAR.fx);
+      }
+      const NOTE_NAMES_V = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+      function varPats() {
+        if (!varAway) return ($("#vPats").innerHTML = "");
+        $("#vPats").innerHTML = song.order
+          .map((pi, i) => `<div class="vp" data-vs="${i}" style="--ccrgb:${PC(pi)}"><span>${i + 1}</span><b>${song.patterns[pi].name}</b></div>`)
+          .join("");
+        varPlayUI();
+      }
+      // what plays: the slot of the song, or the slot looping live (a dashed edge while it waits for its beat)
+      function varPlayUI() {
+        if (!varAway) return;
+        const live = S.playing && S.mode === "live",
+          q = [...S.queue.values()];
+        $$("#vPats .vp").forEach((el) => {
+          const i = +el.dataset.vs,
+            pi = song.order[i];
+          el.classList.toggle("play", S.playing && ((!live && S.playOrd === i) || (live && i === VAR.liveSlot && S.live.includes(pi))));
+          el.classList.toggle("queued", live && i === VAR.liveSlot && q.includes(pi) && !S.live.includes(pi));
+        });
+        $("#vMode").textContent = !S.playing ? "▶ plays them in order · tap one to loop it" : live ? "LOOPING · tap it again to stop, ■ to end" : "PLAYING IN ORDER · tap one to loop it";
+      }
+      setInterval(() => varAway && S.tab === "var" && varPlayUI(), 120);
+      // a tap on a pattern loops it live (from the next beat or bar, like LIVE); tapped again it stops
+      function varTap(slot) {
+        const pi = song.order[slot];
+        ensureCtx();
+        if (!S.playing) {
+          S.ordSel = slot;
+          togglePlay();
+          intoLive(pi);
+          VAR.liveSlot = slot;
+        } else {
+          if (S.mode !== "live") intoLive(song.order[S.ordPos] ?? pi);
+          const on = S.live.includes(pi);
+          if (on && VAR.liveSlot === slot) {
+            launchPat(pi);
+            VAR.liveSlot = -1;
+          } else {
+            if (!on) launchPat(pi);
+            VAR.liveSlot = slot;
+          }
+        }
+        varPlayUI();
+      }
+      $("#vPats").addEventListener("pointerdown", (e) => {
+        const el = e.target.closest("[data-vs]");
+        if (el) (e.preventDefault(), varTap(+el.dataset.vs));
+      });
+      $("#vSeed").onchange = () => {
+        VAR.seed = Math.abs(parseInt($("#vSeed").value, 10)) || 1;
+        VAR.bpm = null;
+        varRegen();
+      };
+      $("#vStyle").innerHTML = Object.entries(V_STY)
+        .map(([k, s]) => `<option value="${k}">${s.n}</option>`)
+        .join("");
+      $("#vStyle").onchange = () => {
+        VAR.style = $("#vStyle").value;
+        VAR.ins = [null, null, null, null, null, null];
+        VAR.bpm = null;
+        VAR.k.swing = V_STY[VAR.style].sw;
+        varRegen();
+      };
+      $("#vStrips").addEventListener("change", (e) => {
+        const s = e.target.closest("[data-vi]");
+        if (!s) return;
+        VAR.ins[+s.dataset.vi] = +s.value;
+        varRegen();
+      });
+      $("#vStrips").addEventListener("click", (e) => {
+        const m = e.target.closest("[data-vm]"),
+          so = e.target.closest("[data-vso]");
+        if (m) VAR.mute[+m.dataset.vm] = !VAR.mute[+m.dataset.vm];
+        else if (so) VAR.solo = VAR.solo === +so.dataset.vso ? -1 : +so.dataset.vso;
+        else return;
+        varStore();
+        if (varAway) varMix();
+        varRender();
+      });
+      // VARIATION knobs: drag up / down, or tap for the next stream
+      {
+        let drag = null;
+        $("#vStrips").addEventListener("pointerdown", (e) => {
+          const k = e.target.closest("[data-vk]");
+          if (!k) return;
+          e.preventDefault();
+          k.setPointerCapture(e.pointerId);
+          drag = { c: +k.dataset.vk, y: e.clientY, v: VAR.vari[+k.dataset.vk], moved: false, el: k };
+        });
+        $("#vStrips").addEventListener("pointermove", (e) => {
+          if (!drag) return;
+          const v = clamp(drag.v + Math.round((drag.y - e.clientY) / 12), 0, 12);
+          if (Math.abs(drag.y - e.clientY) > 6) drag.moved = true;
+          if (v !== VAR.vari[drag.c]) {
+            VAR.vari[drag.c] = v;
+            drag.el.innerHTML = varKnob(v);
+          }
+        });
+        const up = () => {
+          if (!drag) return;
+          if (!drag.moved) VAR.vari[drag.c] = (VAR.vari[drag.c] + 1) % 13;
+          drag = null;
+          varRegen();
+        };
+        $("#vStrips").addEventListener("pointerup", up);
+        $("#vStrips").addEventListener("pointercancel", up);
+      }
+      $("#vCtl").addEventListener("input", (e) => {
+        const k = e.target.dataset.vc;
+        if (!k) return;
+        VAR.k[k] = +e.target.value;
+        e.target.nextElementSibling.textContent = k === "len" ? 8 + Math.round(VAR.k.len * 8) : Math.round(VAR.k[k] * 100);
+        if (k === "swing") $("#swing").value = VAR.k.swing * 0.5;
+      });
+      $("#vCtl").addEventListener("change", (e) => e.target.dataset.vc && varRegen());
+      $("#vRnd").onclick = () => {
+        VAR.seed = 1 + Math.floor(Math.random() * 99999999);
+        VAR.vari = [0, 0, 0, 0, 0, 0];
+        VAR.bpm = null;
+        varRegen();
+        toast("Seed " + VAR.seed);
+      };
+      $("#vFx").onclick = () => {
+        VAR.fx = !VAR.fx;
+        if (!VAR.fx) fxAllOff();
+        else renderFx();
+        varRender();
+      };
+      $("#vLatch").onclick = () => $("#fxLatch").click();
+      // EXPORT: into the song you were writing, as the song to edit, or saved in Files
+      $("#vExp").onclick = () => {
+        if (!varAway) return;
+        const el = document.createElement("div");
+        el.id = "vExpBox";
+        el.innerHTML = `<div class="mlBox"><i>EXPORT · ${song.order.length} PATTERNS · ${song.name}</i>
+<button data-ve="add">ADD TO MY SONG<small>its patterns go at the end of the song you were writing (${varAway.song.name || "untitled"})</small></button>
+<button data-ve="open">OPEN AS A NEW SONG<small>the Variator's song becomes the one you edit (save yours first in Files)</small></button>
+<div class="vxs"><input id="vExpName" type="text" value="${song.name}"><button data-ve="save">SAVE IN FILES</button></div>
+<button data-ve="x" class="vxc">CANCEL</button></div>`;
+        document.body.appendChild(el);
+        el.onclick = async (e) => {
+          const b = e.target.closest("[data-ve]");
+          if (!b && e.target !== el) return;
+          const k = b ? b.dataset.ve : "x";
+          if (k === "save") {
+            const nm = $("#vExpName").value.trim() || song.name,
+              keep = song.name;
+            song.name = nm;
+            const json = serialize(),
+              ms = await metaStore(),
+              now = Date.now();
+            song.name = keep;
+            ms[nm] = Object.assign({ created: (ms[nm] && ms[nm].created) || now, modified: now }, metaOf(json));
+            try {
+              await dbSet("song:" + nm, json);
+              await dbSet("song-meta", ms);
+              toast("Saved in Files: " + nm);
+            } catch {
+              toast("Storage full");
+            }
+          } else if (k === "open") {
+            varLeave(true);
+            showTab("trk");
+            pkApply();
+            toast("The Variator's song is open: save it in Files to keep it");
+          } else if (k === "add") varAddToSong();
+          el.remove();
+        };
+      };
+      function varAddToSong() {
+        const vs = song,
+          pats = JSON.parse(JSON.stringify(vs.patterns)),
+          ins = vs.chInst.slice(),
+          kit = vs.kit;
+        varLeave(false);
+        if (CH < 6) setChannels(8);
+        const base = song.patterns.length;
+        pats.forEach((p) => {
+          p.ci = Array.from({ length: CH }, (_, c) => (c < 6 ? ins[c] : null));
+          while (p.ch.length < CH) p.ch.push(Array(p.len).fill(null));
+          song.patterns.push(p);
+        });
+        vs.order.forEach((o) => song.order.push(base + o));
+        if (song.kit !== kit) toast("Drums play with this song's kit (" + KITS[song.kit || 0] + ")");
+        fixLoop();
+        refreshAll();
+        showTab("trk");
+        S.pk = "song";
+        pkApply();
+        toast(pats.length + " patterns added to your song");
+      }
+
       const HELP = [
         {
           id: "start",
@@ -10626,8 +11765,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           b: {
             en: [
               "- **Logo**: opens this help.",
-              "- **BPM**: tempo, 40 to 240 beats per minute.",
-              "- **Four view icons**: Tracker (squares and keys), Sampler, Mix, Files.",
+              "- **Four view icons**: Tracker (squares and keys), Sampler, Mix (with the **BPM**, the tempo), and the **Variator** (songs generated from a seed). Files sits at the end.",
               "- **↶ Undo**: undoes the last change of the view you are in (notes, song slots, or samples). It is dimmed when there is nothing to undo.",
               "- **⌫ Delete mode**: switch it on, then tap or drag over notes, song slots, patterns or samples to remove them. Tap it again to leave.",
               '- **● Record**: arms live recording (see "Recording live").',
@@ -10635,8 +11773,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             ],
             es: [
               "- **Logo**: abre esta ayuda.",
-              "- **BPM**: tempo, de 40 a 240 pulsos por minuto.",
-              "- **Cuatro iconos de vista**: Tracker (cuadrados y teclas), Sampler, Mix, Files.",
+              "- **Cuatro iconos de vista**: Tracker (cuadrados y teclas), Sampler, Mix (con los **BPM**, el tempo) y el **Variator** (canciones generadas desde una semilla). Files va al final.",
               "- **↶ Deshacer**: deshace el último cambio de la vista en la que estás (notas, huecos de canción o samples). Se atenúa cuando no hay nada que deshacer.",
               "- **⌫ Modo borrar**: actívalo y toca o arrastra sobre notas, huecos de canción, patrones o samples para quitarlos. Púlsalo otra vez para salir.",
               "- **● Grabar**: arma la grabación en vivo (mira «Grabar en vivo»).",
@@ -10840,13 +11977,35 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           b: {
             en: [
               "Mixer for the channel selected in the CH buttons: **volume, pan, reverb, echo, distortion, lo-fi and tone**. Presets are one tap.",
-              "**Master** section: overall volume, **swing** (makes every other step late for a groovy feel), echo feedback and echo time.",
+              "**Master** section: **BPM** (tempo, 40 to 240), overall volume, **swing** (makes every other step late for a groovy feel), echo feedback and echo time.",
               "The screen at the bottom is an oscilloscope of the output.",
             ],
             es: [
               "Mezclador del canal seleccionado en los botones CH: **volumen, panorama, reverb, eco, distorsión, lo-fi y tono**. Los presets son de un toque.",
-              "Sección **Master**: volumen general, **swing** (retrasa un paso de cada dos para dar groove), realimentación del eco y tiempo del eco.",
+              "Sección **Master**: **BPM** (tempo, de 40 a 240), volumen general, **swing** (retrasa un paso de cada dos para dar groove), realimentación del eco y tiempo del eco.",
               "La pantalla de abajo es un osciloscopio de la salida.",
+            ],
+          },
+        },
+        {
+          id: "var",
+          t: { en: "Variator", es: "Variator" },
+          b: {
+            en: [
+              "The **Variator** makes whole songs by itself from a **SEED** number and a **STYLE**. The same seed always gives the same song; **RANDOM** draws a new seed. Tap the number to type one you like.",
+              "Six channels with fixed parts: **drums, bass, chords, lead, arp and pad**. On each one: the instrument (the drum kit on the first), a **VARIATION** knob (drag it up or down, or tap it: each number is another version of that part only, 0 is the seed's own) and **M**ute / **S**olo.",
+              "The squares are the song's patterns in order (A verse, B chorus, C bridge, IN intro, END ending). **▶** plays them in order; a tap on one **loops it** from the next beat or bar, like LIVE, and a second tap stops it.",
+              "The sliders: **density** (how many notes), **swing**, **fills** (drum fills into the next part), **chords** (how often they change), **range** (how far melodies travel), **repeat** (low: repeated parts come back changed) and **length** (8 to 16 patterns).",
+              "**LIVE FX** shows the effect pads. The **mixer** works on the Variator's channels while you go there and back.",
+              "**EXPORT**: add the patterns to the end of the song you were writing, open the result as the song you edit, or save it in Files with a name. Then it is a normal song: every note can be changed.",
+            ],
+            es: [
+              "El **Variator** hace canciones enteras él solo a partir de un número **SEED** (semilla) y un **STYLE** (estilo). La misma semilla da siempre la misma canción; **RANDOM** saca una semilla nueva. Toca el número para escribir una que te guste.",
+              "Seis canales con partes fijas: **batería, bajo, acordes, melodía, arpegio y pad**. En cada uno: el instrumento (el kit de batería en el primero), una rueda **VARIATION** (arrástrala arriba o abajo, o tócala: cada número es otra versión de esa parte sola, 0 es la de la semilla) y **M**ute / **S**olo.",
+              "Los cuadrados son los patrones de la canción en orden (A estrofa, B estribillo, C puente, IN intro, END final). **▶** los toca en orden; un toque en uno **lo repite en bucle** desde el siguiente pulso o compás, como en LIVE, y otro toque lo para.",
+              "Los deslizadores: **density** (cuántas notas), **swing**, **fills** (redobles hacia la parte siguiente), **chords** (cada cuánto cambian los acordes), **range** (cuánto se mueven las melodías), **repeat** (bajo: las partes repetidas vuelven cambiadas) y **length** (de 8 a 16 patrones).",
+              "**LIVE FX** muestra los pads de efectos. El **mezclador** trabaja sobre los canales del Variator si vas y vuelves.",
+              "**EXPORT**: añade los patrones al final de la canción que estabas escribiendo, abre el resultado como la canción que editas, o guárdalo en Files con un nombre. Después es una canción normal: se puede cambiar cada nota.",
             ],
           },
         },
@@ -11956,7 +13115,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       // ======================================================================
       // Switches view. Classic tab names (song, live, fx, pads) are mapped to the tracker, where Pocket draws them.
       function showTab(id) {
-        if (pocketOn() && !["trk", "smp", "mix", "file"].includes(id)) id = "trk"; // song / live / FX / pads live inside the tracker view now
+        if (pocketOn() && !["trk", "smp", "mix", "file", "var"].includes(id)) id = "trk";
+        // the Variator's song stays in while you visit the mixer; any other screen brings yours back
+        if (id === "var") varEnter();
+        else if (varAway && id !== "mix") varLeave(); // song / live / FX / pads live inside the tracker view now
         if (id !== S.tab && S.del) setDel(false);
         S.tab = id;
         $("#chRow").hidden = !(id === "trk" || id === "mix");
@@ -11975,6 +13137,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (id === "pads") renderPads();
         if (id === "live") renderLive();
         if (id === "fx") renderFx();
+        if (id === "var") varRender();
         if (id === "trk" && pocketOn()) pkApply();
         chFace();
         hdrFace();
