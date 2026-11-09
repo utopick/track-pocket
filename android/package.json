@@ -1,6 +1,6 @@
 {
   "name": "track-pocket",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "TRACK.Pocket: pocket music maker in one HTML file.",
   "pocket": {

@@ -9058,6 +9058,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           }
         }
         box.dataset.dr = drums ? 1 : 0;
+        box.dataset.w = box.clientWidth; // 0 while hidden (a drum channel): the observer below refits it once it shows
         if (!scroll) {
           box.innerHTML = h;
           return;
@@ -9079,6 +9080,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           }).join("");
         kbMapWin();
       }
+      // the piano is built to its width: rebuild it when that changes (shown again after a drum channel, rotation)
+      new ResizeObserver(() => {
+        const box = $("#pkbd");
+        if (box.clientWidth && String(box.clientWidth) !== box.dataset.w) buildPKbd();
+      }).observe($("#pkbd"));
       function kbMapWin() {
         const w = $("#pkMap .win");
         if (!w) return;
