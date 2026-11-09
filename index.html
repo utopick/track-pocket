@@ -484,6 +484,64 @@
       .fx span {
         color: var(--dim);
       }
+      #mixScroll {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      #mixScroll > .card {
+        flex: none;
+        margin: 8px 8px 0;
+      }
+      #mixScroll .scopeCard {
+        padding: 6px;
+      }
+      #mixScroll #scope {
+        height: 56px;
+        display: block;
+      }
+      #mixRows {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      #mixRows .chcard {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      #mixRows .chcard > .knobs,
+      #mixRows .chcard > .fx {
+        flex: 1;
+        align-content: space-evenly;
+      }
+      .mstCard .knobs {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      #mix[data-kn="1"] .mstS,
+      #mix[data-kn="0"] .mstK {
+        display: none;
+      }
+      .chtitle .dd {
+        height: 34px;
+        border-radius: 6px;
+        flex: 1;
+        min-width: 0;
+      }
+      .chtitle .mdd {
+        flex: 0 1 120px;
+      }
+      .chtitle .dd span {
+        font-size: 12px;
+      }
+      .chtitle .mch {
+        width: 34px;
+        padding: 0;
+        font-size: 16px;
+      }
       .chcard {
         background: var(--panel);
         border: 1px solid var(--line);
@@ -1676,7 +1734,21 @@
       }
       #vStrips {
         overflow-y: auto;
-        align-content: start;
+        grid-auto-rows: 1fr;
+      }
+      #vStrips .vs {
+        justify-content: space-between;
+      }
+      #mixRows .knobs .kn {
+        width: 72px;
+        height: 72px;
+      }
+      #mixRows .knobs .pdd {
+        width: 80px;
+        height: 72px;
+        flex: none;
+        border-radius: 10px;
+        align-self: center;
       }
       .vSeedRow {
         display: flex;
@@ -1754,11 +1826,14 @@
         border-radius: 10px;
         padding: 4px;
       }
-      .vs select {
+      .vs .dd {
+        flex: none;
+        height: 30px;
+        border-radius: 6px;
+      }
+      .vs .dd span {
         font-size: 10px;
-        min-height: 28px;
-        padding: 0 2px;
-        width: 100%;
+        padding: 0 3px;
       }
       .vs b {
         font: 800 9px var(--mono);
@@ -1829,16 +1904,14 @@
         background: var(--acc2);
         border-color: var(--acc2);
       }
-      .vSty {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+      #var > .vSty {
         flex: none;
+        height: 44px;
+        border-radius: 10px;
       }
-      .vSty select {
-        flex: 1;
-        font: 800 14px var(--mono);
-        min-height: 36px;
+      .vSty span {
+        font: 900 16px var(--mono);
+        letter-spacing: 1px;
       }
       #vPats {
         display: grid;
@@ -1958,6 +2031,7 @@
       }
       .vRib button {
         flex: 1;
+        min-width: 0;
         min-height: 50px;
         display: flex;
         flex-direction: column;
@@ -3696,25 +3770,26 @@
           <label><i>BPM</i><input id="bpm" type="number" min="40" max="240" value="120" /></label>
           <button id="bpmUp" title="Faster (hold to keep going)">+</button>
         </div>
-        <div class="scroll" id="mixScroll">
+        <div id="mixScroll">
           <div class="card scopeCard"><canvas id="scope" height="80"></canvas></div>
-          <div class="card">
-            <div class="chtitle"><span class="lbl" style="margin: 0">Master</span><span class="grow"></span
-              ><button id="mixKn" title="Show the channel controls as knobs or as sliders">KNOBS</button></div>
-            <div class="fx">
+          <div class="card mstCard">
+            <div class="chtitle"><span class="lbl" style="margin: 0">MASTER</span><span class="grow"></span
+              ><label class="dd mdd"><span id="echoTimeTxt"></span
+                ><select id="echoTime" title="Echo time">
+                  <option value=".5">1/8</option>
+                  <option value=".75" selected>1/8 dotted</option>
+                  <option value="1">1/4</option>
+                  <option value="1.5">1/4 dotted</option>
+                </select></label
+              ><button id="mixKn" title="Show the controls as knobs or as sliders">KNOBS</button></div>
+            <div class="knobs mstK" id="mstK"></div>
+            <div class="fx mstS">
               <span>Volume</span
               ><input id="master" type="range" min="0" max="1" step=".01" value=".8" /><span
                 >Swing</span
               ><input id="swing" type="range" min="0" max=".5" step=".01" value="0" />
               <span>Echo fb</span
-              ><input id="echo" type="range" min="0" max=".85" step=".01" value=".35" /><span
-                >Echo</span
-              ><select id="echoTime">
-                <option value=".5">1/8</option>
-                <option value=".75" selected>1/8 dotted</option>
-                <option value="1">1/4</option>
-                <option value="1.5">1/4 dotted</option>
-              </select>
+              ><input id="echo" type="range" min="0" max=".85" step=".01" value=".35" />
             </div>
           </div>
           <div id="mixRows"></div>
@@ -3738,11 +3813,11 @@
             <div id="varFxGrid"></div>
           </div>
         </div>
-        <label class="vSty"><i>STYLE</i><select id="vStyle"></select></label>
+        <label class="dd vSty"><span id="vStyleTxt"></span><select id="vStyle" title="Style"></select></label>
         <div id="vPats"></div>
         <div id="vMode"></div>
         <div class="vRib">
-          <button id="vExp"><b>⇪</b>EXPORT</button><button id="vRnd"><b>⚄</b>RANDOM</button><button id="vVars"><b>◎</b>VARS</button><button id="vFx"><b>FX</b>LIVE FX</button>
+          <button id="vExp"><b>⇪</b>EXPORT</button><button id="vRnd"><b>⚄</b>RANDOM</button><button id="vChs"><b>◐</b>CHANNELS</button><button id="vVars"><b>◎</b>VARS</button><button id="vFx"><b>FX</b>LIVE FX</button>
         </div>
       </section>
       <!-- FILES -->
@@ -8155,23 +8230,34 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         $("#mixRows").innerHTML = song.mix
           .map(
             (m, i) =>
-              `<div class="chcard${i === S.col ? " sel" : ""}" id="mc${i}" style="--ccrgb:${PC(i)}"><div class="chtitle"><b>CH${i + 1}</b><select class="mInst" data-mi="${i}" title="Instrument (for ${song.instAll ? "every pattern" : "pattern " + letter(S.pat)})">${opts}</select>
-    <button data-pre="${i}">${m.preset && m.preset !== "CUSTOM" ? m.preset : "PRESET"} ▾</button>
+              i !== S.col
+                ? ""
+                : `<div class="chcard sel" id="mc${i}" style="--ccrgb:${PC(i)}"><div class="chtitle"><button class="mch" data-mch="-1" title="Previous channel">◀</button><b>CH${i + 1}</b><button class="mch" data-mch="1" title="Next channel">▶</button><label class="dd"><span><i>INSTR. · ${song.instAll ? "ALL" : letter(S.pat)}</i>${instLabel(instOf(i))}</span><select class="mInst" data-mi="${i}" title="Instrument (for ${song.instAll ? "every pattern" : "pattern " + letter(S.pat)})">${opts}</select></label>
     <button data-mm="${i}" class="${m.mute ? "on" : ""}">${m.mute ? "Muted" : "Mute"}</button></div>
-    <div class="bar" data-preset-menu="${i}" hidden style="padding: 4px; flex-wrap: wrap">${Object.keys(PRESETS).map((k) => `<button data-pick="${k}" data-i="${i}">${k}</button>`).join("")}</div>
     ${
       kn
-        ? `<div class="knobs">${FXP.map(([k, l, a, b]) => `<div><div class="kn" data-k="${k}" data-i="${i}" data-a="${a}" data-b="${b}">${knobSvg((m[k] - a) / (b - a), mixTxt(k, m[k]), k === "pan")}</div>${l}</div>`).join("")}</div>`
-        : `<div class="fx">${FXP.map(([k, l, a, b]) => `<span>${l}</span><input type="range" min="${a}" max="${b}" step=".01" value="${m[k]}" data-k="${k}" data-i="${i}">`).join("")}</div>`
+        ? `<div class="knobs">${FXP.map(([k, l, a, b]) => `<div><div class="kn" data-k="${k}" data-i="${i}" data-a="${a}" data-b="${b}">${knobSvg((m[k] - a) / (b - a), mixTxt(k, m[k]), k === "pan")}</div>${l}</div>`).join("")}${presetDd(i, m)}</div>`
+        : `<div class="fx">${FXP.map(([k, l, a, b]) => `<span>${l}</span><input type="range" min="${a}" max="${b}" step=".01" value="${m[k]}" data-k="${k}" data-i="${i}">`).join("")}<span>Preset</span>${presetDd(i, m)}</div>`
     }</div>`,
           )
           .join("");
+        $("#mix").dataset.kn = kn ? 1 : 0;
+        $("#echoTimeTxt").innerHTML = "<i>ECHO</i>" + $("#echoTime").selectedOptions[0].textContent;
+        $("#mstK").innerHTML = MSTK.map(([id, l, b]) => `<div><div class="kn" data-mk="${id}">${knobSvg(+$("#" + id).value / b, Math.round((+$("#" + id).value / b) * 100))}</div>${l}</div>`).join("");
         $$("#mixRows [data-mi]").forEach((s) => {
           const c = +s.dataset.mi,
             inst = instOf(c);
           s.value = inst === DRUM_I ? "d" + (song.kit || 0) : inst;
         });
       }
+      // the 8th square of the channel card: the effect presets, as a banner button that opens the list
+      const presetDd = (i, m) =>
+        `<label class="dd pdd"><span><i>PRESET</i>${m.preset || "None"}</span><select data-pre="${i}" title="Effect presets"><option value="">${m.preset || "None"}</option>${Object.keys(PRESETS).map((k) => `<option>${k}</option>`).join("")}</select></label>`;
+      const MSTK = [
+        ["master", "Volume", 1],
+        ["swing", "Swing", 0.5],
+        ["echo", "Echo fb", 0.85],
+      ];
       // a knob as SVG: f = 0..1 around 270 degrees (mid = from the top, for pan), txt in the middle
       function knobSvg(f, txt, mid) {
         const a0 = 0.75 * Math.PI,
@@ -8240,7 +8326,31 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           el.innerHTML = knobSvg((v - a) / (b - a), mixTxt(k, v), k === "pan");
         },
       );
+      knobDrag(
+        $("#mstK"),
+        ".kn",
+        (el) => +$("#" + el.dataset.mk).value / MSTK.find((x) => x[0] === el.dataset.mk)[2],
+        (el, f) => {
+          const id = el.dataset.mk,
+            b = MSTK.find((x) => x[0] === id)[2],
+            v = f == null ? { master: 0.8, swing: 0, echo: 0.35 }[id] : Math.round(f * b * 100) / 100;
+          $("#" + id).value = v;
+          applyMix();
+          if (id === "swing" && varAway) (VAR.k.swing = v / 0.5), varStore();
+          el.innerHTML = knobSvg(v / b, Math.round((v / b) * 100));
+        },
+      );
+      $("#echoTime").addEventListener("change", () => ($("#echoTimeTxt").innerHTML = "<i>ECHO</i>" + $("#echoTime").selectedOptions[0].textContent));
       $("#mixRows").addEventListener("change", (e) => {
+        const pr = e.target.closest("select[data-pre]");
+        if (pr) {
+          if (!pr.value) return;
+          Object.assign(song.mix[+pr.dataset.pre], PRESETS[pr.value], { preset: pr.value });
+          applyMix();
+          renderMix();
+          pkLabels();
+          return;
+        }
         const s = e.target.closest("[data-mi]");
         if (!s) return;
         const c = +s.dataset.mi,
@@ -8282,10 +8392,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => $(id).addEventListener(ev, stop));
       });
       $("#mixRows").addEventListener("click", (e) => {
-        const toggle = e.target.closest("[data-pre]");
-        if (toggle) {
-          const menu = $(`[data-preset-menu="${toggle.dataset.pre}"]`);
-          menu.hidden = !menu.hidden;
+        const ar = e.target.closest("[data-mch]");
+        if (ar) {
+          select(S.row, (S.col + +ar.dataset.mch + CH) % CH);
+          renderMix();
           return;
         }
         const pick = e.target.closest("[data-pick]");
@@ -10569,11 +10679,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           return;
         }
         select(S.row, +b.dataset.ch);
-        if (S.tab === "mix") {
-          $$("#mixRows .chcard").forEach((el, i) => el.classList.toggle("sel", i === S.col));
-          const card = $("#mc" + S.col);
-          if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+        if (S.tab === "mix") renderMix();
       });
       // song mode: one square per slot of song.order; a square opens a mini modal to choose its pattern
       const hasLoop = () => song.loopA != null || song.loopB != null;
@@ -11433,7 +11539,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         ["chg", "CHORDS", "how often they change"],
         ["range", "RANGE", "how far melodies travel"],
         ["rep", "REPEAT", "low: parts come back changed"],
-        ["len", "LENGTH", "8 to 16 patterns"],
+        ["len", "LENGTH", "8 to 12 patterns"],
       ];
       const VAR = Object.assign(
         {
@@ -11552,7 +11658,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           pc = progs.length > 1 ? sr.pick(progs.filter((p) => p !== pv)) : pv,
           pb = sr.pick(progs.filter((p) => p !== pv && p !== pc).concat(minor ? ["VI VII i i", "iv v VI VII"] : ["IV V iii vi", "vi V IV V"]).filter((p) => VAR.style !== "metal" || /5/.test(p))),
           bpm = VAR.bpm || sr.int(st.bpm[0], st.bpm[1]),
-          L = 8 + Math.round(K.len * 8),
+          L = 8 + Math.round(K.len * 4),
           insIdx = st.ins.map((n, i) => (VAR.ins[i + 1] != null ? VAR.ins[i + 1] : instByName(n))).concat([DRUM_I, VAR.ins[7] != null ? VAR.ins[7] : instByName(V_COUNTER[VAR.style])]);
         // the parts: verse (A), chorus (B), bridge (C), each as 4-bar chunks of chord symbols
         const chunks = (p) => {
@@ -11986,12 +12092,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               ? KITS.map((k, i) => `<option value="${i}">${k}</option>`).join("")
               : instOptions();
           const vol = varAway ? song.mix[c].vol : VAR.vol[c] ?? 0.6;
-          return `<div class="vs" data-c="${c}" style="--ccrgb:${PC(c)}"><select data-vi="${c}">${sel}</select><b>${role}</b><div class="kn vk" data-vk="${c}" title="Variation: drag up or down, tap for the next one">${varKnob(VAR.vari[c])}</div><em>VARIATION</em><div class="kn vv" data-vv="${c}" title="Volume: drag up or down, double-tap to reset">${knobSvg(vol, Math.round(vol * 100))}</div><em>VOLUME</em><div class="vms"><button data-vm="${c}" class="${VAR.mute[c] ? "on" : ""}">M</button><button data-vso="${c}" class="${VAR.solo === c ? "on" : ""}">S</button></div></div>`;
+          return `<div class="vs" data-c="${c}" style="--ccrgb:${PC(c)}"><label class="dd"><span></span><select data-vi="${c}" title="Instrument">${sel}</select></label><b>${role}</b><div class="kn vk" data-vk="${c}" title="Variation: drag up or down, tap for the next one">${varKnob(VAR.vari[c])}</div><em>VARIATION</em><div class="kn vv" data-vv="${c}" title="Volume: drag up or down, double-tap to reset">${knobSvg(vol, Math.round(vol * 100))}</div><em>VOLUME</em><div class="vms"><button data-vm="${c}" class="${VAR.mute[c] ? "on" : ""}">M</button><button data-vso="${c}" class="${VAR.solo === c ? "on" : ""}">S</button></div></div>`;
         }).join("");
         $$("#vStrips select").forEach((s) => {
           const c = +s.dataset.vi;
           s.value = c === 0 || c === 6 ? (VAR.ins[0] != null ? VAR.ins[0] : st.kit) : VAR.ins[c] != null ? VAR.ins[c] : instByName(c === 7 ? V_COUNTER[VAR.style] : st.ins[c - 1]);
+          s.previousElementSibling.textContent = s.selectedOptions[0] ? s.selectedOptions[0].textContent : "";
         });
+        $("#vStyleTxt").innerHTML = "<i>STYLE</i>" + st.n.toUpperCase() + " ▾";
         $("#vCtl").innerHTML =
           V_KNOBS.map(([k, n, h]) => `<div title="${n}: ${h}"><div class="kn vc" data-vc="${k}">${knobSvg(VAR.k[k], vKnobTxt(k))}</div><b>${n}</b><small>${h}</small></div>`).join("") +
           `<div class="mst" title="Volume of everything"><div class="kn vc" data-vc="master">${knobSvg(+$("#master").value, vKnobTxt("master"))}</div><b>MASTER</b><small>volume of everything</small></div>`;
@@ -12001,8 +12109,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         $("#vFxWrap").hidden = VAR.view !== "fx";
         $("#vFx").classList.toggle("on", VAR.view === "fx");
         $("#vVars").classList.toggle("on", VAR.view === "vars");
+        $("#vChs").classList.toggle("on", VAR.view === "ch");
       }
-      const vKnobTxt = (k) => (k === "master" ? Math.round($("#master").value * 100) : k === "len" ? 8 + Math.round(VAR.k.len * 8) : Math.round(VAR.k[k] * 100));
+      const vKnobTxt = (k) => (k === "master" ? Math.round($("#master").value * 100) : k === "len" ? 8 + Math.round(VAR.k.len * 4) : Math.round(VAR.k[k] * 100));
       const V_KDEF = { dens: 0.5, fill: 0.5, chg: 0.5, range: 0.5, rep: 0.6, len: 0.5 };
       const NOTE_NAMES_V = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
       function varPats() {
@@ -12177,6 +12286,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       }
       $("#vFx").onclick = () => varView("fx");
       $("#vVars").onclick = () => varView("vars");
+      $("#vChs").onclick = () => VAR.view !== "ch" && varView(VAR.view);
       $("#vLatch").onclick = () => $("#fxLatch").click();
       // EXPORT: into the song you were writing, as the song to edit, or saved in Files
       $("#vExp").onclick = () => {
@@ -12485,13 +12595,13 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           t: { en: "Mix", es: "Mix" },
           b: {
             en: [
-              "At the top, the **BPM** (tempo): tap the number to type it, **−** / **+** change it by one (hold them to go faster). Below: the oscilloscope of the output, the **Master** card, and one card per channel.",
-              "Each channel card (with the channel's colour): its **instrument**, **volume, pan, reverb, echo, distortion, lo-fi and tone**, presets and mute. **KNOBS / SLIDERS** in Master switches how they look; drag a knob up or down, double-tap it to put it back. A **CH** button at the top scrolls to its card.",
+              "At the top, the **BPM** (tempo): tap the number to type it, **−** / **+** change it by one (hold them to go faster). Below: the oscilloscope of the output, the **Master** card (volume, swing, echo) and the card of the channel you are on.",
+              "Each channel card (with the channel's colour): its **instrument**, **volume, pan, reverb, echo, distortion, lo-fi and tone**, presets and mute. **KNOBS / SLIDERS** in Master switches how they look; drag a knob up or down, double-tap it to put it back. The **CH** buttons at the top, or **◀ ▶** on the card, change the channel shown.",
               "**Master** card: overall volume, **swing** (makes every other step late for a groovy feel), echo feedback and echo time.",
             ],
             es: [
-              "Arriba, los **BPM** (el tempo): toca el número para escribirlo; **−** / **+** lo cambian de uno en uno (mantenlos para ir más rápido). Debajo: el osciloscopio de la salida, la tarjeta **Master** y una tarjeta por canal.",
-              "Cada tarjeta de canal (con su color): su **instrumento**, **volumen, panorama, reverb, eco, distorsión, lo-fi y tono**, presets y mute. **KNOBS / SLIDERS** en Master cambia cómo se ven; arrastra una rueda arriba o abajo, tócala dos veces para devolverla a su sitio. Un botón **CH** de arriba lleva a su tarjeta.",
+              "Arriba, los **BPM** (el tempo): toca el número para escribirlo; **−** / **+** lo cambian de uno en uno (mantenlos para ir más rápido). Debajo: el osciloscopio de la salida, la tarjeta **Master** (volumen, swing, eco) y la tarjeta del canal en el que estás.",
+              "Cada tarjeta de canal (con su color): su **instrumento**, **volumen, panorama, reverb, eco, distorsión, lo-fi y tono**, presets y mute. **KNOBS / SLIDERS** en Master cambia cómo se ven; arrastra una rueda arriba o abajo, tócala dos veces para devolverla a su sitio. Los botones **CH** de arriba, o **◀ ▶** en la tarjeta, cambian el canal que se ve.",
               "Tarjeta **Master**: volumen general, **swing** (retrasa un paso de cada dos para dar groove), realimentación del eco y tiempo del eco.",
             ],
           },
@@ -12505,7 +12615,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "Eight channels with fixed parts: **drums, bass, chords, lead, arp, pad, perc** (shakers, cowbell...) and **counter** (a slower second melody). On each one: the instrument (the drum kit on drums and perc), a **VARIATION** knob (drag it up or down, or tap it: each number is another version of that part only, 0 is the seed's own), a **VOLUME** knob and **M**ute / **S**olo.",
               "**⚄** next to the seed draws a new one and keeps your knobs; **▶** on the other side plays and stops.",
               "The squares are the song's patterns in order (A verse, B chorus, C bridge, IN intro, END ending). **▶** plays them in order; a tap on one **loops it** from the next beat or bar, like LIVE, and a second tap stops it.",
-              "**VARS** (at the bottom) swaps the channels for the generator's knobs: **density** (how many notes), **swing**, **fills** (drum fills into the next part), **chords** (how often they change), **range** (how far melodies travel), **repeat** (low: repeated parts come back changed), **length** (8 to 16 patterns) and **master** volume. Tap VARS again to see the channels.",
+              "**VARS** (at the bottom) swaps the channels (**CHANNELS** brings them back) for the generator's knobs: **density** (how many notes), **swing**, **fills** (drum fills into the next part), **chords** (how often they change), **range** (how far melodies travel), **repeat** (low: repeated parts come back changed), **length** (8 to 12 patterns) and **master** volume. Tap VARS again to see the channels.",
               "**LIVE FX** swaps them for the effect pads, the same way. The **mixer** works on the Variator's channels while you go there and back.",
               "**EXPORT**: add the patterns to the end of the song you were writing, open the result as the song you edit, or save it in Files with a name. Then it is a normal song: every note can be changed.",
             ],
@@ -12514,7 +12624,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "Ocho canales con partes fijas: **batería, bajo, acordes, melodía, arpegio, pad, perc** (shakers, cencerro...) y **counter** (una segunda melodía más lenta). En cada uno: el instrumento (el kit en batería y perc), una rueda **VARIATION** (arrástrala arriba o abajo, o tócala: cada número es otra versión de esa parte sola, 0 es la de la semilla), una rueda **VOLUME** y **M**ute / **S**olo.",
               "**⚄** junto a la semilla saca otra y deja tus ruedas como están; **▶** al otro lado toca y para.",
               "Los cuadrados son los patrones de la canción en orden (A estrofa, B estribillo, C puente, IN intro, END final). **▶** los toca en orden; un toque en uno **lo repite en bucle** desde el siguiente pulso o compás, como en LIVE, y otro toque lo para.",
-              "**VARS** (abajo) cambia los canales por las ruedas del generador: **density** (cuántas notas), **swing**, **fills** (redobles hacia la parte siguiente), **chords** (cada cuánto cambian los acordes), **range** (cuánto se mueven las melodías), **repeat** (bajo: las partes repetidas vuelven cambiadas), **length** (de 8 a 16 patrones) y el volumen **master**. Otro toque en VARS vuelve a los canales.",
+              "**VARS** (abajo) cambia los canales (**CHANNELS** los devuelve) por las ruedas del generador: **density** (cuántas notas), **swing**, **fills** (redobles hacia la parte siguiente), **chords** (cada cuánto cambian los acordes), **range** (cuánto se mueven las melodías), **repeat** (bajo: las partes repetidas vuelven cambiadas), **length** (de 8 a 12 patrones) y el volumen **master**. Otro toque en VARS vuelve a los canales.",
               "**LIVE FX** los cambia por los pads de efectos, igual. El **mezclador** trabaja sobre los canales del Variator si vas y vuelves.",
               "**EXPORT**: añade los patrones al final de la canción que estabas escribiendo, abre el resultado como la canción que editas, o guárdalo en Files con un nombre. Después es una canción normal: se puede cambiar cada nota.",
             ],
