@@ -485,12 +485,127 @@
         color: var(--dim);
       }
       .chcard {
-        border-top: 1px solid var(--line);
-        padding: 10px 0;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-left: 5px solid rgb(var(--ccrgb));
+        border-radius: 14px;
+        padding: 10px 12px;
+        margin: 8px;
+        scroll-margin-top: 8px;
       }
-      .chcard:first-child {
-        border-top: 0;
-        padding-top: 0;
+      .chcard.sel {
+        border-color: rgb(var(--ccrgb));
+        box-shadow: 0 0 0 1px rgb(var(--ccrgb));
+      }
+      .chcard .chtitle b {
+        color: rgb(var(--ccrgb));
+        font-family: var(--mono);
+      }
+      .chcard select.mInst {
+        flex: 1;
+        min-width: 0;
+        min-height: 30px;
+        font-size: 12px;
+      }
+      .mixBpm {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 8px 0;
+        padding: 6px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+      }
+      .mixBpm button {
+        width: 64px;
+        min-height: 52px;
+        font: 900 26px var(--mono);
+        padding: 0;
+        touch-action: manipulation;
+      }
+      .mixBpm label {
+        flex: 1;
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 10px;
+      }
+      .mixBpm i {
+        font: 800 12px var(--mono);
+        letter-spacing: 2px;
+        color: var(--dim);
+        font-style: normal;
+      }
+      .mixBpm input {
+        width: 3.4em;
+        font: 900 34px var(--mono);
+        text-align: center;
+        background: none;
+        border: none;
+        color: var(--acc);
+        padding: 0;
+        min-height: 0;
+        -moz-appearance: textfield;
+      }
+      .mixBpm input::-webkit-inner-spin-button,
+      .mixBpm input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+      }
+      /* knobs: the Variator's and the mixer's (drag up / down) */
+      .kn {
+        touch-action: none;
+        cursor: ns-resize;
+        user-select: none;
+      }
+      .kn svg {
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .kn .kt {
+        fill: none;
+        stroke: var(--line);
+        stroke-width: 5;
+        stroke-linecap: round;
+      }
+      .kn .kv {
+        fill: none;
+        stroke: rgb(var(--ccrgb, 124, 242, 154));
+        stroke-width: 5;
+        stroke-linecap: round;
+      }
+      .kn .kb {
+        fill: var(--panel2);
+        stroke: var(--line);
+      }
+      .kn .kp {
+        stroke: var(--text);
+        stroke-width: 3;
+        stroke-linecap: round;
+      }
+      .kn text {
+        fill: var(--text);
+        font: 800 11px var(--mono);
+        text-anchor: middle;
+      }
+      .knobs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px 4px;
+        margin-top: 8px;
+      }
+      .knobs > div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font: 700 10px var(--mono);
+        color: var(--dim);
+      }
+      .knobs .kn {
+        width: 56px;
+        height: 56px;
       }
       .chtitle {
         display: flex;
@@ -3527,14 +3642,17 @@
       </section>
       <!-- MIX -->
       <section id="mix">
-        <div class="scroll">
+        <div class="mixBpm">
+          <button id="bpmDn" title="Slower (hold to keep going)">−</button>
+          <label><i>BPM</i><input id="bpm" type="number" min="40" max="240" value="120" /></label>
+          <button id="bpmUp" title="Faster (hold to keep going)">+</button>
+        </div>
+        <div class="scroll" id="mixScroll">
+          <div class="card scopeCard"><canvas id="scope" height="80"></canvas></div>
           <div class="card">
-            <div id="mixRows"></div>
-          </div>
-          <div class="card">
-            <div class="lbl">Master</div>
+            <div class="chtitle"><span class="lbl" style="margin: 0">Master</span><span class="grow"></span
+              ><button id="mixKn" title="Show the channel controls as knobs or as sliders">KNOBS</button></div>
             <div class="fx">
-              <span>BPM</span><input id="bpm" type="number" min="40" max="240" value="120" /><span></span><span></span>
               <span>Volume</span
               ><input id="master" type="range" min="0" max="1" step=".01" value=".8" /><span
                 >Swing</span
@@ -3550,7 +3668,7 @@
               </select>
             </div>
           </div>
-          <div class="card"><canvas id="scope" height="80"></canvas></div>
+          <div id="mixRows"></div>
         </div>
       </section>
       <!-- VARIATOR -->
@@ -7855,19 +7973,139 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             if (m[k] === undefined) m[k] = MIXDEF[k];
           }),
         );
+        const kn = S.mixKnobs,
+          opts =
+            instOptions() +
+            `<optgroup label="Drums">${KITS.map((k, i) => `<option value="d${i}">Drums: ${k}</option>`).join("")}</optgroup>`;
+        $("#mixKn").textContent = kn ? "◉ KNOBS" : "═ SLIDERS";
         $("#mixRows").innerHTML = song.mix
-          .map((m, i) =>
-            pocketOn() && i !== S.col
-              ? ""
-              : `<div class="chcard"><div class="chtitle">CH${i + 1} <span class="lbl" style="font-weight:400">${instLabel(instOf(i))}${m.preset ? ` · ${m.preset}` : ""}</span><span class="grow"></span>
-    <button data-pre="${i}">PRESET ▾</button>
+          .map(
+            (m, i) =>
+              `<div class="chcard${i === S.col ? " sel" : ""}" id="mc${i}" style="--ccrgb:${PC(i)}"><div class="chtitle"><b>CH${i + 1}</b><select class="mInst" data-mi="${i}" title="Instrument (for ${song.instAll ? "every pattern" : "pattern " + letter(S.pat)})">${opts}</select>
+    <button data-pre="${i}">${m.preset && m.preset !== "CUSTOM" ? m.preset : "PRESET"} ▾</button>
     <button data-mm="${i}" class="${m.mute ? "on" : ""}">${m.mute ? "Muted" : "Mute"}</button></div>
     <div class="bar" data-preset-menu="${i}" hidden style="padding: 4px; flex-wrap: wrap">${Object.keys(PRESETS).map((k) => `<button data-pick="${k}" data-i="${i}">${k}</button>`).join("")}</div>
-    <div class="fx">${FXP.map(([k, l, a, b]) => `<span>${l}</span><input type="range" min="${a}" max="${b}" step=".01" value="${m[k]}" data-k="${k}" data-i="${i}">`).join("")}</div></div>`,
-
+    ${
+      kn
+        ? `<div class="knobs">${FXP.map(([k, l, a, b]) => `<div><div class="kn" data-k="${k}" data-i="${i}" data-a="${a}" data-b="${b}">${knobSvg((m[k] - a) / (b - a), mixTxt(k, m[k]), k === "pan")}</div>${l}</div>`).join("")}</div>`
+        : `<div class="fx">${FXP.map(([k, l, a, b]) => `<span>${l}</span><input type="range" min="${a}" max="${b}" step=".01" value="${m[k]}" data-k="${k}" data-i="${i}">`).join("")}</div>`
+    }</div>`,
           )
           .join("");
+        $$("#mixRows [data-mi]").forEach((s) => {
+          const c = +s.dataset.mi,
+            inst = instOf(c);
+          s.value = inst === DRUM_I ? "d" + (song.kit || 0) : inst;
+        });
       }
+      // a knob as SVG: f = 0..1 around 270 degrees (mid = from the top, for pan), txt in the middle
+      function knobSvg(f, txt, mid) {
+        const a0 = 0.75 * Math.PI,
+          a = a0 + clamp(f, 0, 1) * 1.5 * Math.PI,
+          am = 1.5 * Math.PI,
+          P = (ang, rr) => [32 + Math.cos(ang) * rr, 32 + Math.sin(ang) * rr].map((x) => x.toFixed(1)).join(" "),
+          arc = (from, to, rr) => {
+            if (to < from) [from, to] = [to, from];
+            return `M${P(from, rr)} A${rr} ${rr} 0 ${to - from > Math.PI ? 1 : 0} 1 ${P(to, rr)}`;
+          },
+          from = mid ? am : a0;
+        return `<svg viewBox="0 0 64 64"><path class="kt" d="${arc(a0, a0 + 1.5 * Math.PI, 26)}"/>${Math.abs(a - from) > 0.01 ? `<path class="kv" d="${arc(from, a, 26)}"/>` : ""}<circle class="kb" cx="32" cy="32" r="18"/><path class="kp" d="M${P(a, 8)} L${P(a, 17)}"/><text x="32" y="36.5">${txt}</text></svg>`;
+      }
+      const mixTxt = (k, v) => (k === "pan" ? (Math.abs(v) < 0.02 ? "C" : (v < 0 ? "L" : "R") + Math.round(Math.abs(v) * 100)) : Math.round(v * 100));
+      // drag a knob up or down (the whole range is about 160 px); a double tap puts it back (pan to the centre, others to the default)
+      function knobDrag(root, get, set) {
+        let d = null;
+        root.addEventListener("pointerdown", (e) => {
+          const k = e.target.closest(".kn");
+          if (!k || !root.contains(k)) return;
+          e.preventDefault();
+          k.setPointerCapture(e.pointerId);
+          const now = performance.now();
+          if (d && d.el === k && now - d.t < 300) {
+            set(k, null);
+            d = null;
+            return;
+          }
+          d = { el: k, y: e.clientY, v: get(k), t: now };
+        });
+        root.addEventListener("pointermove", (e) => {
+          if (!d || !e.buttons) return;
+          set(d.el, clamp(d.v + (d.y - e.clientY) / 160, 0, 1));
+        });
+      }
+      S.mixKnobs = localStorage.getItem("track.mixKnobs") !== "0";
+      $("#mixKn").onclick = () => {
+        S.mixKnobs = !S.mixKnobs;
+        localStorage.setItem("track.mixKnobs", S.mixKnobs ? "1" : "0");
+        renderMix();
+      };
+      function mixSet(i, k, v) {
+        const m = song.mix[i];
+        m[k] = v;
+        if (m.preset !== "CUSTOM") {
+          m.preset = "CUSTOM";
+          pkLabels();
+        }
+        applyMix();
+      }
+      knobDrag(
+        $("#mixRows"),
+        (el) => {
+          const m = song.mix[+el.dataset.i],
+            a = +el.dataset.a,
+            b = +el.dataset.b;
+          return (m[el.dataset.k] - a) / (b - a);
+        },
+        (el, f) => {
+          const k = el.dataset.k,
+            a = +el.dataset.a,
+            b = +el.dataset.b,
+            v = f == null ? (k === "pan" ? 0 : MIXDEF[k]) : a + f * (b - a);
+          mixSet(+el.dataset.i, k, Math.round(v * 100) / 100);
+          el.innerHTML = knobSvg((v - a) / (b - a), mixTxt(k, v), k === "pan");
+        },
+      );
+      $("#mixRows").addEventListener("change", (e) => {
+        const s = e.target.closest("[data-mi]");
+        if (!s) return;
+        const c = +s.dataset.mi,
+          v = s.value;
+        if (!song.instAll) pushUndo();
+        if (v[0] === "d") {
+          song.kit = +v.slice(1);
+          setInst(c, DRUM_I);
+        } else setInst(c, +v);
+        renderGrid();
+        if (c === S.col) buildKbd();
+        pkSig = "";
+        pkLabels();
+        toast("CH" + (c + 1) + ": " + instLabel(instOf(c)) + (song.instAll ? "" : " (pattern " + letter(S.pat) + ")"));
+      });
+      // BPM banner: − / +, held they keep going
+      function bpmStep(d) {
+        song.bpm = clamp(song.bpm + d, 40, 240);
+        $("#bpm").value = song.bpm;
+        applyMix();
+        if (varAway) (VAR.bpm = song.bpm), varStore();
+      }
+      [
+        ["#bpmDn", -1],
+        ["#bpmUp", 1],
+      ].forEach(([id, d]) => {
+        let t = null;
+        const stop = () => (clearTimeout(t), (t = null));
+        $(id).addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          bpmStep(d);
+          let n = 0;
+          const rep = () => {
+            bpmStep(d * (++n > 8 ? 5 : 1));
+            t = setTimeout(rep, 110);
+          };
+          t = setTimeout(rep, 420);
+        });
+        ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => $(id).addEventListener(ev, stop));
+      });
       $("#mixRows").addEventListener("click", (e) => {
         const toggle = e.target.closest("[data-pre]");
         if (toggle) {
@@ -7892,17 +8130,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       });
       $("#mixRows").addEventListener("input", (e) => {
         const t = e.target;
-        if (t.dataset.k) {
-          const m = song.mix[+t.dataset.i];
-          m[t.dataset.k] = +t.value;
-          if (m.preset !== "CUSTOM") {
-            m.preset = "CUSTOM";
-            const title = t.closest(".chcard").querySelector(".chtitle .lbl");
-            title.textContent = instLabel(instOf(+t.dataset.i)) + " · CUSTOM";
-            pkLabels();
-          }
-          applyMix();
-        }
+        if (t.dataset.k && t.type === "range") mixSet(+t.dataset.i, t.dataset.k, +t.value);
       });
       $("#mixRows").addEventListener("click", (e) => {
         const b = e.target.closest("[data-mm]");
@@ -10166,7 +10394,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           return;
         }
         select(S.row, +b.dataset.ch);
-        if (S.tab === "mix") renderMix();
+        if (S.tab === "mix") {
+          $$("#mixRows .chcard").forEach((el, i) => el.classList.toggle("sel", i === S.col));
+          const card = $("#mc" + S.col);
+          if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       });
       // song mode: one square per slot of song.order; a square opens a mini modal to choose its pattern
       const hasLoop = () => song.loopA != null || song.loopB != null;
@@ -11976,14 +12208,14 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           t: { en: "Mix", es: "Mix" },
           b: {
             en: [
-              "Mixer for the channel selected in the CH buttons: **volume, pan, reverb, echo, distortion, lo-fi and tone**. Presets are one tap.",
-              "**Master** section: **BPM** (tempo, 40 to 240), overall volume, **swing** (makes every other step late for a groovy feel), echo feedback and echo time.",
-              "The screen at the bottom is an oscilloscope of the output.",
+              "At the top, the **BPM** (tempo): tap the number to type it, **−** / **+** change it by one (hold them to go faster). Below: the oscilloscope of the output, the **Master** card, and one card per channel.",
+              "Each channel card (with the channel's colour): its **instrument**, **volume, pan, reverb, echo, distortion, lo-fi and tone**, presets and mute. **KNOBS / SLIDERS** in Master switches how they look; drag a knob up or down, double-tap it to put it back. A **CH** button at the top scrolls to its card.",
+              "**Master** card: overall volume, **swing** (makes every other step late for a groovy feel), echo feedback and echo time.",
             ],
             es: [
-              "Mezclador del canal seleccionado en los botones CH: **volumen, panorama, reverb, eco, distorsión, lo-fi y tono**. Los presets son de un toque.",
-              "Sección **Master**: **BPM** (tempo, de 40 a 240), volumen general, **swing** (retrasa un paso de cada dos para dar groove), realimentación del eco y tiempo del eco.",
-              "La pantalla de abajo es un osciloscopio de la salida.",
+              "Arriba, los **BPM** (el tempo): toca el número para escribirlo; **−** / **+** lo cambian de uno en uno (mantenlos para ir más rápido). Debajo: el osciloscopio de la salida, la tarjeta **Master** y una tarjeta por canal.",
+              "Cada tarjeta de canal (con su color): su **instrumento**, **volumen, panorama, reverb, eco, distorsión, lo-fi y tono**, presets y mute. **KNOBS / SLIDERS** en Master cambia cómo se ven; arrastra una rueda arriba o abajo, tócala dos veces para devolverla a su sitio. Un botón **CH** de arriba lleva a su tarjeta.",
+              "Tarjeta **Master**: volumen general, **swing** (retrasa un paso de cada dos para dar groove), realimentación del eco y tiempo del eco.",
             ],
           },
         },
