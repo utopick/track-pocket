@@ -1923,7 +1923,22 @@
         background: var(--acc2);
         border-color: var(--acc2);
       }
-      #var > .vSty {
+      #vLow {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      #vKeys:not([hidden]) {
+        display: flex;
+        flex-direction: column;
+      }
+      #vKeys[hidden] {
+        display: none;
+      }
+      .vs.sel {
+        box-shadow: 0 0 0 2px rgb(var(--ccrgb));
+      }
+      #var .vSty {
         flex: none;
         height: 44px;
         border-radius: 10px;
@@ -3832,11 +3847,14 @@
             <div id="varFxGrid"></div>
           </div>
         </div>
-        <label class="dd vSty"><span id="vStyleTxt"></span><select id="vStyle" title="Style"></select></label>
-        <div id="vPats"></div>
-        <div id="vMode"></div>
+        <div id="vLow">
+          <label class="dd vSty"><span id="vStyleTxt"></span><select id="vStyle" title="Style"></select></label>
+          <div id="vPats"></div>
+          <div id="vMode"></div>
+        </div>
+        <div class="pk" id="vKeys" data-m="edit" data-drum="0" hidden></div>
         <div class="vRib">
-          <button id="vExp"><b>⇪</b>EXPORT</button><button id="vChs"><b>◐</b>CHANNELS</button><button id="vVars"><b>◎</b>VARS</button><button id="vFx"><b>FX</b>LIVE FX</button>
+          <button id="vExp"><b>⇪</b>EXPORT</button><button id="vKbd" title="Rotate the lower part: patterns, piano, drum pads"><b>♫</b>PATTERNS</button><button id="vChs"><b>◐</b>CHANNELS</button><button id="vVars"><b>◎</b>VARS</button><button id="vFx"><b>FX</b>LIVE FX</button>
         </div>
       </section>
       <!-- FILES -->
@@ -6494,7 +6512,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (S.arp && !dr) voice(ctx, g, inst, m, t, 8, v, arpSeq(ex, S.arp));
         else notes.forEach((n) => voice(ctx, g, inst, n, t, 8, v * sc));
         if (!dr) held.set(id, g); // drum hits ring out on their own
-        if (write) {
+        if (write && !varAway) {
           if (S.playing && S.rec) recNote(id, m, ch, vol, dr, tapT);
           else if (!S.playing || S.liveWrite) {
             writeNote(m, S.row, ch, dr, vol);
@@ -11618,6 +11636,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         })(),
       );
       VAR.liveSlot = -1;
+      VAR.low = "pats"; // the lower part: "pats" patterns + style, "piano", "pads"
+      VAR.sel = 3; // the channel the piano plays
       VAR.view = "ch"; // what the middle shows: "ch" channels, "vars" the generator's knobs, "fx" the effect pads
       ["vari", "ins", "vol", "mute"].forEach((k) => {
         VAR[k] = VAR[k] || [];
@@ -12073,11 +12093,57 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         S.playOrd = -1;
         $("#bpm").value = song.bpm;
       }
+      // The lower part rotates: patterns (and style) -> piano -> drum pads. The tracker's own key rows, piano and pads are
+      // moved in here while it shows (their handlers go by id, so they keep working) and back when it hides.
+      const V_KEYIDS = ["pkKeys", "pkPedalRow", "pkMap", "pkbd", "pkPads"];
+      const V_LOW = { pats: ["PATTERNS", "PIANO"], piano: ["PIANO", "DRUM PADS"], pads: ["DRUM PADS", "PATTERNS"] };
+      const varMelodic = () => (VAR.sel === 0 || VAR.sel === 6 ? 3 : VAR.sel);
+      function varMirror() {
+        // the tracker's CSS reads these off its own panel (pedal row, scrolling piano)
+        const k = $("#vKeys"), pk = $("#pk");
+        k.dataset.pedal = pk.dataset.pedal;
+        k.dataset.kb = pk.dataset.kb;
+        k.dataset.drum = VAR.low === "pads" ? 1 : 0;
+      }
+      new MutationObserver(() => varAway && VAR.low !== "pats" && varMirror()).observe($("#pk"), { attributes: true });
+      function varKeysBack() {
+        V_KEYIDS.forEach((id) => $("#pk").insertBefore($("#" + id), $("#pkRib")));
+        $("#vKeys").hidden = true;
+      }
+      function varKeys(mode) {
+        VAR.low = mode;
+        const keys = mode !== "pats" && !!varAway;
+        $("#vLow").hidden = keys;
+        if (keys) {
+          V_KEYIDS.forEach((id) => $("#vKeys").appendChild($("#" + id)));
+          $("#vKeys").hidden = false;
+          S.col = mode === "pads" ? (VAR.sel === 6 ? 6 : 0) : varMelodic();
+          varMirror();
+          pkLabels();
+          buildPKbd();
+        } else varKeysBack();
+        $$("#vStrips .vs").forEach((el) => el.classList.toggle("sel", keys && +el.dataset.c === S.col));
+        $("#vKbd").innerHTML = `<b>♫</b>${V_LOW[mode][0]}`;
+        $("#vKbd").classList.toggle("on", mode !== "pats");
+      }
+      $("#vKbd").onclick = () => {
+        ensureCtx();
+        const next = { pats: "piano", piano: "pads", pads: "pats" }[VAR.low];
+        varKeys(next);
+      };
+      // tap a channel's name to play that one (the drums and perc go to the pads)
+      $("#vStrips").addEventListener("click", (e) => {
+        const b = e.target.closest(".vs > b");
+        if (!b) return;
+        VAR.sel = +b.parentElement.dataset.c;
+        if (VAR.low !== "pats") varKeys(VAR.sel === 0 || VAR.sel === 6 ? "pads" : "piano");
+      });
       function varEnter() {
         if (varAway) return;
         if (S.playing) togglePlay();
         saveNow(); // the user's song is safe before autosave pauses
-        varAway = { song, pk: S.pk, pat: S.pat, ordSel: S.ordSel, swing: $("#swing").value };
+        varAway = { song, pk: S.pk, pat: S.pat, ordSel: S.ordSel, swing: $("#swing").value, col: S.col };
+        VAR.low = "pats";
         song = varBuild();
         S.pk = "song";
         S.pat = 0;
@@ -12094,7 +12160,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (S.playing) togglePlay();
         fxAllOff();
         const a = varAway;
+        varKeys("pats");
         varAway = null;
+        S.col = a.col;
         VAR.liveSlot = -1;
         if (keep) {
           delete song.variator;
@@ -12148,7 +12216,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               ? KITS.map((k, i) => `<option value="${i}">${k}</option>`).join("")
               : instOptions();
           const vol = varAway ? song.mix[c].vol : VAR.vol[c] ?? 0.6;
-          return `<div class="vs" data-c="${c}" style="--ccrgb:${PC(c)}"><label class="dd"><span></span><select data-vi="${c}" title="Instrument">${sel}</select></label><b>${role}</b><div class="kn vk" data-vk="${c}" title="Variation: drag up or down, tap for the next one">${varKnob(VAR.vari[c])}</div><em>VARIATION</em><div class="kn vv" data-vv="${c}" title="Volume: drag up or down, double-tap to reset">${knobSvg(vol, Math.round(vol * 100))}</div><em>VOLUME</em><div class="vms"><button data-vm="${c}" class="${VAR.mute[c] ? "on" : ""}">M</button><button data-vso="${c}" class="${VAR.solo === c ? "on" : ""}">S</button></div></div>`;
+          return `<div class="vs${VAR.low !== "pats" && c === S.col ? " sel" : ""}" data-c="${c}" style="--ccrgb:${PC(c)}"><label class="dd"><span></span><select data-vi="${c}" title="Instrument">${sel}</select></label><b>${role}</b><div class="kn vk" data-vk="${c}" title="Variation: drag up or down, tap for the next one">${varKnob(VAR.vari[c])}</div><em>VARIATION</em><div class="kn vv" data-vv="${c}" title="Volume: drag up or down, double-tap to reset">${knobSvg(vol, Math.round(vol * 100))}</div><em>VOLUME</em><div class="vms"><button data-vm="${c}" class="${VAR.mute[c] ? "on" : ""}">M</button><button data-vso="${c}" class="${VAR.solo === c ? "on" : ""}">S</button></div></div>`;
         }).join("");
         $$("#vStrips select").forEach((s) => {
           const c = +s.dataset.vi;
@@ -12670,7 +12738,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "Eight channels with fixed parts: **drums, bass, chords, lead, arp, pad, perc** (shakers, cowbell...) and **counter** (a slower second melody). On each one: the instrument (the drum kit on drums and perc), a **VARIATION** knob (drag it up or down, or tap it: each number is another version of that part only, 0 is the seed's own), a **VOLUME** knob and **M**ute / **S**olo.",
               "**⚄** (left of the seed) draws a new seed and shuffles the **VARS** knobs, so it is a whole new song; **▶** (right) plays and stops.",
               "The squares are the song's patterns in order (A verse, B chorus, C bridge, IN intro, END ending). **▶** plays them in order; a tap on one **loops it** from the next beat or bar, like LIVE, and a second tap stops it.",
-              "**VARS** (at the bottom) swaps the channels (**CHANNELS** brings them back) for the generator's knobs: **density** (how many notes), **swing**, **fills** (drum fills into the next part), **chords** (how often they change), **range** (how far melodies travel), **repeat** (low: repeated parts come back changed), **length** (8 to 12 patterns) and **master** volume. Tap VARS again to see the channels.",
+              "**♫** (bottom row) rotates the lower part: patterns and style, then a **piano** and then **drum pads**, to play along. The piano plays the channel you chose by tapping its name (the drums and perc go to the pads); nothing you play is written into the song. **VARS** (at the bottom) swaps the channels (**CHANNELS** brings them back) for the generator's knobs: **density** (how many notes), **swing**, **fills** (drum fills into the next part), **chords** (how often they change), **range** (how far melodies travel), **repeat** (low: repeated parts come back changed), **length** (8 to 12 patterns) and **master** volume. Tap VARS again to see the channels.",
               "**LIVE FX** swaps them for the effect pads, the same way. The **mixer** works on the Variator's channels while you go there and back.",
               "**EXPORT**: add the patterns to the end of the song you were writing, open the result as the song you edit, or save it in Files with a name. Then it is a normal song: every note can be changed.",
             ],
@@ -12679,7 +12747,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "Ocho canales con partes fijas: **batería, bajo, acordes, melodía, arpegio, pad, perc** (shakers, cencerro...) y **counter** (una segunda melodía más lenta). En cada uno: el instrumento (el kit en batería y perc), una rueda **VARIATION** (arrástrala arriba o abajo, o tócala: cada número es otra versión de esa parte sola, 0 es la de la semilla), una rueda **VOLUME** y **M**ute / **S**olo.",
               "**⚄** (a la izquierda de la semilla) saca otra semilla y mezcla las ruedas de **VARS**: una canción nueva entera; **▶** (a la derecha) toca y para.",
               "Los cuadrados son los patrones de la canción en orden (A estrofa, B estribillo, C puente, IN intro, END final). **▶** los toca en orden; un toque en uno **lo repite en bucle** desde el siguiente pulso o compás, como en LIVE, y otro toque lo para.",
-              "**VARS** (abajo) cambia los canales (**CHANNELS** los devuelve) por las ruedas del generador: **density** (cuántas notas), **swing**, **fills** (redobles hacia la parte siguiente), **chords** (cada cuánto cambian los acordes), **range** (cuánto se mueven las melodías), **repeat** (bajo: las partes repetidas vuelven cambiadas), **length** (de 8 a 12 patrones) y el volumen **master**. Otro toque en VARS vuelve a los canales.",
+              "**♫** (fila de abajo) rota la parte de abajo: patrones y estilo, luego un **piano** y luego **pads de batería**, para tocar encima. El piano toca el canal que elijas tocando su nombre (la batería y perc van a los pads); lo que toques no se escribe en la canción. **VARS** (abajo) cambia los canales (**CHANNELS** los devuelve) por las ruedas del generador: **density** (cuántas notas), **swing**, **fills** (redobles hacia la parte siguiente), **chords** (cada cuánto cambian los acordes), **range** (cuánto se mueven las melodías), **repeat** (bajo: las partes repetidas vuelven cambiadas), **length** (de 8 a 12 patrones) y el volumen **master**. Otro toque en VARS vuelve a los canales.",
               "**LIVE FX** los cambia por los pads de efectos, igual. El **mezclador** trabaja sobre los canales del Variator si vas y vuelves.",
               "**EXPORT**: añade los patrones al final de la canción que estabas escribiendo, abre el resultado como la canción que editas, o guárdalo en Files con un nombre. Después es una canción normal: se puede cambiar cada nota.",
             ],
