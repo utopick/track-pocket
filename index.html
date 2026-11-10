@@ -1770,17 +1770,26 @@
         flex: 1;
         min-width: 0;
       }
+      .vSeedRow {
+        align-self: stretch;
+      }
       .vSeedRow button {
-        width: 52px;
-        min-height: 52px;
+        align-self: stretch;
+        width: 58px;
+        min-height: 0;
         padding: 0;
-        font-size: 24px;
+        font-size: 44px;
+        line-height: 1;
+        background: none;
+        border: none;
         border-radius: 10px;
+        color: var(--dim);
+      }
+      .vSeedRow button:active {
+        color: var(--acc);
       }
       #vPlay.on {
-        background: var(--acc);
-        border-color: var(--acc);
-        color: var(--ink);
+        color: var(--acc);
       }
       #var i {
         font: 800 9px var(--mono);
@@ -3809,7 +3818,7 @@
       <section id="var">
         <div class="vTop">
           <div class="vSeedRow">
-            <button id="vDice" title="A new seed (the knobs and sliders stay)">⚄</button>
+            <button id="vDice" title="A new seed, with the VARS knobs shuffled">⚄</button>
             <label class="vSeed"><i>SEED</i><input id="vSeed" type="text" inputmode="numeric" maxlength="9" /></label>
             <button id="vPlay" title="Play / stop">▶</button>
           </div>
@@ -3827,7 +3836,7 @@
         <div id="vPats"></div>
         <div id="vMode"></div>
         <div class="vRib">
-          <button id="vExp"><b>⇪</b>EXPORT</button><button id="vRnd"><b>⚄</b>RANDOM</button><button id="vChs"><b>◐</b>CHANNELS</button><button id="vVars"><b>◎</b>VARS</button><button id="vFx"><b>FX</b>LIVE FX</button>
+          <button id="vExp"><b>⇪</b>EXPORT</button><button id="vChs"><b>◐</b>CHANNELS</button><button id="vVars"><b>◎</b>VARS</button><button id="vFx"><b>FX</b>LIVE FX</button>
         </div>
       </section>
       <!-- FILES -->
@@ -8386,6 +8395,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           setInst(c, DRUM_I);
         } else setInst(c, +v);
         renderGrid();
+        renderMix(); // refresh the instrument name shown in the channel card, not just its select value
         if (c === S.col) buildKbd();
         pkSig = "";
         pkLabels();
@@ -11503,9 +11513,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         jazz: [[7, "....x.......x..."], [10, "x.x.x.x.x.x.x.x."]],
         bossa: [[9, "x..x..x...x..x.."], [7, "..x...x...x..x.."]],
         hiphop: [[10, "..x...x...x...x."], [2, "....x.......x..."], [11, "..............x."]],
+        lofi: [[10, "..x...x...x...x."], [7, "....x.......x..."]],
+        synthwave: [[10, "x.x.x.x.x.x.x.x."], [9, "....x.......x..."]],
+        dungeon: [[5, "x.......x......."], [8, "x..............."]],
       };
       // COUNTER: a slower second melody, its instrument per style
-      const V_COUNTER = { rock: "Clean guitar", blues: "Trumpet", funk: "Sax", reggae: "Jazz organ", metal: "Slow strings", jazz: "Trumpet", bossa: "Vibraphone", hiphop: "Voice ooh" };
+      const V_COUNTER = { rock: "Clean guitar", blues: "Trumpet", funk: "Sax", reggae: "Jazz organ", metal: "Slow strings", jazz: "Trumpet", bossa: "Vibraphone", hiphop: "Voice ooh", lofi: "Voice ooh", synthwave: "Soft lead", dungeon: "Oboe" };
       // drums: 16 steps per bar for kick (k), snare (s), hats (h), open hat (o), extra (x, drum xd). sn / hd: drums used.
       const V_STY = {
         rock: {
@@ -11555,6 +11568,24 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           ins: ["Moog bass", "Rhodes", "Pluck lead", "Vibraphone", "Warm pad"],
           dr: { k: ["x......x..x.....", "x.........x.....", "x......xx.x....."], s: "....x.......x...", h: "x.x.x.x.x.x.x.x.", sn: 2, hd: 3 },
           prog: { maj: ["Imaj7 Imaj7 vi7 vi7", "IVmaj7 IVmaj7 V7 V7", "Imaj7 iii7 vi7 IVmaj7"], min: ["i7 i7 iv7 iv7", "VImaj7 VImaj7 v7 v7", "i7 VImaj7 iv7 v7"] },
+        },
+        lofi: {
+          n: "Lo-Fi", bpm: [68, 88], kit: 0, sw: 0.5, minor: 0.5, lead: "pent", bass: "hiphop", comp: "stab",
+          ins: ["Fingered bass", "Rhodes", "Kalimba", "Nylon guitar", "Warm pad"],
+          dr: { k: ["x......x..x.....", "x.........x....."], s: "....x.......x...", h: "x.x.x.x.x.x.x.x.", sn: 2, hd: 3, soft: 1 },
+          prog: { maj: ["ii7 V7 Imaj7 vi7", "Imaj7 iii7 IVmaj7 V7", "Imaj7 vi7 ii7 V7"], min: ["i7 iv7 VImaj7 v7", "i7 i7 iv7 v7", "iiø7 V7 i7 VImaj7"] },
+        },
+        synthwave: {
+          n: "Synthwave", bpm: [100, 122], kit: 1, sw: 0, minor: 0.7, lead: "scale", bass: "8th", comp: "8th",
+          ins: ["Synth bass 2", "Polysynth", "Saw lead 2", "Pluck lead", "Warm pad"],
+          dr: { k: ["x...x...x...x..."], s: "....x.......x...", h: "..x...x...x...x.", sn: 2, hd: 3 },
+          prog: { maj: ["I V vi IV", "vi IV I V", "I iii IV V"], min: ["i VI III VII", "i VII VI VII", "i iv VI V"] },
+        },
+        dungeon: {
+          n: "Dungeon Synth", bpm: [56, 76], kit: 7, sw: 0, minor: 0.95, lead: "scale", bass: "dub", comp: "stab",
+          ins: ["Sub bass", "Dungeon pad", "Pan flute", "Harp", "Dungeon choir"],
+          dr: { k: ["x...............", "x.......x......."], s: "........x.......", h: "x...............", sn: 1, hd: 3 },
+          prog: { maj: ["I IV I V", "I vi IV V", "I V IV I"], min: ["i VI III VII", "i iv v i", "i VII VI VII", "i bII i VII"] },
         },
       };
       const V_KNOBS = [
@@ -12124,7 +12155,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           s.value = c === 0 || c === 6 ? (VAR.ins[0] != null ? VAR.ins[0] : st.kit) : VAR.ins[c] != null ? VAR.ins[c] : instByName(c === 7 ? V_COUNTER[VAR.style] : st.ins[c - 1]);
           s.previousElementSibling.textContent = s.selectedOptions[0] ? s.selectedOptions[0].textContent : "";
         });
-        $("#vStyleTxt").innerHTML = "<i>STYLE</i>" + st.n.toUpperCase() + " ▾";
+        $("#vStyleTxt").innerHTML = "<i>STYLE</i>" + st.n.toUpperCase();
         $("#vCtl").innerHTML =
           V_KNOBS.map(([k, n, h]) => `<div title="${n}: ${h}"><div class="kn vc" data-vc="${k}">${knobSvg(VAR.k[k], vKnobTxt(k))}</div><b>${n}</b><small>${h}</small></div>`).join("") +
           `<div class="mst" title="Volume of everything"><div class="kn vc" data-vc="master">${knobSvg(+$("#master").value, vKnobTxt("master"))}</div><b>MASTER</b><small>volume of everything</small></div>`;
@@ -12262,9 +12293,15 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           VAR.volT = setTimeout(varStore, 400);
         },
       );
+      // the dice: a new seed, the VARS knobs shuffled (in a musical range) and the variation knobs back to 0
       $("#vDice").onclick = () => {
+        const r = (lo, hi) => Math.round((lo + Math.random() * (hi - lo)) * 20) / 20;
         VAR.seed = 1 + Math.floor(Math.random() * 99999999);
+        VAR.vari = [0, 0, 0, 0, 0, 0, 0, 0];
         VAR.bpm = null;
+        ["dens", "fill", "chg", "range", "rep", "len"].forEach((k) => (VAR.k[k] = r(0.15, 0.9)));
+        VAR.k.swing = clamp(V_STY[VAR.style].sw + r(-0.2, 0.2), 0, 1);
+        $("#swing").value = VAR.k.swing * 0.5;
         varRegen();
         toast("Seed " + VAR.seed);
       };
@@ -12296,13 +12333,6 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       const vKUp = () => vKDirty && ((vKDirty = false), varRegen());
       $("#vCtl").addEventListener("pointerup", vKUp);
       $("#vCtl").addEventListener("pointercancel", vKUp);
-      $("#vRnd").onclick = () => {
-        VAR.seed = 1 + Math.floor(Math.random() * 99999999);
-        VAR.vari = [0, 0, 0, 0, 0, 0, 0, 0];
-        VAR.bpm = null;
-        varRegen();
-        toast("Seed " + VAR.seed);
-      };
       function varView(v) {
         VAR.view = VAR.view === v ? "ch" : v;
         if (VAR.view !== "fx") fxAllOff();
@@ -12636,18 +12666,18 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           t: { en: "Variator", es: "Variator" },
           b: {
             en: [
-              "The **Variator** makes whole songs by itself from a **SEED** number and a **STYLE**. The same seed always gives the same song; **RANDOM** draws a new seed. Tap the number to type one you like.",
+              "The **Variator** makes whole songs by itself from a **SEED** number and a **STYLE**. The same seed always gives the same song; The **⚄** dice draws a new seed. Tap the number to type one you like.",
               "Eight channels with fixed parts: **drums, bass, chords, lead, arp, pad, perc** (shakers, cowbell...) and **counter** (a slower second melody). On each one: the instrument (the drum kit on drums and perc), a **VARIATION** knob (drag it up or down, or tap it: each number is another version of that part only, 0 is the seed's own), a **VOLUME** knob and **M**ute / **S**olo.",
-              "**⚄** next to the seed draws a new one and keeps your knobs; **▶** on the other side plays and stops.",
+              "**⚄** (left of the seed) draws a new seed and shuffles the **VARS** knobs, so it is a whole new song; **▶** (right) plays and stops.",
               "The squares are the song's patterns in order (A verse, B chorus, C bridge, IN intro, END ending). **▶** plays them in order; a tap on one **loops it** from the next beat or bar, like LIVE, and a second tap stops it.",
               "**VARS** (at the bottom) swaps the channels (**CHANNELS** brings them back) for the generator's knobs: **density** (how many notes), **swing**, **fills** (drum fills into the next part), **chords** (how often they change), **range** (how far melodies travel), **repeat** (low: repeated parts come back changed), **length** (8 to 12 patterns) and **master** volume. Tap VARS again to see the channels.",
               "**LIVE FX** swaps them for the effect pads, the same way. The **mixer** works on the Variator's channels while you go there and back.",
               "**EXPORT**: add the patterns to the end of the song you were writing, open the result as the song you edit, or save it in Files with a name. Then it is a normal song: every note can be changed.",
             ],
             es: [
-              "El **Variator** hace canciones enteras él solo a partir de un número **SEED** (semilla) y un **STYLE** (estilo). La misma semilla da siempre la misma canción; **RANDOM** saca una semilla nueva. Toca el número para escribir una que te guste.",
+              "El **Variator** hace canciones enteras él solo a partir de un número **SEED** (semilla) y un **STYLE** (estilo). La misma semilla da siempre la misma canción; El dado **⚄** saca una semilla nueva. Toca el número para escribir una que te guste.",
               "Ocho canales con partes fijas: **batería, bajo, acordes, melodía, arpegio, pad, perc** (shakers, cencerro...) y **counter** (una segunda melodía más lenta). En cada uno: el instrumento (el kit en batería y perc), una rueda **VARIATION** (arrástrala arriba o abajo, o tócala: cada número es otra versión de esa parte sola, 0 es la de la semilla), una rueda **VOLUME** y **M**ute / **S**olo.",
-              "**⚄** junto a la semilla saca otra y deja tus ruedas como están; **▶** al otro lado toca y para.",
+              "**⚄** (a la izquierda de la semilla) saca otra semilla y mezcla las ruedas de **VARS**: una canción nueva entera; **▶** (a la derecha) toca y para.",
               "Los cuadrados son los patrones de la canción en orden (A estrofa, B estribillo, C puente, IN intro, END final). **▶** los toca en orden; un toque en uno **lo repite en bucle** desde el siguiente pulso o compás, como en LIVE, y otro toque lo para.",
               "**VARS** (abajo) cambia los canales (**CHANNELS** los devuelve) por las ruedas del generador: **density** (cuántas notas), **swing**, **fills** (redobles hacia la parte siguiente), **chords** (cada cuánto cambian los acordes), **range** (cuánto se mueven las melodías), **repeat** (bajo: las partes repetidas vuelven cambiadas), **length** (de 8 a 12 patrones) y el volumen **master**. Otro toque en VARS vuelve a los canales.",
               "**LIVE FX** los cambia por los pads de efectos, igual. El **mezclador** trabaja sobre los canales del Variator si vas y vuelves.",
