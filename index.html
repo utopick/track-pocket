@@ -764,6 +764,40 @@
         font-size: 12px;
         line-height: 1.4;
       }
+      #syBox textarea {
+        width: 100%;
+        font: 11px var(--mono);
+        background: var(--panel2);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px;
+        resize: none;
+        margin-bottom: 4px;
+      }
+      #file .fpanel button.dis {
+        opacity: 0.35;
+        pointer-events: none;
+      }
+      #syBadge {
+        position: fixed;
+        top: calc(env(safe-area-inset-top) + 2px);
+        right: 4px;
+        z-index: 60;
+        font: 800 9px var(--mono);
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: var(--acc);
+        color: var(--ink);
+        pointer-events: none;
+      }
+      #syBadge.mute {
+        background: var(--hot);
+        color: #fff;
+      }
+      #syBadge[hidden] {
+        display: none;
+      }
       #toast {
         position: fixed;
         left: 50%;
@@ -3958,7 +3992,31 @@
             when it is asked for. Chrome, Edge or Firefox; not Safari.
           </p>
         </div>
+        <div class="card fpanel" data-fp="sync" hidden>
+          <div class="lbl" style="margin-bottom: 6px">Sync devices on the same Wi-Fi</div>
+          <div class="hint" id="syStat" style="margin: 0 0 8px"></div>
+          <div class="bar" style="padding: 0; flex-wrap: wrap">
+            <button id="syHost" title="Start a sync, or add one more device to it">HOST</button>
+            <button id="syJoin" title="Join the sync of another device (it replaces this song)">JOIN</button>
+            <button id="sySilent" title="Mute this device: another one makes the sound">SILENT</button>
+            <button id="syLeave" title="Leave the sync">LEAVE</button>
+          </div>
+          <div id="syBox" hidden>
+            <div class="lbl" id="syL1" style="margin: 10px 0 4px"></div>
+            <textarea id="syOut" readonly rows="4" title="The code to send"></textarea>
+            <div class="bar" style="padding: 0"><button id="syCopy">COPY</button><button id="syShare">SHARE</button></div>
+            <div class="lbl" id="syL2" style="margin: 10px 0 4px"></div>
+            <textarea id="syIn" rows="4" title="Paste the code you got" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+            <div class="bar" style="padding: 0"><button id="syGo">CONNECT</button></div>
+          </div>
+          <p class="hint" style="margin: 8px 0 0">
+            One device is the <b>host</b> and the others <b>join</b>: the song, the samples and PLAY / STOP are shared, and every
+            device can edit. Only one should make the sound: tap <b>SILENT</b> on the others. A MIDI knob on one device moves
+            the mixer of all.
+          </p>
+        </div>
         <div class="prow" id="fileTabs">
+          <button data-fpb="sync"><i>DEVICES</i>SYNC</button>
           <button data-fpb="file"><i>SONG</i>FILE</button>
           <button data-fpb="theme"><i>LOOK</i>THEME</button>
           <button data-fpb="opts"><i>SETTINGS</i>OPTIONS</button>
@@ -3986,6 +4044,7 @@
         <div class="wb"><button id="wOpen" class="on"></button><button id="wOk"></button></div>
       </div>
     </div>
+    <div id="syBadge" hidden></div>
     <div id="toast"></div>
     <!--
       lamejs 1.2.1 (MP3 encoder), bundled unmodified so MP3 export works offline.
@@ -5586,7 +5645,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       function buildGraph(c) {
         const g = {};
         g.master = c.createGain();
-        g.master.gain.value = +$("#master").value;
+        g.master.gain.value = +$("#master").value * (SYNC.silent && c === ctx ? 0 : 1);
         g.comp = c.createDynamicsCompressor();
         g.comp.threshold.value = -10;
         g.comp.ratio.value = 4;
@@ -5772,7 +5831,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             m.crush > 0 ? 18000 - m.crush * 15000 : 20000,
           );
         });
-        g.master.gain.value = +$("#master").value;
+        g.master.gain.value = +$("#master").value * (SYNC.silent && c === ctx ? 0 : 1);
         g.fb.gain.value = +$("#echo").value;
         g.dl.delayTime.value = (60 / song.bpm) * +$("#echoTime").value;
       }
@@ -6245,6 +6304,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       // ======================================================================
       // samples
       // ======================================================================
+      // SYNC (the module is further down): defined here because the mixer reads .silent
+      const SYNC = { host: false, peers: [], hub: null, off: 0, rtt: 1e9, silent: false, last: {}, smp: [], got: {}, pend: null, apply: 0 };
       const samples = new Array(SLOTS).fill(null); // AudioBuffer-like: {rate, data:Float32Array}
       const sampleSettings = Array.from({ length: SLOTS }, () => ({ velocity: 1, pitch: 0, hold: true }));
       const bufCache = new WeakMap();
@@ -9865,6 +9926,317 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       addEventListener("pagehide", saveNow);
 
       // ======================================================================
+      // SYNC: devices on the same Wi-Fi share one song, with no server (WebRTC, paired by copying two codes)
+      // ======================================================================
+      // The host is the hub: guests talk to it and it passes every message on. What travels: the song, key by key (a changed key is
+      // sent, so a knob is a few bytes); the 16 samples (in pieces, when they change); PLAY / STOP, which the host times 250 ms ahead
+      // of the clocks it has measured. Last writer wins. shortcut: the host leaving ends the sync; no QR code (copy or share the code).
+      const SY_KEYS = ["name", "bpm", "kit", "chInst", "patterns", "order", "scale", "mix", "chN", "xInst", "xMix", "instAll", "loopA", "loopB", "arpRate"];
+      const SY_CTL = { $master: "#master", $swing: "#swing", $echo: "#echo", $echoTime: "#echoTime" };
+      const syN = () => (SYNC.host ? SYNC.peers.filter((x) => x.dc.readyState === "open").length : SYNC.hub && SYNC.hub.dc.readyState === "open" ? 1 : 0);
+      const syNow = () => Date.now() + SYNC.off;
+      const syB64 = (u8) => btoa(Array.from(u8, (c) => String.fromCharCode(c)).join("")).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      async function syPack(o) {
+        const st = new Blob([JSON.stringify(o)]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+        return syB64(new Uint8Array(await new Response(st).arrayBuffer()));
+      }
+      async function syUnpack(t) {
+        t = String(t).replace(/\s+/g, "");
+        if (!t || t.length > 20000) throw new Error("size");
+        const b = Uint8Array.from(atob(t.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+        const o = JSON.parse(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text());
+        if (!o || typeof o.sdp !== "string" || !/^(offer|answer)$/.test(o.type)) throw new Error("code");
+        return { type: o.type, sdp: o.sdp };
+      }
+      const syGathered = (pc) =>
+        new Promise((ok) => {
+          const f = () => pc.iceGatheringState === "complete" && (pc.removeEventListener("icegatheringstatechange", f), ok());
+          pc.addEventListener("icegatheringstatechange", f);
+          f();
+          setTimeout(ok, 3000);
+        });
+      async function syRaw(dc, str) {
+        while (dc.readyState === "open" && dc.bufferedAmount > 1 << 20) await new Promise((r) => setTimeout(r, 30));
+        if (dc.readyState === "open") dc.send(str);
+      }
+      async function syTx(dc, msg) {
+        const str = JSON.stringify(msg),
+          N = 15000;
+        if (str.length <= N) return syRaw(dc, str);
+        const id = Math.random().toString(36).slice(2, 8),
+          n = Math.ceil(str.length / N);
+        for (let i = 0; i < n; i++) await syRaw(dc, JSON.stringify({ t: "c", id, i, n, d: str.slice(i * N, (i + 1) * N) }));
+      }
+      // to everyone else: the host to all its guests, a guest to the host (which passes it on)
+      const syOut = (msg) => (SYNC.host ? SYNC.peers : SYNC.hub ? [SYNC.hub] : []).forEach((x) => syTx(x.dc, msg));
+      async function syRoom(bytes) {
+        try {
+          const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+          if (quota && quota - usage < bytes * 3) return toast("Not enough free space on this device for the samples"), false;
+        } catch {}
+        return true;
+      }
+      // ---- what changed in this song
+      function syCur() {
+        const o = {};
+        SY_KEYS.forEach((k) => song[k] !== undefined && (o[k] = JSON.stringify(song[k])));
+        Object.entries(SY_CTL).forEach(([k, id]) => (o[k] = JSON.stringify($(id).value)));
+        return o;
+      }
+      const syFp = (i) => {
+        const x = samples[i],
+          st = JSON.stringify(sampleSettings[i]);
+        if (!x) return "n" + st;
+        const d = x.data,
+          n = d.length;
+        return [n, x.rate, d[0], d[n >> 2], d[n >> 1], d[(3 * n) >> 2], d[n - 1], st].join("|"); // shortcut: a sample edited in place that keeps these 5 points and its length is not seen
+      };
+      const syMark = () => ((SYNC.last = syCur()), (SYNC.smp = samples.map((_, i) => syFp(i))));
+      function syScan() {
+        if (!syN() || varAway || SYNC.apply) return;
+        const cur = syCur();
+        for (const k in cur)
+          if (cur[k] !== SYNC.last[k]) {
+            SYNC.last[k] = cur[k];
+            syOut({ t: "k", k, v: JSON.parse(cur[k]) });
+          }
+        samples.forEach((x, i) => {
+          const f = syFp(i);
+          if (f === SYNC.smp[i]) return;
+          SYNC.smp[i] = f;
+          syOut({ t: "smp", i, s: x ? { rate: x.rate, b64: f32ToB64(x.data) } : null, st: sampleSettings[i] });
+        });
+      }
+      setInterval(syScan, 150);
+      // ---- what arrives
+      function syKey(k, v) {
+        if (varAway) return;
+        if (SY_CTL[k]) {
+          const el = $(SY_CTL[k]);
+          el.value = v;
+          if (String(el.value) !== String(v)) el.value = el.defaultValue;
+          return applyMix();
+        }
+        if (!SY_KEYS.includes(k)) return;
+        const cand = Object.assign({}, song, { [k]: v });
+        vetSong(cand); // a damaged value throws here and changes nothing
+        song = cand;
+        fixChannels();
+        S.pat = clamp(S.pat, 0, song.patterns.length - 1);
+        S.ordSel = clamp(S.ordSel, 0, song.order.length - 1);
+        $("#bpm").value = song.bpm;
+        $("#songName").value = song.name || "";
+        S.root = (song.scale && song.scale.root) || 0;
+        S.scaleT = (song.scale && song.scale.type) || 0;
+        song.mix.forEach((m) => Object.keys(MIXDEF).forEach((q) => m[q] === undefined && (m[q] = MIXDEF[q])));
+        chResize();
+        fixLoop();
+        refreshAll();
+        applyMix();
+      }
+      async function sySmp(m) {
+        const i = m.i;
+        if (!Number.isInteger(i) || i < 0 || i >= SLOTS) return;
+        const st = { velocity: 1, pitch: 0, hold: true };
+        Object.entries(m.st || {}).forEach(([k, v]) => (typeof v === "number" || typeof v === "boolean") && k.length < 20 && (st[k] = v));
+        if (m.s && typeof m.s.b64 === "string") {
+          if (!(await syRoom(m.s.b64.length))) return;
+          samples[i] = { rate: clamp(+m.s.rate || 44100, 3000, 192000), data: b64ToF32(m.s.b64) };
+        } else samples[i] = null;
+        sampleSettings[i] = st;
+        renderSlots();
+        smpLoadSel();
+        SYNC.smp[i] = syFp(i);
+      }
+      async function sySnap(text) {
+        if (!(await syRoom(text.length))) return;
+        const o = JSON.parse(text);
+        vetSong(o && o.song);
+        // the guest's own song is kept in the song list first
+        try {
+          await dbSet("song:Before sync " + new Date().toISOString().slice(0, 16).replace("T", " "), serialize());
+        } catch {}
+        loadData(o);
+      }
+      function syGo(play) {
+        const at = Date.now() + 250;
+        syOut({ t: "go", play, at });
+        syAt(play, at);
+      }
+      function syAt(play, at) {
+        setTimeout(() => {
+          if (S.playing === play) return;
+          SYNC.apply++;
+          try {
+            togglePlayLocal();
+          } finally {
+            SYNC.apply--;
+          }
+        }, Math.max(0, at - syNow()));
+      }
+      function syGot(peer, raw, joined) {
+        let m;
+        try {
+          m = JSON.parse(raw);
+        } catch {
+          return;
+        }
+        if (!m || typeof m !== "object") return;
+        if (m.t === "p") return syRaw(peer.dc, JSON.stringify({ t: "q", c: m.c, h: Date.now() }));
+        if (m.t === "q") {
+          const now = Date.now(),
+            rtt = now - m.c;
+          if (rtt <= SYNC.rtt) ((SYNC.rtt = rtt), (SYNC.off = m.h + rtt / 2 - now));
+          SYNC.rtt += 2; // an old best sample ages out
+          return;
+        }
+        if (m.t === "tp") return SYNC.host && syGo(!!m.want);
+        if (SYNC.host && !joined) SYNC.peers.forEach((x) => x !== peer && syRaw(x.dc, raw)); // the hub passes it on
+        try {
+          if (m.t === "c") {
+            if (typeof m.id !== "string" || !(m.n > 0 && m.n <= 4000) || typeof m.d !== "string") return;
+            const b = (SYNC.got[m.id] ||= { n: m.n, p: [], k: 0 });
+            if (!b.p[m.i]) (b.p[m.i] = m.d), b.k++;
+            if (b.k === b.n) {
+              delete SYNC.got[m.id];
+              syGot(peer, b.p.join(""), true);
+            }
+          } else if (m.t === "go") syAt(!!m.play, +m.at || 0);
+          else if (m.t === "k") syKey(m.k, m.v), syMark();
+          else if (m.t === "smp") sySmp(m);
+          else if (m.t === "snap" && typeof m.d === "string") sySnap(m.d).then(syMark);
+        } catch (e) {
+          console.warn("sync: a message was refused", e);
+        }
+      }
+      // ---- the connection
+      function syWire(peer) {
+        peer.dc.onopen = () => {
+          if (SYNC.host) {
+            SYNC.peers.push(peer);
+            syTx(peer.dc, { t: "snap", d: serialize() });
+          } else {
+            SYNC.hub = peer;
+            for (let i = 0; i < 6; i++) setTimeout(() => syRaw(peer.dc, JSON.stringify({ t: "p", c: Date.now() })), i * 300);
+            const iv = setInterval(() => (peer.dc.readyState === "open" ? syRaw(peer.dc, JSON.stringify({ t: "p", c: Date.now() })) : clearInterval(iv)), 8000);
+            syMark();
+          }
+          $("#syBox").hidden = true;
+          toast("Synced");
+          syFace();
+        };
+        peer.dc.onclose = () => {
+          SYNC.peers = SYNC.peers.filter((x) => x !== peer);
+          if (!SYNC.host) syLeave(true);
+          syFace();
+        };
+        peer.dc.onmessage = (e) => typeof e.data === "string" && syGot(peer, e.data);
+      }
+      const syPc = () => new RTCPeerConnection({ iceServers: [] }); // the same network: no STUN server
+      function syLeave(quiet) {
+        SYNC.peers.forEach((x) => x.pc.close());
+        if (SYNC.hub) SYNC.hub.pc.close();
+        if (SYNC.pend) SYNC.pend.pc.close();
+        Object.assign(SYNC, { host: false, peers: [], hub: null, pend: null, silent: false, got: {} });
+        applyMix();
+        $("#syBox").hidden = true;
+        syFace();
+        if (!quiet) toast("Left the sync");
+      }
+      function syFace() {
+        const n = syN(),
+          role = SYNC.host ? "host" : SYNC.hub ? "guest" : "";
+        $("#syStat").textContent = n
+          ? `Synced: ${role === "host" ? n + " other device" + (n > 1 ? "s" : "") + " joined" : "you joined a host"}. ${SYNC.silent ? "This device is silent." : "This device makes sound."}`
+          : SYNC.host ? "Waiting for a device to join." : "Not synced. On one device tap HOST; on the others tap JOIN.";
+        $("#syHost").classList.toggle("dis", !!SYNC.hub);
+        $("#syJoin").classList.toggle("dis", !!SYNC.host || !!SYNC.hub);
+        $("#sySilent").classList.toggle("on", SYNC.silent);
+        $("#syLeave").classList.toggle("dis", !SYNC.host && !SYNC.hub);
+        const b = $("#syBadge");
+        b.hidden = !n;
+        b.classList.toggle("mute", SYNC.silent);
+        b.textContent = "⇄ " + (n + (SYNC.host ? 1 : 0)) + (SYNC.silent ? " · SILENT" : "");
+      }
+      let syMode = "";
+      function syShow(l1, out, l2, ph) {
+        $("#syBox").hidden = false;
+        $("#syL1").textContent = l1;
+        $("#syL2").textContent = l2;
+        $("#syOut").value = out;
+        $("#syOut").hidden = $("#syCopy").hidden = $("#syShare").hidden = !out;
+        $("#syL1").hidden = !l1;
+        $("#syIn").value = "";
+        $("#syIn").placeholder = ph;
+      }
+      $("#syHost").onclick = async () => {
+        if (SYNC.hub) return;
+        ensureCtx(); // iOS only lets a page make sound after a tap
+        try {
+          SYNC.host = true;
+          if (SYNC.pend) SYNC.pend.pc.close();
+          const pc = syPc(),
+            peer = { pc, dc: pc.createDataChannel("t") };
+          SYNC.pend = peer;
+          syWire(peer);
+          syMode = "host";
+          await pc.setLocalDescription(await pc.createOffer());
+          await syGathered(pc);
+          syShow("1 · Send this code to the other device (message, AirDrop, anything).", await syPack({ type: "offer", sdp: pc.localDescription.sdp }), "3 · Paste the answer it gives you here.", "Paste the answer");
+          syFace();
+        } catch (e) {
+          toast("Could not start the sync: " + (e.message || e));
+        }
+      };
+      $("#syJoin").onclick = () => {
+        if (SYNC.host || SYNC.hub) return;
+        ensureCtx();
+        syMode = "join";
+        syShow("", "", "1 · Paste the host's code here. This device's song is kept in FILE as “Before sync”, then replaced by the host's.", "Paste the host's code");
+      };
+      $("#syGo").onclick = async () => {
+        try {
+          const d = await syUnpack($("#syIn").value);
+          if (syMode === "host") {
+            if (d.type !== "answer") throw new Error("this is not an answer code");
+            await SYNC.pend.pc.setRemoteDescription(d);
+            toast("Connecting…");
+          } else {
+            if (d.type !== "offer") throw new Error("this is not a host code");
+            const pc = syPc(),
+              peer = { pc };
+            pc.ondatachannel = (e) => ((peer.dc = e.channel), syWire(peer));
+            SYNC.pend = peer;
+            await pc.setRemoteDescription(d);
+            await pc.setLocalDescription(await pc.createAnswer());
+            await syGathered(pc);
+            syShow("2 · Send this answer back to the host. It connects by itself.", await syPack({ type: "answer", sdp: pc.localDescription.sdp }), "", "");
+            $("#syIn").hidden = $("#syGo").hidden = true;
+          }
+        } catch (e) {
+          toast("That code does not work: " + (e.message || e), 2600);
+        }
+      };
+      $("#syCopy").onclick = () => navigator.clipboard.writeText($("#syOut").value).then(() => toast("Copied"), () => ($("#syOut").select(), toast("Select and copy the code")));
+      $("#syShare").onclick = () => (navigator.share ? navigator.share({ text: $("#syOut").value }).catch(() => {}) : $("#syCopy").click());
+      $("#sySilent").onclick = () => {
+        SYNC.silent = !SYNC.silent;
+        applyMix();
+        syFace();
+        toast(SYNC.silent ? "This device is silent" : "This device makes sound");
+      };
+      $("#syLeave").onclick = () => syLeave();
+      // PLAY / STOP: a guest asks the host, the host sets the time for all
+      const togglePlayLocal = togglePlay;
+      togglePlay = function () {
+        if (!syN() || SYNC.apply) return togglePlayLocal();
+        if (SYNC.host) syGo(!S.playing);
+        else syTx(SYNC.hub.dc, { t: "tp", want: !S.playing });
+      };
+      $("#play").onclick = () => togglePlay();
+      syFace();
+
+      // ======================================================================
       // demo
       // ======================================================================
       function demo() {
@@ -12742,7 +13114,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       }
 
       // The version of the app: change it here (and add its notes to the last help section, "What's new").
-      const APP_VERSION = "1.2.0";
+      const APP_VERSION = "1.3.0";
       const HELP = [
         {
           id: "start",
@@ -13085,10 +13457,34 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           },
         },
           {
+            id: "sync",
+            t: { en: "Sync", es: "Sincronizar" },
+            b: {
+              en: [
+                "**SYNC** (Files screen) joins several devices on the **same Wi-Fi** into one session, with no server and no account: every device has the same song, the same samples and the same PLAY / STOP. Use it to have the mixer open on one device, the live patterns on another and the piano on a third, or to play together with a friend.",
+                "- **HOST** on one device makes a code. Send it to the other device (a message, AirDrop, anything) and tap **JOIN** there: paste the code, and send back the answer it makes. Paste the answer on the host and tap **CONNECT**. Repeat for each device you add.",
+                "- A device that joins gets the host's song and samples; its own song is kept in the song list as *Before sync*. After that every device can edit: the last change wins. A change on one appears on the others in a moment, and so do the samples.",
+                "- **PLAY** and **STOP** on any device start and stop all of them together. Each device plays from what its own view shows (live patterns, song or pattern).",
+                "- **SILENT** mutes this device, because only one should make the sound (the one you record on or listen from). A MIDI knob on one device moves the mixer of all.",
+                "- **LEAVE** leaves the session. If the host leaves, the session ends. The devices need enough free space for the samples; if a device has none it says so and skips them. It does not work on guest Wi-Fi networks that keep devices apart, or when one device is on mobile data.",
+              ],
+              es: [
+                "**SYNC** (pantalla Files) une varios dispositivos en la **misma Wi-Fi** en una sola sesión, sin servidor ni cuenta: todos tienen la misma canción, las mismas muestras y el mismo PLAY / STOP. Sirve para tener el mezclador abierto en uno, los patrones en vivo en otro y el piano en un tercero, o para tocar con un amigo.",
+                "- **HOST** en un dispositivo crea un código. Envíalo al otro dispositivo (un mensaje, AirDrop, lo que sea) y toca **JOIN** allí: pega el código y envía de vuelta la respuesta que genera. Pega la respuesta en el host y toca **CONNECT**. Repite con cada dispositivo que añadas.",
+                "- El que se une recibe la canción y las muestras del host; la suya queda en la lista de canciones como *Before sync*. Después todos pueden editar: gana el último cambio. Un cambio en uno aparece en los demás al momento, igual que las muestras.",
+                "- **PLAY** y **STOP** en cualquiera arrancan y paran a todos a la vez. Cada dispositivo toca lo que muestra su vista (patrones en vivo, canción o patrón).",
+                "- **SILENT** silencia este dispositivo, porque solo uno debe sonar (el que grabas o escuchas). Un potenciómetro MIDI en uno mueve el mezclador de todos.",
+                "- **LEAVE** sale de la sesión. Si sale el host, la sesión termina. Los dispositivos necesitan espacio libre para las muestras; si uno no tiene, lo dice y las omite. No funciona en redes Wi-Fi de invitados que aíslan los dispositivos, ni si uno está con datos móviles.",
+              ],
+            },
+          },
+          {
             id: "new",
             t: { en: "What's new", es: "Novedades" },
             b: {
               en: [
+                "## Version 1.3.0",
+                "- **Sync:** devices on the same Wi-Fi can share one session (Files ▸ **SYNC**, paired by copying two codes, no server): the same song and samples, shared PLAY / STOP, edits on any device appear on the others, a **SILENT** switch so one device makes the sound, and a MIDI knob on one moves the mixer of all.",
                 "## Version 1.2.0",
                 "- **Install it:** the app is now a web app (PWA). Add it to the Home Screen (iPhone: Safari ▸ Share; Android and desktop: Chrome ▸ Install app) and it opens like an app and works offline. The Android APK is retired.",
                 "- **Variator:** new styles **Lo-Fi**, **Synthwave** and **Dungeon Synth**; the dice also shuffles the VARS knobs; the **♫** button rotates the lower part between patterns, a piano and drum pads (what you play there is not written into the song).",
@@ -13098,6 +13494,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
                 "Older versions: see *Releases* on GitHub.",
               ],
               es: [
+                "## Versión 1.3.0",
+                "- **Sincronizar:** los dispositivos de la misma Wi-Fi pueden compartir una sesión (Files ▸ **SYNC**, emparejados copiando dos códigos, sin servidor): la misma canción y muestras, PLAY / STOP compartidos, las ediciones de uno aparecen en los demás, un interruptor **SILENT** para que suene solo uno, y un potenciómetro MIDI en uno mueve el mezclador de todos.",
                 "## Versión 1.2.0",
                 "- **Instálala:** la app ahora es una web app (PWA). Añádela a la pantalla de inicio (iPhone: Safari ▸ Compartir; Android y escritorio: Chrome ▸ Instalar app) y se abre como una app y funciona sin conexión. El APK de Android se retira.",
                 "- **Variator:** estilos nuevos **Lo-Fi**, **Synthwave** y **Dungeon Synth**; el dado también mezcla los potes de VARS; el botón **♫** rota la parte de abajo entre patrones, un piano y pads de batería (lo que toques ahí no se escribe en la canción).",
