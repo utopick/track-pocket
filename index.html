@@ -6939,7 +6939,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         };
         // Only replace report rows: clock updates must not detach buttons mid-click.
         el.querySelector("ul").innerHTML = miTestRows()
-          .map(([a, b]) => `<li class="${a === "✔" ? "ok" : a === "i" ? "inf" : ""}"><b>${a}</b>${b}</li>`)
+          .map(([a, b]) => `<li class="${a === "✔" ? "ok" : a === "i" ? "inf" : ""}"><b>${a}</b>${String(b).replace(/[&<>"']/g, (c) => "&#" + c.charCodeAt(0) + ";")}</li>`)
           .join("");
       }
       function miRun(act, key, cc, on, v) {
@@ -7558,7 +7558,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         toast("Pattern " + letter(S.pat) + " added");
       };
       $("#patName").oninput = (e) => {
-        pat().name = e.target.value.slice(0, 16);
+        pat().name = cleanName(e.target.value);
         fillSelects();
         $$("#pats .blk").forEach((b, i) => (b.textContent = letter(i)));
         $$("#order .blk").forEach((b, i) => (b.textContent = letter(song.order[i])));
@@ -9267,7 +9267,31 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         });
       }
       // Replaces the whole state with a saved or imported file and fills in fields that older files lack.
+      // Text that ends up inside HTML templates (pattern names): no markup characters, short.
+      const cleanName = (n) => String(n ?? "").replace(/[<>&"'`]/g, "").slice(0, 16);
+      // A song from a file or the autosave is checked BEFORE it replaces the one on screen: a malformed file throws here and
+      // changes nothing (it used to replace the song first, so a broken file was then autosaved and broke every start).
+      function vetSong(sg) {
+        if (!sg || typeof sg !== "object" || !Array.isArray(sg.patterns) || !sg.patterns.length || sg.patterns.length > 512)
+          throw new Error("This file has no usable song");
+        sg.patterns.forEach((p) => {
+          if (!p || typeof p !== "object" || !Array.isArray(p.ch)) throw new Error("A pattern in this file is damaged");
+          p.len = clamp(Math.round(+p.len) || 16, 1, 512);
+          p.name = cleanName(p.name);
+          p.ch = p.ch.map((col) => (Array.isArray(col) ? col : []));
+        });
+        sg.order = (Array.isArray(sg.order) ? sg.order : []).filter((i) => Number.isInteger(i) && i >= 0 && i < sg.patterns.length);
+        if (!sg.order.length) sg.order = [0];
+        sg.bpm = clamp(+sg.bpm || 120, 40, 240);
+        sg.name = String(sg.name ?? "").slice(0, 80);
+        // effect preset names are shown in the mixer: only the real ones
+        (Array.isArray(sg.mix) ? sg.mix : []).forEach((m) => {
+          if (m && typeof m === "object" && m.preset && m.preset !== "CUSTOM" && !Object.prototype.hasOwnProperty.call(PRESETS, m.preset)) delete m.preset;
+        });
+        return sg;
+      }
       function loadData(o) {
+        vetSong(o && o.song);
         song = Object.assign(blankSong(), o.song);
         song.mix = song.mix || blankSong().mix;
         fixChannels();
@@ -9593,7 +9617,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (varAway) return; // the Variator's song is not the user's: theirs was saved on the way in
         dbSet("autosave", serialize()).catch(() => {});
       }
-      setInterval(saveNow, 15000);
+      setInterval(() => S.playing || saveNow(), 15000); // not while playing: with many samples it stalls the scheduler for 50-300 ms (pagehide saves too)
       // pagehide also covers reloads, which Safari does not always announce with visibilitychange
       addEventListener("pagehide", saveNow);
 
