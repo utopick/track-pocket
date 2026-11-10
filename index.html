@@ -9163,7 +9163,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           nPat = Math.min(64, Math.ceil(total / L)),
           nCh = voices.length <= 4 ? 4 : voices.length <= 8 ? 8 : 16, // the sizes the OPTIONS panel offers
           sg = blankSong();
-        sg.name = name;
+        sg.name = cleanTitle(name);
         sg.bpm = clamp(Math.round(m.bpm), 40, 240);
         sg.chN = nCh;
         sg.patterns = Array.from({ length: nPat }, () => ({
@@ -9268,6 +9268,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       }
       // Replaces the whole state with a saved or imported file and fills in fields that older files lack.
       // Text that ends up inside HTML templates (pattern names): no markup characters, short.
+      const esc = (x) => String(x ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      const cleanTitle = (n) => String(n ?? "").replace(/[<>&"'`]/g, "").slice(0, 80); // a song's name: shown in lists and boxes
       const cleanName = (n) => String(n ?? "").replace(/[<>&"'`]/g, "").slice(0, 16);
       // A song from a file or the autosave is checked BEFORE it replaces the one on screen: a malformed file throws here and
       // changes nothing (it used to replace the song first, so a broken file was then autosaved and broke every start).
@@ -9283,7 +9285,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         sg.order = (Array.isArray(sg.order) ? sg.order : []).filter((i) => Number.isInteger(i) && i >= 0 && i < sg.patterns.length);
         if (!sg.order.length) sg.order = [0];
         sg.bpm = clamp(+sg.bpm || 120, 40, 240);
-        sg.name = String(sg.name ?? "").slice(0, 80);
+        sg.name = cleanTitle(sg.name);
         // effect preset names are shown in the mixer: only the real ones
         (Array.isArray(sg.mix) ? sg.mix : []).forEach((m) => {
           if (m && typeof m === "object" && m.preset && m.preset !== "CUSTOM" && !Object.prototype.hasOwnProperty.call(PRESETS, m.preset)) delete m.preset;
@@ -9543,7 +9545,6 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           try {
             await dbSet("song-meta", ms);
           } catch {}
-        const esc = (x) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
         $("#fileList").innerHTML =
           names
             .map((n) => {
@@ -12440,10 +12441,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         if (!varAway) return;
         const el = document.createElement("div");
         el.id = "vExpBox";
-        el.innerHTML = `<div class="mlBox"><i>EXPORT · ${song.order.length} PATTERNS · ${song.name}</i>
-<button data-ve="add">ADD TO MY SONG<small>its patterns go at the end of the song you were writing (${varAway.song.name || "untitled"})</small></button>
+        el.innerHTML = `<div class="mlBox"><i>EXPORT · ${song.order.length} PATTERNS · ${esc(song.name)}</i>
+<button data-ve="add">ADD TO MY SONG<small>its patterns go at the end of the song you were writing (${esc(varAway.song.name) || "untitled"})</small></button>
 <button data-ve="open">OPEN AS A NEW SONG<small>the Variator's song becomes the one you edit (save yours first in Files)</small></button>
-<div class="vxs"><input id="vExpName" type="text" value="${song.name}"><button data-ve="save">SAVE IN FILES</button></div>
+<div class="vxs"><input id="vExpName" type="text" value="${esc(song.name)}"><button data-ve="save">SAVE IN FILES</button></div>
 <button data-ve="x" class="vxc">CANCEL</button></div>`;
         document.body.appendChild(el);
         el.onclick = async (e) => {
