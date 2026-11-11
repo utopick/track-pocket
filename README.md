@@ -167,6 +167,8 @@ Have fun.
 
 The banner, app icons and favicons are lettered in [Inter](https://rsms.me/inter/) (SIL Open Font License 1.1), converted to shapes, so no font file is included.
 
+`index.html` also bundles **jsQR 1.4.0** (a QR code reader, used by SCAN in SYNC) in its own `<script id="jsqr">` block, under the [Apache License 2.0](LICENSE-jsQR.txt), unmodified.
+
 `index.html` bundles **lamejs 1.2.1** (the MP3 encoder, a JavaScript port of LAME) in its own `<script id="lamejs">` block. lamejs is **not** covered by the MIT License: it is licensed under the [GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.html). It is included unmodified (`lame.min.js` from the npm package [`lamejs@1.2.1`](https://registry.npmjs.org/lamejs/-/lamejs-1.2.1.tgz)); its source is at <https://github.com/zhuker/lamejs>. The full license texts are in this repository: [`COPYING.LESSER`](COPYING.LESSER) (LGPL-3.0) and [`COPYING`](COPYING) (GPL-3.0, which the LGPL builds on). You may replace that block with any other compatible build of lamejs.
 
 ## The readmes
