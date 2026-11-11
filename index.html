@@ -3998,7 +3998,7 @@
           <div class="bar" style="padding: 0; flex-wrap: wrap">
             <button id="syHost" title="Start a sync: this device plays a sound that the other one listens to">HOST</button>
             <button id="syJoin" title="Join the sync of another device by listening to it (it replaces this song)">JOIN</button>
-            <button id="syHostQ" title="Start a sync and show a QR code: the other device scans it with its camera, then answers by sound">HOST QR</button>
+            <button id="syHostQ" title="Start a sync with QR codes only: the other device scans this one with its camera, then shows a code that this device scans back">HOST QR</button>
             <button id="syHi" title="Pair with near-ultrasound tones that are hard to hear: set it the same on both devices (a QR carries it)">QUIET</button>
             <button id="sySilent" title="Mute this device: another one makes the sound">SILENT</button>
             <button id="syStop" class="on" hidden title="Stop trying to pair: the sound, the microphone and the connection attempt">STOP</button>
@@ -4012,7 +4012,7 @@
           </div>
           <div id="syHQ" hidden>
             <div id="syHQImg" style="background: #fff; border-radius: 8px; padding: 4px; width: min(300px, 100%); margin: 10px auto 4px"></div>
-            <div class="hint" style="text-align: center; margin: 0 0 6px">Point the other device's camera at this code: it opens the app and asks to join. Keep this screen open, the volume up and the microphone allowed.</div>
+            <div class="hint" id="syHQTxt" style="text-align: center; margin: 0 0 6px"></div>
           </div>
           <div id="syQJ" hidden style="border: 1px solid var(--acc); border-radius: 8px; padding: 10px; margin: 10px 0">
             <div class="hint" style="margin: 0 0 8px"><b>A device invites you to its sync.</b> This device's song is kept in FILE as “Before sync”, then replaced by the host's. Only join a device you trust that is next to you.</div>
@@ -11059,23 +11059,23 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         const k = await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
         return new Uint8Array(await crypto.subtle.sign("HMAC", k, bytes)).slice(0, 8);
       }
-      // the link's data: [1, nonce hi, nonce lo, 6 bytes of secret, the host's connection data]
-      function syQrPayload(n, secret, off) {
-        return Uint8Array.from([SYM.F0 > 5000 ? 2 : 1, n >> 8, n & 255, ...secret, ...off]);
+      // the link's data: [1 sound, 2 quiet sound or 3 QR both ways, nonce hi, nonce lo, 6 bytes of secret, the host's connection data]
+      function syQrPayload(n, secret, off, kind = 3) {
+        return Uint8Array.from([kind, n >> 8, n & 255, ...secret, ...off]);
       }
       function syQrParse(t) {
         const u = syUnB64(t);
-        if (!(u[0] === 1 || u[0] === 2) || u.length < 9 + 40 || u.length > 260) throw new Error("this link is not a sync invitation");
+        if (!(u[0] >= 1 && u[0] <= 3) || u.length < 9 + 40 || u.length > 260) throw new Error("this link is not a sync invitation");
         const offer = u.slice(9);
         syExpand(offer); // throws when the connection data is damaged
-        return { hi: u[0] === 2, n8: syN8((u[1] << 8) | u[2]), secret: u.slice(3, 9), offer };
+        return { hi: u[0] === 2, full: u[0] === 3, n8: syN8((u[1] << 8) | u[2]), secret: u.slice(3, 9), offer };
       }
+      // QR both ways: the host shows its QR, the guest scans it with the camera app and shows an answer QR, the host scans that with its camera app.
+      // The answer's link opens in a new tab of the same browser, which hands it to this tab (BroadcastChannel): no camera code, no sound.
       async function syHostQ() {
         if (SYNC.hub) return;
         syStop(true);
         try {
-          ensureCtx();
-          await syMic();
           const pc = syPc(),
             peer = { pc, dc: pc.createDataChannel("t") };
           SYNC.host = true;
@@ -11089,7 +11089,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             why = null;
           for (const k of [4, 2, 1]) {
             try {
-              const u = syAppUrl() + "#j=" + syB64(syQrPayload(n, secret, syCompact(pc.localDescription, k)));
+              const u = syAppUrl() + "#j=" + syB64(syQrPayload(n, secret, syCompact(pc.localDescription, k), 3));
               qrMake(u); // throws when it does not fit
               url = u;
               break;
@@ -11100,30 +11100,13 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           }
           if (!url) throw why;
           const me = (SYNC.talk = { qr: true });
+          SYNC.qa = { pc, secret, me };
           $("#syHQImg").innerHTML = qrSvg(url);
+          $("#syHQTxt").textContent = "Step 1: point the other device's camera at this code. It opens the app and asks to join. Then it shows a code of its own: point THIS device's camera at that one. Keep this screen open.";
           syNote("host: QR shown, " + url.length + " characters");
           syWatch(pc, "host", true);
           syFace();
-          const io = syIo(me);
-          for (let tries = 0; tries < 5; tries++) {
-            syStat("Waiting for the other device to scan the code and answer…");
-            const got = await syRecvAll(io, 0, syN8(n), syStat, 20000, 30, null, null, 0);
-            if (!got || SYNC.talk !== me) return;
-            const ans = got.slice(8);
-            if (!(await syMac(secret, ans)).every((v, i) => v === got[i])) {
-              syNote("host: an answer without the right proof was ignored");
-              toast("An answer that did not know the QR code was ignored", 3000);
-              continue;
-            }
-            syNote("host: heard the answer");
-            syStat("Heard the answer. Connecting…");
-            await pc.setRemoteDescription(syExpand(ans));
-            pc.syGo = Date.now();
-            syQuiet();
-            syFace();
-            return;
-          }
-          throw new Error("too many wrong answers");
+          syStat("Waiting for the other device to scan the code and show its answer…");
         } catch (e) {
           if (!SYNC.talk && !SYNC.pend) return;
           syNote("host failed: " + (e.message || e));
@@ -11131,14 +11114,45 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           toast("Could not start: " + (e.message || e), 3600);
         }
       }
+      // the answer link was opened (here or in another tab): check its proof, then finish the connection
+      async function syAnswerIn(t) {
+        const q = SYNC.qa;
+        if (!q || SYNC.talk !== q.me) return false;
+        try {
+          const u = syUnB64(t);
+          if (u.length < 8 + 40 || u.length > 8 + 260) throw new Error("size");
+          const ans = u.slice(8);
+          if (!(await syMac(q.secret, ans)).every((v, i) => v === u[i])) {
+            syNote("host: an answer without the right proof was ignored");
+            toast("An answer that did not know the QR code was ignored", 3000);
+            return false;
+          }
+          syNote("host: got the answer by QR");
+          await q.pc.setRemoteDescription(syExpand(ans));
+          q.pc.syGo = Date.now();
+          SYNC.qa = null;
+          syStat("Got the answer. Connecting…");
+          syQuiet();
+          syFace();
+          return true;
+        } catch (e) {
+          toast("That answer code does not work", 2600);
+          return false;
+        }
+      }
+      const syBc = "BroadcastChannel" in window ? new BroadcastChannel("track-sync") : null;
+      if (syBc)
+        syBc.onmessage = async (e) => {
+          const d = e.data;
+          if (d && typeof d.a === "string" && d.a.length < 700 && SYNC.qa && (await syAnswerIn(d.a))) syBc.postMessage({ ok: 1 });
+        };
       async function syJoinQ(inv) {
         syStop(true);
-        syBand(inv.hi); // the link says which tones the host listens for
-        syHiFace();
+        if (!inv.full) (syBand(inv.hi), syHiFace()); // an older link: it says which tones the host listens for
         try {
           ensureCtx();
-          await syMic();
-          const me = (SYNC.talk = {}),
+          if (!inv.full) await syMic();
+          const me = (SYNC.talk = inv.full ? { qr: true } : {}),
             pc = syPc(),
             peer = { pc };
           pc.ondatachannel = (e) => ((peer.dc = e.channel), syWire(peer));
@@ -11152,6 +11166,15 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             mac = await syMac(inv.secret, ans);
           syNote(`guest: answer ready, ${ans.length} bytes`);
           syWatch(pc, "guest", true);
+          if (inv.full) {
+            // QR both ways: the answer is shown as a link for the host's camera, no sound
+            pc.syGo = Date.now() + 30000; // time to scan it
+            $("#syHQImg").innerHTML = qrSvg(syAppUrl() + "#a=" + syB64(Uint8Array.from([...mac, ...ans])));
+            $("#syHQTxt").textContent = "Step 2: point the host's camera at this code. Keep this screen open until it connects.";
+            syStat("Show this code to the host's camera…");
+            syFace();
+            return;
+          }
           const sent = await sySendAll(syIo(me), Uint8Array.from([...mac, ...ans]), 1, inv.n8, syStat);
           if (!sent || SYNC.talk !== me) return;
           pc.syGo = Date.now();
@@ -11169,6 +11192,16 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       let syInv = null;
       function syLink() {
         const h = location.hash;
+        if (h.startsWith("#a=")) {
+          // the host scanned a guest's answer: this is a new tab, so hand it to the tab that is waiting for it
+          history.replaceState(null, "", location.pathname + location.search);
+          if (SYNC.qa) return void syAnswerIn(h.slice(3)); // opened in the waiting tab itself
+          if (!syBc || h.length > 710) return toast("That answer link does not work here", 3200);
+          const t = setTimeout(() => toast("No waiting host found in this browser. Open the answer in the browser where HOST QR was started.", 5000), 2500);
+          syBc.onmessage = (e) => e.data && e.data.ok && (clearTimeout(t), toast("Answer delivered to the host. You can close this tab.", 5000));
+          syBc.postMessage({ a: h.slice(3) });
+          return;
+        }
         if (!h.startsWith("#j=")) return;
         history.replaceState(null, "", location.pathname + location.search); // a link is used once
         try {
@@ -14432,7 +14465,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             b: {
               en: [
                 "**SYNC** (Files screen) joins several devices on the **same Wi-Fi** into one session, with no server and no account: every device has the same song, the same samples and the same PLAY / STOP. Use it to have the mixer open on one device, the live patterns on another and the piano on a third, or to play together with a friend.",
-                "- **Pair by QR (the quickest):** tap **HOST QR** on one device: it shows a QR code. Point the other device's normal camera app at it: the link opens the app and asks to join (**JOIN** or **NO**: nothing starts until you tap). The answer then comes back by sound, about 20 seconds, with the devices close and the volume up. The code holds a one-time secret and the answer carries a proof of it, so a device that only heard the sound cannot join. Then the same 4-digit check follows. Nothing leaves your Wi-Fi: the data travels in the part of the link after the #, which no server ever sees.",
+                "- **Pair by QR (the quickest):** tap **HOST QR** on one device: it shows a QR code. Point the other device's normal camera app at it: the link opens the app and asks to join (**JOIN** or **NO**: nothing starts until you tap). The joining device then shows an answer code: point the host's camera at it (its link opens in a new tab of the same browser and passes the answer to the waiting one). No sound and no microphone are used. The code holds a one-time secret and the answer carries a proof of it, so a device that only saw or heard the pairing cannot join without it. Then the same 4-digit check follows. Nothing leaves your Wi-Fi: the data travels in the part of the link after the #, which no server ever sees.",
                 "- **Pair by sound:** put the two devices close, volume up, in a quiet room. Tap **HOST** on one and **JOIN** on the other. The host calls with short tones, the joiner answers, and then they take turns: one plays the connection data in a short burst of small pieces while the other listens and answers with what it got, and only the missing pieces are played again (a device never listens while it plays, so it does not hear itself). It takes about 40 seconds. **STOP** ends a try at any time. Then both screens show the **same 4 digits**: if they match, tap **THEY MATCH** on the host (this stops anyone who overheard from joining). Repeat for each device you add. **QUIET** switches to near-ultrasound tones that most adults barely hear: set it on both devices (a QR carries it), and it needs a speaker and microphone that reach 18 kHz, so try the normal tones if it fails.",
                 "- **Pair by code** (no sound needed, or a noisy room): **HOST BY CODE** makes a code. Send it to the other device (a message, AirDrop, anything) and tap **JOIN BY CODE** there: paste the code and send back the answer it makes. Paste the answer on the host and tap **CONNECT**.",
                 "- A device that joins gets the host's song and samples; its own song is kept in the song list as *Before sync*. After that every device can edit: the last change wins. A change on one appears on the others in a moment, and so do the samples.",
@@ -14443,7 +14476,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               ],
               es: [
                 "**SYNC** (pantalla Files) une varios dispositivos en la **misma Wi-Fi** en una sola sesión, sin servidor ni cuenta: todos tienen la misma canción, las mismas muestras y el mismo PLAY / STOP. Sirve para tener el mezclador abierto en uno, los patrones en vivo en otro y el piano en un tercero, o para tocar con un amigo.",
-                "- **Emparejar por QR (lo más rápido):** toca **HOST QR** en un dispositivo: muestra un código QR. Apunta la cámara normal del otro dispositivo: el enlace abre la app y pregunta si quieres unirte (**JOIN** o **NO**: no empieza nada hasta que toques). La respuesta vuelve por sonido, unos 20 segundos, con los dispositivos cerca y el volumen alto. El código lleva un secreto de un solo uso y la respuesta lleva una prueba de él, así que quien solo oyó el sonido no puede unirse. Después sigue la misma comprobación de 4 dígitos. Nada sale de tu Wi-Fi: los datos viajan en la parte del enlace después del #, que ningún servidor ve.",
+                "- **Emparejar por QR (lo más rápido):** toca **HOST QR** en un dispositivo: muestra un código QR. Apunta la cámara normal del otro dispositivo: el enlace abre la app y pregunta si quieres unirte (**JOIN** o **NO**: no empieza nada hasta que toques). Después el dispositivo que se une muestra un código de respuesta: apunta la cámara del anfitrión a él (su enlace se abre en una pestaña nueva del mismo navegador y pasa la respuesta a la que espera). No se usa sonido ni micrófono. El código lleva un secreto de un solo uso y la respuesta lleva una prueba de él, así que quien solo vio o oyó el emparejamiento no puede unirse sin él. Después sigue la misma comprobación de 4 dígitos. Nada sale de tu Wi-Fi: los datos viajan en la parte del enlace después del #, que ningún servidor ve.",
                 "- **Emparejar por sonido:** pon los dos dispositivos cerca, con el volumen alto, en una sala tranquila. Toca **HOST** en uno y **JOIN** en el otro. El host llama con tonos cortos, el otro responde, y luego se turnan: uno reproduce los datos de conexión en una ráfaga de trocitos mientras el otro escucha y responde con lo que ha recibido, y solo se repiten los trocitos que faltan (un dispositivo nunca escucha mientras suena, así que no se oye a sí mismo). Tarda unos 40 segundos. **STOP** termina un intento en cualquier momento. Luego las dos pantallas muestran los **mismos 4 dígitos**: si coinciden, toca **THEY MATCH** en el host (así nadie que haya oído el sonido puede entrar). Repite con cada dispositivo que añadas. **QUIET** cambia a tonos casi ultrasónicos que la mayoría de adultos apenas oye: actívalo en los dos dispositivos (un QR lo lleva), y hace falta un altavoz y un micrófono que lleguen a 18 kHz, así que prueba los tonos normales si falla.",
                 "- **Emparejar con código** (sin sonido, o en una sala ruidosa): **HOST BY CODE** crea un código. Envíalo al otro dispositivo (un mensaje, AirDrop, lo que sea) y toca **JOIN BY CODE** allí: pega el código y envía de vuelta la respuesta que genera. Pega la respuesta en el host y toca **CONNECT**.",
                 "- El que se une recibe la canción y las muestras del host; la suya queda en la lista de canciones como *Before sync*. Después todos pueden editar: gana el último cambio. Un cambio en uno aparece en los demás al momento, igual que las muestras.",
