@@ -35,6 +35,14 @@
     <meta name="apple-mobile-web-app-title" content="TRACK.Pocket" />
     <link rel="manifest" href="manifest.webmanifest" />
     <script>
+      // the browser's install prompt can come before the app has started: keep it for the INSTALL buttons
+      addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        window.pocketInstall = e;
+        dispatchEvent(new Event("pocketinstall"));
+      });
+    </script>
+    <script>
       if ("serviceWorker" in navigator && !location.pathname.includes("/@") &&
           ((location.protocol === "https:" && location.hostname !== "localhost") ||
            (location.protocol === "http:" && ["localhost", "127.0.0.1"].includes(location.hostname)))) {
@@ -1774,7 +1782,11 @@
       .vSeedRow {
         align-self: stretch;
       }
-      .vSeedRow button {
+      /* the dice and play icons are bare glyphs, not buttons: the #var id beats every theme's button frame */
+      #var .vSeedRow button,
+      #var .vSeedRow button:hover,
+      #var .vSeedRow button:active,
+      #var .vSeedRow button.on {
         align-self: stretch;
         width: 58px;
         min-height: 0;
@@ -1783,13 +1795,13 @@
         line-height: 1;
         background: none;
         border: none;
+        box-shadow: none;
+        text-shadow: none;
         border-radius: 10px;
         color: var(--dim);
       }
-      .vSeedRow button:active {
-        color: var(--acc);
-      }
-      #vPlay.on {
+      #var .vSeedRow button:active,
+      #var .vSeedRow button.on {
         color: var(--acc);
       }
       #var i {
@@ -1932,6 +1944,20 @@
       #vKeys:not([hidden]) {
         display: flex;
         flex-direction: column;
+      }
+      /* the Variator only plays: no PLAYING (write while playing) and no APPLY TO (HOLD / REPEAT / VOL on written notes) */
+      #vKeys #pkLive,
+      #vKeys #pkScope {
+        display: none;
+      }
+      #vKeys .pad.down {
+        background: rgb(var(--ccrgb));
+        border-color: rgb(var(--ccrgb));
+        color: #000;
+      }
+      /* the SCALE / ARP sheet floats over the channels (it is moved in here while the piano shows) like over the squares */
+      #vCtx {
+        position: relative;
       }
       #vKeys[hidden] {
         display: none;
@@ -2622,6 +2648,8 @@
           animation: none;
         }
       }
+      #instBtn { width: 100%; }
+      #instBtn:disabled { opacity: 0.6; color: var(--text); }
       /* ===================== HELP ===================== */
       #help,
       #welcome {
@@ -3957,6 +3985,9 @@
             play, record, the Live FX pads, the patterns (live loops), the samples and the volumes: press each control
             when it is asked for. Chrome, Edge or Firefox; not Safari.
           </p>
+          <div class="lbl" style="margin: 12px 0 6px">Install as an app</div>
+          <button id="instBtn" title="Install the app: its own window on your home screen or computer, and it works offline"></button>
+          <p class="hint" id="instHint" style="margin: 8px 0 0"></p>
         </div>
         <div class="prow" id="fileTabs">
           <button data-fpb="file"><i>SONG</i>FILE</button>
@@ -3983,7 +4014,8 @@
         <h2>Welcome to TRACK.Pocket · Bienvenida</h2>
         <p id="wEn"></p>
         <p id="wEs"></p>
-        <div class="wb"><button id="wOpen" class="on"></button><button id="wOk"></button></div>
+        <p class="hint" id="wInstHint" hidden style="white-space: pre-line"></p>
+        <div class="wb"><button id="wOpen" class="on"></button><button id="wOk"></button><button id="wInst" hidden style="flex: 1 1 100%" title="Install the app on your device · Instalar la app en tu dispositivo"></button></div>
       </div>
     </div>
     <div id="toast"></div>
@@ -10711,9 +10743,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         return notes.length;
       }
       const scopeWhere = () => "all channels in pattern " + letter(S.pat);
+      const scopeOn = () => S.scope === "pat" && !varAway; // the Variator's song is generated: never rewritten by VOL / HOLD / REPEAT
       function setRep(rep) {
         if (!!S.rep !== rep) $("#tieBtn").click();
-        if (S.scope === "pat") {
+        if (scopeOn()) {
           pushUndo();
           const n = scopeApply((c) => (rep ? (c.r = 1) : delete c.r));
           pkRender();
@@ -10735,7 +10768,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         $("#volSel").value = v;
         $("#volSel").dispatchEvent(new Event("change"));
         $("#pkVolN").textContent = v;
-        if (S.scope === "pat") {
+        if (scopeOn()) {
           if (!volUndo) pushUndo();
           volUndo = true;
           scopeApply((c) => (c.v = v));
@@ -10743,7 +10776,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         }
       };
       $("#pkVol").onchange = (e) => {
-        if (S.scope === "pat" && volUndo) toast("VOL " + e.target.value + ": every note of " + scopeWhere());
+        if (scopeOn() && volUndo) toast("VOL " + e.target.value + ": every note of " + scopeWhere());
         volUndo = false;
       };
       // PEDAL row and its switches (remembered on this device)
@@ -12374,6 +12407,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       }
       new MutationObserver(() => varAway && VAR.low !== "pats" && varMirror()).observe($("#pk"), { attributes: true });
       function varKeysBack() {
+        closeSheet();
+        $("#sqWrap").appendChild($("#sheet")); // SCALE / ARP sheet: back over the tracker's squares
         V_KEYIDS.forEach((id) => $("#pk").insertBefore($("#" + id), $("#pkRib")));
         $("#vKeys").hidden = true;
       }
@@ -12382,9 +12417,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         const keys = mode !== "pats" && !!varAway;
         $("#vLow").hidden = keys;
         if (keys) {
+          closeSheet();
+          $("#vCtx").appendChild($("#sheet")); // SCALE / ARP sheet: over the channels, above the keys
           V_KEYIDS.forEach((id) => $("#vKeys").appendChild($("#" + id)));
           $("#vKeys").hidden = false;
           S.col = mode === "pads" ? (VAR.sel === 6 ? 6 : 0) : varMelodic();
+          $("#vKeys").style.setProperty("--ccrgb", PC(S.col)); // the pads wear the colour of the channel they play (as its card does)
           varMirror();
           pkLabels();
           buildPKbd();
@@ -12398,12 +12436,31 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         const next = { pats: "piano", piano: "pads", pads: "pats" }[VAR.low];
         varKeys(next);
       };
-      // tap a channel's name to play that one (the drums and perc go to the pads)
-      $("#vStrips").addEventListener("click", (e) => {
-        const b = e.target.closest(".vs > b");
-        if (!b) return;
-        VAR.sel = +b.parentElement.dataset.c;
-        if (VAR.low !== "pats") varKeys(VAR.sel === 0 || VAR.sel === 6 ? "pads" : "piano");
+      // touch a channel anywhere (its knobs, buttons and name too, which still do their own job) to play that one: the
+      // piano or pads take its instrument (the drums and perc go to the pads). It runs on pointerup, not click, because the
+      // VARIATION knob rebuilds the strips on release; a scroll ends in pointercancel, so scrolling never selects.
+      let vSheetTap = -1; // the pointer whose touch only closed the sheet
+      $("#vCtx").addEventListener(
+        "pointerdown",
+        (e) => {
+          if ($("#sheet").hidden || e.target.closest("#sheet")) return;
+          closeSheet();
+          vSheetTap = e.pointerId;
+          e.stopPropagation();
+          e.preventDefault();
+        },
+        true,
+      );
+      $("#vStrips").addEventListener("pointerup", (e) => {
+        if (vSheetTap === e.pointerId) return void (vSheetTap = -1);
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        const s = e.target.closest(".vs");
+        if (!s) return;
+        const c = +s.dataset.c,
+          want = c === 0 || c === 6 ? "pads" : "piano";
+        if (c === VAR.sel && (VAR.low === "pats" || VAR.low === want)) return;
+        VAR.sel = c;
+        if (VAR.low !== "pats") varKeys(want);
       });
       function varEnter() {
         if (varAway) return;
@@ -13007,7 +13064,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "Eight channels with fixed parts: **drums, bass, chords, lead, arp, pad, perc** (shakers, cowbell...) and **counter** (a slower second melody). On each one: the instrument (the drum kit on drums and perc), a **VARIATION** knob (drag it up or down, or tap it: each number is another version of that part only, 0 is the seed's own), a **VOLUME** knob and **M**ute / **S**olo.",
               "**⚄** (left of the seed) draws a new seed and shuffles the **VARS** knobs, so it is a whole new song; **▶** (right) plays and stops.",
               "The squares are the song's patterns in order (A verse, B chorus, C bridge, IN intro, END ending). **▶** plays them in order; a tap on one **loops it** from the next beat or bar, like LIVE, and a second tap stops it.",
-              "**♫** (bottom row) rotates the lower part: patterns and style, then a **piano** and then **drum pads**, to play along. The piano plays the channel you chose by tapping its name (the drums and perc go to the pads); nothing you play is written into the song. **VARS** (at the bottom) swaps the channels (**CHANNELS** brings them back) for the generator's knobs: **density** (how many notes), **swing**, **fills** (drum fills into the next part), **chords** (how often they change), **range** (how far melodies travel), **repeat** (low: repeated parts come back changed), **length** (8 to 12 patterns) and **master** volume. Tap VARS again to see the channels.",
+              "**♫** (bottom row) rotates the lower part: patterns and style, then a **piano** and then **drum pads**, to play along. The piano plays the channel you chose by touching it anywhere (the drums and perc go to the pads); nothing you play is written into the song. **VARS** (at the bottom) swaps the channels (**CHANNELS** brings them back) for the generator's knobs: **density** (how many notes), **swing**, **fills** (drum fills into the next part), **chords** (how often they change), **range** (how far melodies travel), **repeat** (low: repeated parts come back changed), **length** (8 to 12 patterns) and **master** volume. Tap VARS again to see the channels.",
               "**LIVE FX** swaps them for the effect pads, the same way. The **mixer** works on the Variator's channels while you go there and back.",
               "**EXPORT**: add the patterns to the end of the song you were writing, open the result as the song you edit, or save it in Files with a name. Then it is a normal song: every note can be changed.",
             ],
@@ -13016,7 +13073,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "Ocho canales con partes fijas: **batería, bajo, acordes, melodía, arpegio, pad, perc** (shakers, cencerro...) y **counter** (una segunda melodía más lenta). En cada uno: el instrumento (el kit en batería y perc), una rueda **VARIATION** (arrástrala arriba o abajo, o tócala: cada número es otra versión de esa parte sola, 0 es la de la semilla), una rueda **VOLUME** y **M**ute / **S**olo.",
               "**⚄** (a la izquierda de la semilla) saca otra semilla y mezcla las ruedas de **VARS**: una canción nueva entera; **▶** (a la derecha) toca y para.",
               "Los cuadrados son los patrones de la canción en orden (A estrofa, B estribillo, C puente, IN intro, END final). **▶** los toca en orden; un toque en uno **lo repite en bucle** desde el siguiente pulso o compás, como en LIVE, y otro toque lo para.",
-              "**♫** (fila de abajo) rota la parte de abajo: patrones y estilo, luego un **piano** y luego **pads de batería**, para tocar encima. El piano toca el canal que elijas tocando su nombre (la batería y perc van a los pads); lo que toques no se escribe en la canción. **VARS** (abajo) cambia los canales (**CHANNELS** los devuelve) por las ruedas del generador: **density** (cuántas notas), **swing**, **fills** (redobles hacia la parte siguiente), **chords** (cada cuánto cambian los acordes), **range** (cuánto se mueven las melodías), **repeat** (bajo: las partes repetidas vuelven cambiadas), **length** (de 8 a 12 patrones) y el volumen **master**. Otro toque en VARS vuelve a los canales.",
+              "**♫** (fila de abajo) rota la parte de abajo: patrones y estilo, luego un **piano** y luego **pads de batería**, para tocar encima. El piano toca el canal que elijas tocándolo en cualquier parte (la batería y perc van a los pads); lo que toques no se escribe en la canción. **VARS** (abajo) cambia los canales (**CHANNELS** los devuelve) por las ruedas del generador: **density** (cuántas notas), **swing**, **fills** (redobles hacia la parte siguiente), **chords** (cada cuánto cambian los acordes), **range** (cuánto se mueven las melodías), **repeat** (bajo: las partes repetidas vuelven cambiadas), **length** (de 8 a 12 patrones) y el volumen **master**. Otro toque en VARS vuelve a los canales.",
               "**LIVE FX** los cambia por los pads de efectos, igual. El **mezclador** trabaja sobre los canales del Variator si vas y vuelves.",
               "**EXPORT**: añade los patrones al final de la canción que estabas escribiendo, abre el resultado como la canción que editas, o guárdalo en Files con un nombre. Después es una canción normal: se puede cambiar cada nota.",
             ],
@@ -13041,6 +13098,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "## OPTIONS",
               "- **Channels 4 / 8 / 16**: how many channels this song has (16 is the most). With more than four the CH buttons slide sideways (on a computer: drag them with the mouse, turn the mouse wheel over them, or use the ← → arrow keys). Choosing fewer asks before removing channels that have notes.",
               "- **Note names**: letters (**A B C**) or solfège (**Do Re Mi**). The choice is shared with TUNE.Pocket and SING.Pocket.",
+              "- **Install**: adds TRACK.Pocket to your home screen or apps, with its own window and working offline. The **INSTALL** button (here and in the welcome note) says **INSTALLED** when you already run it as an app; on iPhone it shows the Safari ▸ Share ▸ Add to Home Screen steps.",
               "## HELP",
               "- **Help**: the HELP button at the bottom (or the TRACK. logo) opens this manual again.",
               "The current work is also autosaved when you leave the page. Add the page to your home screen to use it like an app.",
@@ -13060,6 +13118,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               "## OPTIONS",
               "- **Channels 4 / 8 / 16**: cuántos canales tiene esta canción (16 como máximo). Con más de cuatro, los botones CH se deslizan hacia los lados (en ordenador: arrástralos con el ratón, gira la rueda sobre ellos o usa las flechas ← →). Si eliges menos, pregunta antes de quitar canales que tengan notas.",
               "- **Note names**: letras (**A B C**) o solfeo (**Do Re Mi**). La elección se comparte con TUNE.Pocket y SING.Pocket.",
+              "- **Install**: añade TRACK.Pocket a tu pantalla de inicio o a tus aplicaciones, con su propia ventana y funcionando sin conexión. El botón **INSTALL** (aquí y en la nota de bienvenida) dice **INSTALLED** si ya la usas como app; en iPhone muestra los pasos Safari ▸ Compartir ▸ Añadir a pantalla de inicio.",
               "## HELP",
               "- **Help**: el botón HELP de abajo (o el logo TRACK.) vuelve a abrir este manual.",
               "El trabajo actual también se guarda solo al salir de la página. Añade la página a la pantalla de inicio para usarla como una app.",
@@ -13090,8 +13149,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
             b: {
               en: [
                 "## Version 1.2.0",
-                "- **Install it:** the app is now a web app (PWA). Add it to the Home Screen (iPhone: Safari ▸ Share; Android and desktop: Chrome ▸ Install app) and it opens like an app and works offline. The Android APK is retired.",
-                "- **Variator:** new styles **Lo-Fi**, **Synthwave** and **Dungeon Synth**; the dice also shuffles the VARS knobs; the **♫** button rotates the lower part between patterns, a piano and drum pads (what you play there is not written into the song).",
+                "- **Install it:** the app is now a web app (PWA). Add it to the Home Screen (iPhone: Safari ▸ Share; Android and desktop: Chrome ▸ Install app) and it opens like an app and works offline. The welcome note and **OPTIONS** have an **INSTALL** button that knows when the app is already installed. The Android APK is retired.",
+                "- **Variator:** new styles **Lo-Fi**, **Synthwave** and **Dungeon Synth**; the dice also shuffles the VARS knobs; the **♫** button rotates the lower part between patterns, a piano and drum pads (what you play there is not written into the song); touch a channel anywhere to play it, and the dice and play icons are bare icons.",
                 "- **Autosave** no longer interrupts playback (it waits until you stop).",
                 "- **MIDI:** the DEVICE view draws your controller (Akai MPK, Launchkey, Synido, Casio, nanoPAD) and lights its keys, pads, knobs and joystick as you play; TEST counts different keys, not presses; the same five buttons (ASSIGN, CLEAR, TEST, DEVICE, SOUND) in all three apps, and SOUND turns the app's own sound off for keyboards with speakers.",
                 "- **Safer and sturdier:** files are checked before they open and names are cleaned (a crafted file could run code), and a damaged setting no longer stops the app from starting.",
@@ -13099,8 +13158,8 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
               ],
               es: [
                 "## Versión 1.2.0",
-                "- **Instálala:** la app ahora es una web app (PWA). Añádela a la pantalla de inicio (iPhone: Safari ▸ Compartir; Android y escritorio: Chrome ▸ Instalar app) y se abre como una app y funciona sin conexión. El APK de Android se retira.",
-                "- **Variator:** estilos nuevos **Lo-Fi**, **Synthwave** y **Dungeon Synth**; el dado también mezcla los potes de VARS; el botón **♫** rota la parte de abajo entre patrones, un piano y pads de batería (lo que toques ahí no se escribe en la canción).",
+                "- **Instálala:** la app ahora es una web app (PWA). Añádela a la pantalla de inicio (iPhone: Safari ▸ Compartir; Android y escritorio: Chrome ▸ Instalar app) y se abre como una app y funciona sin conexión. La nota de bienvenida y **OPTIONS** tienen un botón **INSTALL** que sabe si la app ya está instalada. El APK de Android se retira.",
+                "- **Variator:** estilos nuevos **Lo-Fi**, **Synthwave** y **Dungeon Synth**; el dado también mezcla los potes de VARS; el botón **♫** rota la parte de abajo entre patrones, un piano y pads de batería (lo que toques ahí no se escribe en la canción); toca un canal en cualquier parte para tocarlo, y el dado y el play son iconos sin botón.",
                 "- El **autoguardado** ya no interrumpe la reproducción (espera a que pares).",
                 "- **MIDI:** la vista DEVICE dibuja tu controlador (Akai MPK, Launchkey, Synido, Casio, nanoPAD) e ilumina sus teclas, pads, potes y joystick al tocar; TEST cuenta teclas distintas, no pulsaciones; los mismos cinco botones (ASSIGN, CLEAR, TEST, DEVICE, SOUND) en las tres apps, y SOUND apaga el sonido de la app para teclados con altavoces.",
                 "- **Más segura y robusta:** los archivos se comprueban antes de abrirse y los nombres se limpian (un archivo manipulado podía ejecutar código), y un ajuste dañado ya no impide que la app arranque.",
@@ -13118,6 +13177,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           wb: "Tap the **TRACK.** logo (top left), or **HELP** in the Files screen, at any time to open the help manual: it explains every screen and option.",
           wopen: "Open the manual",
           wok: "Got it",
+          winst: "Install the app",
         },
         es: {
           title: "Ayuda",
@@ -13127,6 +13187,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           wb: "Toca el logo **TRACK.** (arriba a la izquierda), o **HELP** en la pantalla de archivos, en cualquier momento para abrir el manual de ayuda: explica cada pantalla y cada opción.",
           wopen: "Abrir el manual",
           wok: "Entendido",
+          winst: "Instalar la app",
         },
       };
 
@@ -13783,12 +13844,89 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           el && $("#hBody").scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
         }
       });
+      // ======================================================================
+      // INSTALL (OPTIONS and the first-visit note): the browser's own install dialog where there is one (Chrome, Edge,
+      // Android), the Share-menu steps on iPhone, and "installed" when it already runs as an app. The same block is in the
+      // three apps; the head script keeps the browser's install event (it can fire before this point).
+      // ======================================================================
+      const PWA = { ev: window.pocketInstall || null, done: false };
+      const pwaApp = () =>
+        matchMedia("(display-mode: standalone), (display-mode: minimal-ui), (display-mode: window-controls-overlay)").matches ||
+        navigator.standalone === true;
+      const pwaIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const pwaState = () => (PWA.done || pwaApp() ? "done" : PWA.ev ? "prompt" : pwaIOS() ? "ios" : "menu");
+      const PWA_T = {
+        done: {
+          b: "INSTALLED ✓",
+          h: "Installed: it opens in its own window and works offline.",
+          t: "Already installed: open it from your home screen or apps",
+        },
+        prompt: {
+          b: "INSTALL",
+          h: "Adds it to your home screen or apps: its own window, no browser bars, and it works offline.",
+          t: "Install cancelled",
+        },
+        ios: {
+          b: "HOW TO INSTALL",
+          h: "iPhone and iPad: in Safari tap Share, then Add to Home Screen. An installed app also keeps its saved data longer.",
+          t: "Safari ▸ Share ▸ Add to Home Screen",
+          w: ["On iPhone: Safari ▸ Share ▸ Add to Home Screen.", "En iPhone: Safari ▸ Compartir ▸ Añadir a pantalla de inicio."],
+        },
+        menu: {
+          b: "HOW TO INSTALL",
+          h: "Use your browser's menu: Install app (Chrome, Edge, Android) or Add to Home Screen. Firefox and Safari on a computer cannot install it. If you already installed it, open it from there.",
+          t: "Use your browser's menu: Install app / Add to Home Screen",
+        },
+      };
+      const pwaWLabel = () => HELPUI.en.winst + " · " + HELPUI.es.winst;
+      function pwaFace() {
+        const st = pwaState(),
+          t = PWA_T[st];
+        $("#instBtn").textContent = t.b;
+        $("#instBtn").disabled = st === "done";
+        $("#instBtn").classList.toggle("on", st === "prompt");
+        $("#instHint").textContent = t.h;
+        $("#wInst").textContent = pwaWLabel();
+        $("#wInst").hidden = st === "done" || st === "menu"; // the first-visit note only offers what can be done from it
+        if (st !== "ios") $("#wInstHint").hidden = true;
+      }
+      async function pwaRun(fromWelcome) {
+        const st = pwaState();
+        if (st === "prompt") {
+          const ev = PWA.ev;
+          PWA.ev = null; // the browser's event works once
+          try {
+            ev.prompt();
+            if ((await ev.userChoice).outcome === "accepted") PWA.done = true;
+            else toast(PWA_T.prompt.t);
+          } catch {}
+          pwaFace();
+        } else if (st === "ios" && fromWelcome) {
+          $("#wInstHint").textContent = PWA_T.ios.w.join("\n"); // the toast would sit under the note
+          $("#wInstHint").hidden = false;
+        } else toast(PWA_T[st].t);
+      }
+      $("#instBtn").onclick = () => pwaRun(false);
+      $("#wInst").onclick = () => pwaRun(true);
+      addEventListener("pocketinstall", () => {
+        PWA.ev = window.pocketInstall;
+        pwaFace();
+      });
+      addEventListener("appinstalled", () => {
+        PWA.done = true;
+        PWA.ev = null;
+        pwaFace();
+        toast("Installed: open it from your home screen or apps");
+      });
+      matchMedia("(display-mode: standalone)").addEventListener("change", pwaFace);
+      pwaFace();
       function welcomeShow() {
         $("#wEn").innerHTML = hfmt(HELPUI.en.wb);
         $("#wEs").innerHTML = hfmt(HELPUI.es.wb);
         $("#wOpen").textContent = HELPUI.en.wopen + " · " + HELPUI.es.wopen;
         $("#wOk").textContent = HELPUI.en.wok + " · " + HELPUI.es.wok;
         $("#welcome").hidden = false;
+        pwaFace();
       }
       function welcomeDone() {
         $("#welcome").hidden = true;
