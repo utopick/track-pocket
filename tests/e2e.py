@@ -146,15 +146,16 @@ class Track(Page):
         self.js("syCamScan(false)"); self.wait(0.2)  # no pairing running: the camera stays closed
         self.assertTrue(self.js("return !SYM.cam && document.querySelector('#syCam').hidden"))
         # a pretend camera that shows a code: each reader sees it in the camera loop, and STOP closes the camera
-        self.js("""const c = document.createElement('canvas'), g = c.getContext('2d'), Q = qrMake('https://x.test/#j=abc'), k = 600 / (Q.length + 8);
-          c.width = c.height = 600; g.fillStyle = '#fff'; g.fillRect(0, 0, 600, 600); g.fillStyle = '#000';
-          Q.forEach((row, r) => row.forEach((on, x) => on && g.fillRect((x + 4) * k, (r + 4) * k, k + 0.5, k + 0.5)));
+        self.js("""const c = document.createElement('canvas'), g = c.getContext('2d'), Q = qrMake('https://x.test/#j=abc'), k = 500 / (Q.length + 8);
+          c.width = c.height = 1000; g.fillStyle = '#fff'; g.fillRect(0, 0, 1000, 1000); g.fillStyle = '#000';  // the code in the middle: only that part is read
+          Q.forEach((row, r) => row.forEach((on, x) => on && g.fillRect(250 + (x + 4) * k, 250 + (r + 4) * k, k + 0.5, k + 0.5)));
           setInterval(() => g.clearRect(0, 0, 1, 1), 50);
           navigator.mediaDevices.getUserMedia = async () => c.captureStream(15);""")
         for lib, name in ((False, "Own reader"), (True, "jsQR")):
             with self.subTest(name):
                 self.js("SYNC.qa = { me: 1 }; SYNC.talk = { qr: true }; syFace(); syCamScan(arguments[0])", lib); self.wait(1.5)
                 self.assertFalse(self.js("return document.querySelector('#syCam').hidden"))
+                self.assertTrue(self.js("const b = document.querySelector('#syHQBody'), r = document.querySelector('#syCam').getBoundingClientRect(); return r.width > 199 && Math.abs(r.width - r.height) < 2 && b.scrollHeight <= b.clientHeight"), "the camera view needs scrolling")
                 self.assertTrue(self.js("return syLog.some(l => l.includes(arguments[0] + ' read a code'))", name), "the camera loop read nothing")
                 self.js("SYNC.qa = null; syStop(true)")
                 self.assertTrue(self.js("return !SYM.cam && document.querySelector('#syCam').hidden"))
