@@ -199,15 +199,36 @@ class Track(Page):
         on(1); self.until("return +document.querySelector('#master').value === 0.33 && song.mix[S.col].vol === 0.21", "the knob values on a guest")
         after = self.js("return [document.querySelector('#mstK').innerHTML, document.querySelector('#mixRows .kn[data-k=vol]').innerHTML]")
         self.assertNotEqual(before[0], after[0], "the master knob was not drawn again"); self.assertNotEqual(before[1], after[1], "the channel knob was not drawn again")
-        # the Variator on one device, then another screen: the song keeps playing on all
-        self.js("showTab('var'); togglePlay()")
+        # one device makes the sound: the host at first, then the one that takes it
+        on(0); self.assertFalse(self.js("return SYNC.silent")); on(2); self.assertTrue(self.js("return SYNC.silent"))
+        on(1); self.assertTrue(self.js("return SYNC.silent")); self.js("document.querySelector('#sySound').click()")
+        on(0); self.until("return SYNC.silent && /sound/.test(document.querySelectorAll('#syList div')[2].textContent)", "the host went silent and lists who sounds")
+        on(2); self.until("return SYNC.silent && SYNC.who.snd === 1", "the other guest stays silent and knows who sounds")
+        # the Variator opened on a guest: every device is in it, with the same seed and patterns, and no piano gets locked to its key
+        on(0); name0, scale0 = self.js("return [song.name, S.scaleT]")
+        on(1); self.js("VAR.seed = 777; showTab('var')"); sig = "return varAway && VAR.seed === %d && JSON.stringify([song.order, song.patterns.map(p => p.len), song.bpm, song.chInst])"
+        same = lambda seed, want, what: self.until("return (() => { %s })() === arguments[0]".replace("arguments[0]", __import__("json").dumps(want)) % (sig % seed), what)
+        want = self.js(sig % 777)
+        for i in (0, 2):
+            on(i); same(777, want, "the Variator on device %d" % i)
+            self.assertEqual(self.js("return S.scaleT"), scale0, "the Variator's key locked the piano")
+        on(0); self.js("showTab('var')"); self.assertEqual(self.js("return +document.querySelector('#vSeed').value"), 777)
+        self.js("VAR.seed = 778; varRegen()"); want = self.js(sig % 778)
+        on(1); same(778, want, "the new seed on the guest that opened it")
+        self.assertEqual(self.js("return +document.querySelector('#vSeed').value"), 778, "the Variator screen was not drawn again")
+        # another screen: the song keeps playing on all
+        self.js("togglePlay()")
         self.until("return S.playing", "play on the guest"); on(0); self.until("return S.playing", "play on the host")
         on(1); self.js("showTab('smp')"); self.wait(0.8)
-        self.assertTrue(self.js("return S.playing && !!varAway"), "leaving the Variator stopped the song")
-        on(0); self.assertTrue(self.js("return S.playing"))
-        # a guest leaves: its own song comes back there, and the others stay
-        on(1); self.js("syLeave()"); self.assertTrue(self.js("return !varAway && !syN()"))
-        on(0); self.until("return syN() === 1 && document.querySelectorAll('#syList div').length === 3", "the host's list after a guest left")
+        self.assertTrue(self.js("return S.playing && !!varAway"), "leaving the Variator screen stopped the song")
+        on(0); self.assertTrue(self.js("return S.playing")); self.js("togglePlay()"); self.until("return !S.playing", "stop")
+        # BACK TO OUR SONG on one device ends the Variator on all
+        self.js("varLeave(); showTab('trk')")
+        for i in (1, 2):
+            on(i); self.until("return !varAway && song.name === arguments[0]" .replace("arguments[0]", __import__("json").dumps(name0)), "the song came back on device %d" % i)
+        # a guest opens the Variator again and leaves the sync on another screen: its own song comes back there, and the others stay
+        on(1); self.js("showTab('var'); showTab('file'); syLeave()"); self.assertTrue(self.js("return !varAway && !syN()"))
+        on(0); self.until("return syN() === 1 && document.querySelectorAll('#syList div').length === 3 && !SYNC.silent", "the host's list after the guest with the sound left, and the sound back on the host")
         for i in range(3):
             on(i); self.assertEqual(self.errors(), [])
 
