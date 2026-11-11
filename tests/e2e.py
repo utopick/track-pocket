@@ -139,10 +139,10 @@ class Track(Page):
           return bad""")
         self.assertEqual(bad, [])
 
-    def test_scan_buttons_show_only_for_the_host(self):
+    def test_camera_reads_a_code_in_the_pairing_dialog(self):
         self.open()
         if not self.js("return !!document.querySelector('#syScanA')"): self.skipTest("no SCAN in this build")
-        self.assertTrue(self.js("syFace(); return document.querySelector('#syScanBar').hidden"))
+        self.assertTrue(self.js("syFace(); return document.querySelector('#syHQ').hidden"))
         self.js("syCamScan(false)"); self.wait(0.2)  # no pairing running: the camera stays closed
         self.assertTrue(self.js("return !SYM.cam && document.querySelector('#syCam').hidden"))
         # a pretend camera that shows a code: each reader sees it in the camera loop, and STOP closes the camera
@@ -153,13 +153,63 @@ class Track(Page):
           navigator.mediaDevices.getUserMedia = async () => c.captureStream(15);""")
         for lib, name in ((False, "Own reader"), (True, "jsQR")):
             with self.subTest(name):
-                self.js("SYNC.qa = { me: 1 }; SYNC.talk = { qr: true }; syFace(); syCamScan(arguments[0])", lib); self.wait(1.5)
+                self.js("syDlg({ scan: 'a', txt: 'x' }); syCamScan(arguments[0])", lib); self.wait(1.5)
                 self.assertFalse(self.js("return document.querySelector('#syCam').hidden"))
                 self.assertTrue(self.js("const b = document.querySelector('#syHQBody'), r = document.querySelector('#syCam').getBoundingClientRect(); return r.width > 199 && Math.abs(r.width - r.height) < 2 && b.scrollHeight <= b.clientHeight"), "the camera view needs scrolling")
                 self.assertTrue(self.js("return syLog.some(l => l.includes(arguments[0] + ' read a code'))", name), "the camera loop read nothing")
-                self.js("SYNC.qa = null; syStop(true)")
-                self.assertTrue(self.js("return !SYM.cam && document.querySelector('#syCam').hidden"))
+                self.js("syStop(true)")
+                self.assertTrue(self.js("return !SYM.cam && document.querySelector('#syHQ').hidden"))
         self.assertEqual(self.errors(), [])
+
+    def until(self, code, what, secs=12):
+        end = __import__("time").time() + secs
+        while __import__("time").time() < end:
+            v = self.js(code)
+            if v: return v
+            self.wait(0.15)
+        self.fail("never happened: " + what + " | log: " + str(self.js("return syLog.slice(-6)")))
+
+    def test_three_devices_sync(self):
+        """Three tabs pair through the dialog (the codes are handed over in place of the camera): more than one guest, the list, knobs, the Variator."""
+        self.open()
+        if not self.js("return typeof syDlg === 'function'"): self.skipTest("no QR sync in this build")
+        tabs = [self.d.current_window_handle]
+        for _ in range(2):
+            self.d.switch_to.new_window("tab"); self.open(); tabs.append(self.d.current_window_handle)
+        on = lambda i: self.d.switch_to.window(tabs[i])
+        for g in (1, 2):
+            on(0); self.js("syHost()")
+            inv = self.until("return SYNC.ui && SYNC.ui.qr", "the host's code")
+            self.assertFalse(self.js("return document.querySelector('#syHQ').hidden || document.querySelector('#syScanBar').hidden"))
+            on(g); self.js("syJoinRead(arguments[0].split('#j=')[1])", inv)
+            ans = self.until("return SYNC.ui && SYNC.ui.qr", "the guest's answer code")
+            on(0); self.assertTrue(self.js("return syAnswerIn(arguments[0].split('#a=')[1])", ans))
+            num = self.until("return SYNC.ui && SYNC.ui.chk && SYNC.ui.num", "the check on the host")
+            self.assertFalse(self.js("return document.querySelector('#syChkBar').hidden"))
+            on(g); self.assertEqual(self.until("return SYNC.ui && SYNC.ui.num", "the check on the guest"), num)
+            self.assertFalse(self.js("return document.querySelector('#syHQ').hidden"), "the guest waits in the dialog")
+            on(0); self.js("document.querySelector('#syYes').click()")
+            self.until("return syN() === %d && document.querySelector('#syHQ').hidden" % g, "guest %d confirmed, the earlier ones still in" % g)
+            on(g); self.until("return syN() === 1 && document.querySelector('#syHQ').hidden", "the guest is in and its dialog closed")
+        on(0); self.assertEqual(self.js("return document.querySelectorAll('#syList div').length"), 4)  # the title and three devices
+        on(1); self.until("return SYNC.who && SYNC.who.l.length === 3 && document.querySelectorAll('#syList div').length === 4", "the guest's list of devices")
+        # knobs: the value and its drawing follow on the other devices
+        self.js("showTab('mix')"); before = self.js("return [document.querySelector('#mstK').innerHTML, document.querySelector('#mixRows .kn[data-k=vol]').innerHTML]")
+        on(0); self.js("document.querySelector('#master').value = 0.33; mixSet(S.col, 'vol', 0.21)")
+        on(1); self.until("return +document.querySelector('#master').value === 0.33 && song.mix[S.col].vol === 0.21", "the knob values on a guest")
+        after = self.js("return [document.querySelector('#mstK').innerHTML, document.querySelector('#mixRows .kn[data-k=vol]').innerHTML]")
+        self.assertNotEqual(before[0], after[0], "the master knob was not drawn again"); self.assertNotEqual(before[1], after[1], "the channel knob was not drawn again")
+        # the Variator on one device, then another screen: the song keeps playing on all
+        self.js("showTab('var'); togglePlay()")
+        self.until("return S.playing", "play on the guest"); on(0); self.until("return S.playing", "play on the host")
+        on(1); self.js("showTab('smp')"); self.wait(0.8)
+        self.assertTrue(self.js("return S.playing && !!varAway"), "leaving the Variator stopped the song")
+        on(0); self.assertTrue(self.js("return S.playing"))
+        # a guest leaves: its own song comes back there, and the others stay
+        on(1); self.js("syLeave()"); self.assertTrue(self.js("return !varAway && !syN()"))
+        on(0); self.until("return syN() === 1 && document.querySelectorAll('#syList div').length === 3", "the host's list after a guest left")
+        for i in range(3):
+            on(i); self.assertEqual(self.errors(), [])
 
 
 @unittest.skipUnless(APP == "tune", "TUNE only")
