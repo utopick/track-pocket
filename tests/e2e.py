@@ -115,6 +115,51 @@ class Track(Page):
                 self.reopen()
                 self.assertTrue(self.js("return song.patterns.length > 0 && !!document.querySelector('#grid, #pk')"), "does not boot")
 
+    def test_qr_readers_read_what_the_app_draws(self):
+        """Both readers behind SCAN (ours and jsQR) read the app's own codes from a turned, tilted picture, and nothing from noise."""
+        self.open()
+        if not self.js("return typeof qrRead === 'function'"): self.skipTest("no QR reader in this build")
+        bad = self.js("""const bad = [], shot = (Q, deg, tilt) => {
+            const W = 960, H = 720, N = Q.length, size = 500 / (N + 8), c = Math.cos(deg * Math.PI / 180), s = Math.sin(deg * Math.PI / 180), data = new Uint8ClampedArray(W * H * 4);
+            for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+              let X = x - W / 2, Y = y - H / 2; const w = 1 + tilt * (X + 0.6 * Y); X /= w; Y /= w;
+              const u = (c * X + s * Y) / size + N / 2, v = (-s * X + c * Y) / size + N / 2, k = (y * W + x) * 4;
+              const page = u >= -4 && v >= -4 && u < N + 4 && v < N + 4, on = u >= 0 && v >= 0 && u < N && v < N && Q[Math.floor(v)][Math.floor(u)];
+              data[k] = data[k + 1] = data[k + 2] = (page ? (on ? 40 : 215) : 90 + 60 * Math.sin(x / 37) * Math.cos(y / 23)) * (0.75 + 0.25 * x / W); data[k + 3] = 255;
+            }
+            return { data, width: W, height: H };
+          };
+          for (const t of ['https://x.test/', 'https://x.test/#a=' + 'Ab3-_9'.repeat(28), 'ñ€' + 'Z9'.repeat(200)]) for (const [deg, tilt] of [[0, 0], [-23, 0.0001], [187, 0.0001]]) {
+            const p = shot(qrMake(t), deg, tilt);
+            if (qrRead(p) !== t) bad.push('own ' + t.length + ' ' + deg);
+            if ((jsQR(p.data, p.width, p.height) || {}).data !== t) bad.push('jsQR ' + t.length + ' ' + deg);
+          }
+          const noise = { data: Uint8ClampedArray.from({ length: 320 * 240 * 4 }, (_, i) => (i * 2654435761 >>> 24)), width: 320, height: 240 };
+          if (qrRead(noise) !== null) bad.push('own read noise');
+          return bad""")
+        self.assertEqual(bad, [])
+
+    def test_scan_buttons_show_only_for_the_host(self):
+        self.open()
+        if not self.js("return !!document.querySelector('#syScanA')"): self.skipTest("no SCAN in this build")
+        self.assertTrue(self.js("syFace(); return document.querySelector('#syScanBar').hidden"))
+        self.js("syCamScan(false)"); self.wait(0.2)  # no pairing running: the camera stays closed
+        self.assertTrue(self.js("return !SYM.cam && document.querySelector('#syCam').hidden"))
+        # a pretend camera that shows a code: each reader sees it in the camera loop, and STOP closes the camera
+        self.js("""const c = document.createElement('canvas'), g = c.getContext('2d'), Q = qrMake('https://x.test/#j=abc'), k = 600 / (Q.length + 8);
+          c.width = c.height = 600; g.fillStyle = '#fff'; g.fillRect(0, 0, 600, 600); g.fillStyle = '#000';
+          Q.forEach((row, r) => row.forEach((on, x) => on && g.fillRect((x + 4) * k, (r + 4) * k, k + 0.5, k + 0.5)));
+          setInterval(() => g.clearRect(0, 0, 1, 1), 50);
+          navigator.mediaDevices.getUserMedia = async () => c.captureStream(15);""")
+        for lib, name in ((False, "Own reader"), (True, "jsQR")):
+            with self.subTest(name):
+                self.js("SYNC.qa = { me: 1 }; SYNC.talk = { qr: true }; syFace(); syCamScan(arguments[0])", lib); self.wait(1.5)
+                self.assertFalse(self.js("return document.querySelector('#syCam').hidden"))
+                self.assertTrue(self.js("return syLog.some(l => l.includes(arguments[0] + ' read a code'))", name), "the camera loop read nothing")
+                self.js("SYNC.qa = null; syStop(true)")
+                self.assertTrue(self.js("return !SYM.cam && document.querySelector('#syCam').hidden"))
+        self.assertEqual(self.errors(), [])
+
 
 @unittest.skipUnless(APP == "tune", "TUNE only")
 class Tune(Page):
