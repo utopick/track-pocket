@@ -14753,6 +14753,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     }
     // a control nobody assigned, doing what its model's starting assignment says
     function fallback(from, key, cc, on, value) {
+      if (MI.holdDefaults && MI.holdDefaults()) return false; // the app is using the pads and keys for something on screen
       const e = effective(from, profOf(from), controlOf(from, key)), action = e && e[0] && MI.actions().find((a) => a.id === e[0]);
       if (!action) return false;
       run(action, from + "/" + key, cc, on, value);
@@ -14926,7 +14927,9 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       run(action, from + "/" + key, cc, on, value);
       return true;
     }
-    return { open, close, observe, route, fallback, defaultsOff };
+    // is this note-on from one of the controller's pads (its pad channel) and not from a key?
+    const isPad = (from, ch) => { const p = profOf(from); return !!p.pads && ch === (p.padCh ?? 9); };
+    return { open, close, observe, route, fallback, defaultsOff, isPad };
   }
   window.createMidiPanel = createMidiPanel;
   window.pocketMidiHelpers = { padIndex, knobRank, guess };
@@ -17466,6 +17469,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
           return MI.cc && MI.cc(a, b, ch);
         }
         if (cc) return MI.cc && MI.cc(a, b, ch);
+        MI.pad = midiPanel.isPad(from, ch); // an app can treat the pads and the keys of a controller differently
         if (on) {
           if (MI.susd.delete(a) && MI.off) MI.off(a, ch); // pressed again under the pedal: the old one ends first
           MI.held.set(a, b);
@@ -17749,7 +17753,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
         { id: "oct-", group: "Transport", name: "OCTAVE −", kind: "tap", run: () => octMove(-1) },
         { id: "oct+", group: "Transport", name: "OCTAVE +", kind: "tap", run: () => octMove(1) },
         { id: "bpm", group: "Knobs", name: "BPM", kind: "knob", run: (v) => midiBpm(40 + v * 200) },
-        { id: "master", group: "Knobs", name: "MASTER VOLUME", kind: "knob", run: (v) => (($("#master").value = v), applyMix()) },
+        { id: "master", group: "Knobs", name: "MASTER VOLUME", kind: "knob", run: (v) => (($("#master").value = v), applyMix(), midiMixFace()) },
         ...song.mix.map((m, c) => ({ id: "vol" + c, group: "Knobs", name: "VOLUME CH" + (c + 1), kind: "knob", run: (v) => midiVol(c, v) })),
         ...FXS.map((f) => ({ id: "fx:" + f.id, group: "Live FX", name: f.n.toUpperCase(), kind: "hold", run: (on) => midiFx(f.id, on) })),
         ...Array.from({ length: 16 }, (_, i) => ({ id: "live" + i, group: "Live loops", name: "PATTERN " + (song.patterns[i] ? letter(i) : i + 1), kind: "tap", run: () => song.patterns[i] && midiLive(i) })),
@@ -17774,12 +17778,27 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
         $("#bpm").value = song.bpm;
         applyMix();
       };
+      // the knobs on screen follow a MIDI knob, a few times a second: the mixer (master and channels) and the Variator (master and channels)
       let midiMixT = 0;
+      function midiMixFace() {
+        if (midiMixT) return;
+        midiMixT = setTimeout(() => {
+          midiMixT = 0;
+          if ($("#mix").classList.contains("show")) renderMix();
+          if (!$("#var").classList.contains("show")) return;
+          const m = +$("#master").value;
+          $$('#vCtl [data-vc="master"]').forEach((el) => (el.innerHTML = knobSvg(m, Math.round(m * 100))));
+          $$("#vStrips .vv").forEach((el) => {
+            const c = +el.dataset.vv,
+              v = varAway ? song.mix[c].vol : VAR.vol[c] ?? 0.6;
+            el.innerHTML = knobSvg(v, Math.round(v * 100));
+          });
+        }, 100);
+      }
       const midiVol = (c, v) => {
         song.mix[c].vol = v;
         applyMix();
-        // the mixer's sliders follow, a few times a second
-        if (!midiMixT && $("#mix").classList.contains("show")) midiMixT = setTimeout(() => ((midiMixT = 0), renderMix()), 120);
+        midiMixFace();
       };
       // the Live FX pads, as the screen does: held, or on / off with LATCH
       function midiFx(id, on) {
@@ -17805,7 +17824,22 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       // the keys play the channel you are on and write in the tracker like the keys on screen (velocity = volume);
       // on a drum channel notes 36-51 are the 16 pads (any other note falls on one of the first 12)
       const midiPad = (n) => (n >= 36 && n < 52 ? n - 36 : ((n % 12) + 12) % 12);
+      // While the Live FX pads are open the MIDI pads and keys play the effects (pad 1 is the first effect, the keys count from C3). In the
+      // Variator: with the piano open only the pads play effects and the keys play the piano, with the drum pads open both play drums
+      // and the effects are for the touch screen. The notes held on effects are remembered so that letting go ends the effect.
+      const miFx = new Map();
+      function miFxFor(n) {
+        if ($("#var").classList.contains("show")) {
+          if (VAR.view !== "fx" || VAR.low === "pads" || (VAR.low === "piano" && !MI.pad)) return null;
+        } else if (!(S.fxPanel && $("#trk").classList.contains("show"))) return null;
+        return FXS[(((n - (MI.pad ? 36 : 48)) % FXS.length) + FXS.length) % FXS.length].id;
+      }
       MI.on = (n, v) => {
+        const fx = miFxFor(n);
+        if (fx) {
+          if (!S.fxLatch) miFx.set(n, fx);
+          return midiFx(fx, true);
+        }
         const vol = Math.max(1, Math.round((v / 127) * 15)),
           write = $("#trk").classList.contains("show");
         if (instOf(S.col) === DRUM_I) {
@@ -17817,6 +17851,10 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
         noteOn("m" + n, n, S.col, write, vol, !MI.sound());
       };
       MI.off = (n) => {
+        if (miFx.has(n)) {
+          midiFx(miFx.get(n), false);
+          return miFx.delete(n);
+        }
         $$(`#pkPads .pad[data-p="${midiPad(n)}"]`).forEach((x) => x.classList.remove("down"));
         kLight(n, false);
         noteOff("m" + n);
@@ -24534,7 +24572,7 @@ ${syN() ? `<button data-ve="back">BACK TO OUR SONG<small>ends the Variator on al
             en: [
               "Record or load your own sounds and play them as instruments. There are **16 slots** (S1–S16), shown as squares; the selected one is outlined.",
               "@smp",
-              "- **RECORD**: records from the microphone (your browser will ask permission). Tap again to stop.",
+              "- **RECORD**: records from the microphone (your browser will ask permission). Tap again to stop. On iPhone and iPad the browser always records from the built-in microphone, even with a USB interface plugged in, and moves the sound to the device while recording: an Apple limitation. Chrome or Firefox on a computer, or Firefox on Android, can use the interface.",
               "- **OPEN**: loads an audio file from your device (WAV, MP3, OGG, M4A…; the first 20 seconds).",
               "- **PLAY**: plays the slot; while anything from this screen sounds it becomes **STOP**, which silences it all. **CROP** keeps only the selected part.",
               "- **FX**: effects written into the sound itself, apart from the live and song FX. Tap pads to add them (they stay on): reverb, echo, lo-fi, drive, flanger, filters, radio, gates, octave up or down, unison and fifth layers. The slot is re-rendered and played after each tap; tap a pad again to take it out, or **Original** to remove them all. Record a flute, then add Reverb and Lo-fi, and S1 *is* that sound everywhere it plays.",
@@ -24547,7 +24585,7 @@ ${syN() ? `<button data-ve="back">BACK TO OUR SONG<small>ends the Variator on al
             es: [
               "Graba o carga tus propios sonidos y tócalos como instrumentos. Hay **16 huecos** (S1–S16), mostrados como cuadrados; el seleccionado lleva un borde.",
               "@smp",
-              "- **RECORD**: graba con el micrófono (el navegador pedirá permiso). Toca de nuevo para parar.",
+              "- **RECORD**: graba con el micrófono (el navegador pedirá permiso). Toca de nuevo para parar. En iPhone y iPad el navegador siempre graba con el micrófono integrado, aunque haya una interfaz USB conectada, y pasa el sonido al propio dispositivo mientras graba: una limitación de Apple. Chrome o Firefox en un ordenador, o Firefox en Android, pueden usar la interfaz.",
               "- **OPEN**: carga un archivo de audio de tu dispositivo (WAV, MP3, OGG, M4A…; los primeros 20 segundos).",
               "- **PLAY**: reproduce el hueco; mientras suene algo de esta pantalla se convierte en **STOP**, que lo silencia todo. **CROP** conserva solo la parte seleccionada.",
               "- **FX**: efectos grabados en el propio sonido, aparte de los FX en directo y de la canción. Toca pads para añadirlos (se quedan puestos): reverb, eco, lo-fi, saturación, flanger, filtros, radio, puertas, octava arriba o abajo, capas al unísono y de quinta. El hueco se vuelve a generar y suena tras cada toque; toca un pad otra vez para quitarlo, u **Original** para quitarlos todos. Graba una flauta, añade Reverb y Lo-fi, y S1 *es* ese sonido allí donde suene.",
@@ -24701,6 +24739,7 @@ ${syN() ? `<button data-ve="back">BACK TO OUR SONG<small>ends the Variator on al
                 "## Version 1.3.0",
                 "- **Sync:** devices on the same Wi-Fi can share one session (Files ▸ **SYNC**, paired with QR codes, no server): the same song and samples, shared PLAY / STOP, edits on any device appear on the others, **SOUND HERE** to choose the device that makes the sound, and a MIDI knob on one moves the mixer of all.",
                 "## Version 1.2.0",
+                "- **MIDI:** the master volume knob now moves the mixer and Variator knobs as well (they follow every MIDI volume knob). When the Live FX pads are open, the MIDI pads and keys play the effects. In the Variator, with the piano open only the pads play effects and the keys play the piano, and with the drum pads open both play drums.",
                 "- **Install it:** the app is now a web app (PWA). Add it to the Home Screen (iPhone: Safari ▸ Share; Android and desktop: Chrome ▸ Install app) and it opens like an app and works offline. The welcome note and **OPTIONS** have an **INSTALL** button that knows when the app is already installed. The Android APK is retired.",
                 "- **Variator:** new styles **Lo-Fi**, **Synthwave** and **Dungeon Synth**; the dice also shuffles the VARS knobs; the **♫** button rotates the lower part between patterns, a piano and drum pads (what you play there is not written into the song); touch a channel anywhere to play it, and the dice and play icons are bare icons.",
                 "- **Autosave** no longer interrupts playback (it waits until you stop).",
@@ -24713,6 +24752,7 @@ ${syN() ? `<button data-ve="back">BACK TO OUR SONG<small>ends the Variator on al
                 "## Versión 1.3.0",
                 "- **Sincronizar:** los dispositivos de la misma Wi-Fi pueden compartir una sesión (Files ▸ **SYNC**, emparejados con códigos QR, sin servidor): la misma canción y muestras, PLAY / STOP compartidos, las ediciones de uno aparecen en los demás, **SOUND HERE** para elegir el dispositivo que suena, y un potenciómetro MIDI en uno mueve el mezclador de todos.",
                 "## Versión 1.2.0",
+                "- **MIDI:** el pote de volumen general ahora mueve también los potes del mezclador y del Variator (siguen todos los potes MIDI de volumen). Con los pads de Live FX abiertos, los pads y teclas MIDI tocan los efectos. En el Variator, con el piano abierto solo los pads tocan efectos y las teclas el piano, y con los pads de batería abiertos ambos tocan la batería.",
                 "- **Instálala:** la app ahora es una web app (PWA). Añádela a la pantalla de inicio (iPhone: Safari ▸ Compartir; Android y escritorio: Chrome ▸ Instalar app) y se abre como una app y funciona sin conexión. La nota de bienvenida y **OPTIONS** tienen un botón **INSTALL** que sabe si la app ya está instalada. El APK de Android se retira.",
                 "- **Variator:** estilos nuevos **Lo-Fi**, **Synthwave** y **Dungeon Synth**; el dado también mezcla los potes de VARS; el botón **♫** rota la parte de abajo entre patrones, un piano y pads de batería (lo que toques ahí no se escribe en la canción); toca un canal en cualquier parte para tocarlo, y el dado y el play son iconos sin botón.",
                 "- El **autoguardado** ya no interrumpe la reproducción (espera a que pares).",
