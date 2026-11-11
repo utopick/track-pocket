@@ -6333,7 +6333,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       // samples
       // ======================================================================
       // SYNC (the module is further down): defined here because the mixer reads .silent
-      const SYNC = { host: false, peers: [], hub: null, off: 0, rtt: 1e9, silent: false, last: {}, smp: [], got: {}, pend: null, apply: 0 };
+      const SYNC = { then: null, me: Math.random().toString(36).slice(2, 6), goAt: 0, host: false, peers: [], hub: null, off: 0, rtt: 1e9, silent: false, last: {}, smp: [], got: {}, pend: null, apply: 0 };
       const samples = new Array(SLOTS).fill(null); // AudioBuffer-like: {rate, data:Float32Array}
       const sampleSettings = Array.from({ length: SLOTS }, () => ({ velocity: 1, pitch: 0, hold: true }));
       const bufCache = new WeakMap();
@@ -6832,14 +6832,11 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       }
       // Starts a held voice for key/pad `id`. With write = true the note is stored too:
       // stopped -> at the cursor (writeNote); playing with REC on -> on the heard step (recNote).
-      function noteOn(id, m, ch = S.col, write = true, vol, quiet = false) {
-        ensureCtx();
-        const tapT = ctx.currentTime;
+      // a held voice: also what a note from another synced device plays
+      function liveVoice(id, m, ch, v, ex, arp, quiet) {
         const inst = instOf(ch),
           dr = inst === DRUM_I,
-          v = (vol ?? S.vol) / 15,
-          ex = dr ? [] : CHORDS[S.chord][1];
-        const bus = G.buses[ch].v,
+          bus = G.buses[ch].v,
           t = ctx.currentTime + 0.005,
           notes = [m, ...ex.map((o) => m + o)],
           sc = 1 / Math.sqrt(notes.length);
@@ -6847,9 +6844,19 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         const g = ctx.createGain();
         if (quiet) g.gain.value = 0; // MIDI keys with SOUND off: still written, not heard
         g.connect(bus);
-        if (S.arp && !dr) voice(ctx, g, inst, m, t, 8, v, arpSeq(ex, S.arp));
+        if (arp && !dr) voice(ctx, g, inst, m, t, 8, v, arpSeq(ex, arp));
         else notes.forEach((n) => voice(ctx, g, inst, n, t, 8, v * sc));
         if (!dr) held.set(id, g); // drum hits ring out on their own
+      }
+      function noteOn(id, m, ch = S.col, write = true, vol, quiet = false) {
+        ensureCtx();
+        const tapT = ctx.currentTime;
+        const inst = instOf(ch),
+          dr = inst === DRUM_I,
+          v = (vol ?? S.vol) / 15,
+          ex = dr ? [] : CHORDS[S.chord][1];
+        if (!quiet && !SYNC.apply && syN()) syOut({ t: "n", id: SYNC.me + ":" + id, m, ch, v: vol ?? S.vol, ex, arp: dr ? 0 : S.arp }); // the other devices play it (SILENT ones do not)
+        liveVoice(id, m, ch, v, ex, dr ? 0 : S.arp, quiet);
         if (write && !varAway) {
           if (S.playing && S.rec) recNote(id, m, ch, vol, dr, tapT);
           else if (!S.playing || S.liveWrite) {
@@ -6965,6 +6972,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         } else if (st && pr.row === S.row && pr.col === S.col) select((pr.row + st) % L, pr.col);
       }
       function noteOff(id) {
+        if (!SYNC.apply && syN()) syOut({ t: "x", id: SYNC.me + ":" + id });
         endPress(id);
         const g = held.get(id);
         if (!g) return;
@@ -8909,6 +8917,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           const pi = +sc.dataset.scene;
           for (let c = 0; c < CH; c++) S.queue.set(c, hasNotes(song.patterns[pi], c) ? pi : null);
           liveGo();
+          syLive();
           return;
         }
         if (!lc) return;
@@ -8920,10 +8929,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           S.queue.set(c, null); // playing: stop on the next beat/bar
         else S.queue.set(c, pi); // start (replaces what that channel plays)
         liveGo();
+        syLive();
       });
       $("#liveStop").onclick = () => {
         for (let c = 0; c < CH; c++) if (S.live[c] != null) S.queue.set(c, null);
         liveUI(S.gstep, S.live, S.queue);
+        syLive();
       };
 
       // ======================================================================
@@ -10056,7 +10067,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       // The host is the hub: guests talk to it and it passes every message on. What travels: the song, key by key (a changed key is
       // sent, so a knob is a few bytes); the 16 samples (in pieces, when they change); PLAY / STOP, which the host times 250 ms ahead
       // of the clocks it has measured. Last writer wins. shortcut: the host leaving ends the sync; no QR code (copy or share the code).
-      const SY_KEYS = ["name", "bpm", "kit", "chInst", "patterns", "order", "scale", "mix", "chN", "xInst", "xMix", "instAll", "loopA", "loopB", "arpRate"];
+      const SY_KEYS = ["chN", "name", "bpm", "kit", "chInst", "patterns", "order", "scale", "mix", "xInst", "xMix", "instAll", "loopA", "loopB", "arpRate"];
       const SY_CTL = { $master: "#master", $swing: "#swing", $echo: "#echo", $echoTime: "#echoTime" };
       const syN = () => (SYNC.host ? SYNC.peers.filter((x) => x.dc.readyState === "open").length : SYNC.hub && SYNC.hub.dc.readyState === "open" ? 1 : 0);
       const syNow = () => Date.now() + SYNC.off;
@@ -10105,6 +10116,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       function syCur() {
         const o = {};
         SY_KEYS.forEach((k) => song[k] !== undefined && (o[k] = JSON.stringify(song[k])));
+        if (song.chN === undefined) o.chN = "4"; // four channels is the default and has no field: say it so that a device with more goes back to four
         Object.entries(SY_CTL).forEach(([k, id]) => (o[k] = JSON.stringify($(id).value)));
         return o;
       }
@@ -10118,7 +10130,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       };
       const syMark = () => ((SYNC.last = syCur()), (SYNC.smp = samples.map((_, i) => syFp(i))));
       function syScan() {
-        if (!syN() || varAway || SYNC.apply) return;
+        if (!syN() || SYNC.apply) return;
         const cur = syCur();
         for (const k in cur)
           if (cur[k] !== SYNC.last[k]) {
@@ -10133,9 +10145,45 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         });
       }
       setInterval(syScan, 150);
+      // ---- live playing: notes, effect pads and the loops being launched go to the other devices (all of it is untrusted: checked here)
+      function syLive() {
+        if (!syN() || SYNC.apply) return;
+        syOut({ t: "lq", mode: S.mode, live: S.live.slice(0, CH), q: [...S.queue], at: syNow() });
+      }
+      const syInt = (x, a, b) => Number.isInteger(x) && x >= a && x <= b;
+      function syLq(m) {
+        // after a start that is still waiting for its time, so that the mode is not reset by it
+        setTimeout(() => {
+          if (m.mode !== "live" || !Array.isArray(m.live) || !Array.isArray(m.q) || m.q.length > 64) return;
+          const pat = (v) => v === null || (syInt(v, 0, song.patterns.length - 1) && !!song.patterns[v]);
+          SYNC.apply++;
+          try {
+            if (S.mode !== "live" && S.playing) {
+              intoLive(null);
+              m.live.slice(0, CH).forEach((v, c) => (S.live[c] = pat(v) ? v : null));
+            }
+            S.queue.clear();
+            m.q.forEach((e) => Array.isArray(e) && syInt(e[0], 0, CH - 1) && pat(e[1]) && S.queue.set(e[0], e[1]));
+            if (S.playing && S.mode === "live") liveUI(S.gstep, S.live, S.queue);
+          } finally {
+            SYNC.apply--;
+          }
+        }, Math.max(0, SYNC.goAt + 40 - syNow()));
+      }
+      function syNoteIn(m) {
+        const id = typeof m.id === "string" && m.id.length < 24 ? "r" + m.id : null;
+        if (!id || SYNC.silent || !syInt(m.ch, 0, CH - 1) || !(m.m >= 0 && m.m <= 127) || !(m.v >= 0 && m.v <= 15) || !Array.isArray(m.ex) || m.ex.length > 8 || !m.ex.every((o) => syInt(o, -36, 36)) || !syInt(m.arp, 0, 3)) return;
+        ensureCtx();
+        if (held.has(id)) noteOff(id);
+        SYNC.apply++;
+        try {
+          liveVoice(id, +m.m, m.ch, m.v / 15, m.ex, m.arp, false);
+        } finally {
+          SYNC.apply--;
+        }
+      }
       // ---- what arrives
       function syKey(k, v) {
-        if (varAway) return;
         if (SY_CTL[k]) {
           const el = $(SY_CTL[k]);
           el.value = v;
@@ -10155,6 +10203,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         S.scaleT = (song.scale && song.scale.type) || 0;
         song.mix.forEach((m) => Object.keys(MIXDEF).forEach((q) => m[q] === undefined && (m[q] = MIXDEF[q])));
         chResize();
+        if (ctx && G && G.buses.length !== CH) {
+          // the song has more or fewer channels than the sound graph: build it again (as the Variator does)
+          G.comp.disconnect();
+          G = buildGraph(ctx);
+          G.comp.connect(FXC.in);
+        }
         fixLoop();
         refreshAll();
         applyMix();
@@ -10185,10 +10239,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
       }
       function syGo(play) {
         const at = Date.now() + 250;
+        SYNC.goAt = at;
         syOut({ t: "go", play, at });
         syAt(play, at);
       }
       function syAt(play, at) {
+        SYNC.goAt = at;
         setTimeout(() => {
           if (S.playing === play) return;
           SYNC.apply++;
@@ -10197,6 +10253,9 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           } finally {
             SYNC.apply--;
           }
+          const f = SYNC.then; // what the tap wanted once the shared start has happened (a start is delayed so all devices begin together)
+          SYNC.then = null;
+          if (f) f();
         }, Math.max(0, at - syNow()));
       }
       function syGot(peer, raw, joined) {
@@ -10230,6 +10289,12 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           } else if (m.t === "go") syAt(!!m.play, +m.at || 0);
           else if (m.t === "k") syKey(m.k, m.v), syMark();
           else if (m.t === "smp") sySmp(m);
+          else if (m.t === "n") syNoteIn(m);
+          else if (m.t === "x") {
+            if (typeof m.id === "string" && m.id.length < 24) (SYNC.apply++, noteOff("r" + m.id), SYNC.apply--);
+          } else if (m.t === "fx") {
+            if (typeof m.id === "string" && FXS.some((d) => d.id === m.id)) (SYNC.apply++, fxSet(m.id, !!m.on), SYNC.apply--);
+          } else if (m.t === "lq") syLq(m);
           else if (m.t === "snap" && typeof m.d === "string") sySnap(m.d).then(syMark);
         } catch (e) {
           console.warn("sync: a message was refused", e);
@@ -12479,6 +12544,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         for (let c = 0; c < CH; c++) S.live[c] = p && hasNotes(p, c) ? now : null;
         sgPlay();
         renderSong();
+        syLive();
       }
       // whole-pattern launch: every channel of the pattern starts together on the chosen beat / bar (or stops)
       function launchPat(pi) {
@@ -12495,6 +12561,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
           });
         } else for (let c = 0; c < CH; c++) S.queue.set(c, hasNotes(p, c) ? pi : null);
         liveGo();
+        syLive();
       }
       let spT = null,
         spD = null;
@@ -12959,6 +13026,7 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         $("#varFxGrid").innerHTML = h;
       }
       function fxSet(id, on) {
+        if (!SYNC.apply && syN()) syOut({ t: "fx", id, on: !!on });
         if (on) S.fxOn.add(id);
         else S.fxOn.delete(id);
         fxRecalc();
@@ -13807,9 +13875,10 @@ a.length>D&&(D=a.length,p=0|1.25*D+7200,r=new Int8Array(p));a=u.lame_encode_buff
         ensureCtx();
         if (!S.playing) {
           S.ordSel = slot;
+          const go = () => (intoLive(pi), (VAR.liveSlot = slot), varPlayUI());
           togglePlay();
-          intoLive(pi);
-          VAR.liveSlot = slot;
+          if (syN()) SYNC.then = go; // after the shared start
+          else go();
         } else {
           if (S.mode !== "live") intoLive(song.order[S.ordPos] ?? pi);
           const on = S.live.includes(pi);
