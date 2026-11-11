@@ -204,6 +204,12 @@ class Track(Page):
         on(1); self.assertTrue(self.js("return SYNC.silent")); self.js("document.querySelector('#sySound').click()")
         on(0); self.until("return SYNC.silent && /sound/.test(document.querySelectorAll('#syList div')[2].textContent)", "the host went silent and lists who sounds")
         on(2); self.until("return SYNC.silent && SYNC.who.snd === 1", "the other guest stays silent and knows who sounds")
+        self.js("document.querySelector('#sySoundAll').click()")  # SOUND EVERYWHERE from a guest: all of them sound
+        for i in (0, 1, 2):
+            on(i); self.until("return !SYNC.silent && document.querySelector('#sySoundAll').classList.contains('on')", "sound everywhere on device %d" % i)
+        on(1); self.js("document.querySelector('#sySound').click()")  # and back to one
+        on(0); self.until("return SYNC.silent", "the host silent again"); on(2); self.until("return SYNC.silent", "the other guest silent again")
+        on(1); self.until("return !SYNC.silent && document.querySelector('#sySound').classList.contains('on')", "the sound on the guest that took it")
         # the Variator opened on a guest: every device is in it, with the same seed and patterns, and no piano gets locked to its key
         on(0); name0, scale0 = self.js("return [song.name, S.scaleT]")
         on(1); self.js("VAR.seed = 777; showTab('var')"); sig = "return varAway && VAR.seed === %d && JSON.stringify([song.order, song.patterns.map(p => p.len), song.bpm, song.chInst])"
