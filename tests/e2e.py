@@ -193,6 +193,22 @@ class Track(Page):
         self.assertEqual(self.js("return [S.mode, VAR.liveSlot]"), ["live", 4])
         self.assertEqual(self.errors(), [])
 
+    def test_keys_only_play_until_write_mode_is_on(self):
+        self.open()
+        wrote = lambda: self.js("return pat().ch[S.col][S.row] != null && pat().ch[S.col][S.row] !== 0")
+        self.js("S.row = 3; pat().ch[S.col][3] = null; noteOn('t', 60, S.col, true)")
+        self.assertFalse(wrote(), "the keys wrote with WRITE off")
+        self.js("noteOff && 0; document.querySelector('#pkLive').click()")  # the button: WRITE
+        self.assertTrue(self.js("return S.liveWrite"))
+        self.js("noteOn('t2', 62, S.col, true)")
+        self.assertTrue(wrote(), "the keys did not write with WRITE on")
+        self.js("document.querySelector('#pkLive').click(); pat().ch[S.col][3] = null; S.row = 3")  # back to PLAY
+        self.assertFalse(self.js("return S.liveWrite"))
+        # tapping a square while stopped turns WRITE on
+        self.js("document.querySelector('#sq .sq').dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, pointerId: 7, clientX: 5, clientY: 5})); dispatchEvent(new PointerEvent('pointerup', {pointerId: 7, clientX: 5, clientY: 5}))")
+        self.assertTrue(self.js("return S.liveWrite"), "a tapped square did not turn WRITE on")
+        self.assertEqual(self.errors(), [])
+
     def test_song_file_cannot_run_script(self):
         self.open()
         self.js("""const e = JSON.parse(serialize());

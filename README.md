@@ -65,7 +65,7 @@ If you've ever used a groovebox or tracker, you've got it. If not, it should be 
 
 - **Patterns:** add notes to the step grid, choose instruments, and build a repeating phrase.
 - **Playback:** adjust the tempo and press play to hear the current pattern. Use the song and live views to arrange or perform patterns.
-- **Playing along:** the keys play while the pattern runs without writing anything. Turn **PLAYING · WRITE** on to write into the selected step as the pattern plays, or press **●** to record each note on the step you hear. On a computer, the keyboard plays the keys, the drum pads and the FX pads, and each pad shows its key.
+- **Playing along:** the keys play while the pattern runs without writing anything. The keys only play until you turn **KEYS · WRITE** on (or tap a square while stopped): then they write into the selected step, stopped or playing,, or press **●** to record each note on the step you hear. On a computer, the keyboard plays the keys, the drum pads and the FX pads, and each pad shows its key.
 - **Sampler:** record or open a sound into one of 16 slots, then crop, reverse, normalize or add effects. In **MORE**, an optional **GRID** lays the song's steps over the wave so a selection snaps to whole steps, and **QUANTIZE** moves the hits onto it to tighten a loose beat.
 - **Live FX:** open the FX pads and hold one to apply it; release to turn it off. **Latch** keeps an effect on after you release it. **Off** clears active effects. The FX board includes loop/repeat, rolls, pitch, filter, and other performance effects.
 - **Save:** use the file controls to save and load songs. TRACK.Pocket also keeps browser-local autosave data.
